@@ -1,0 +1,4 @@
+TransactionID,AccountName,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,Credit
+3006202601,Ecobank,Salary,Monthly,May,2026,June,2026,7000.0
+3006202602,Ecobank,Company Bonus,Variable,June,2026,,,2500
+3006202603,Ecobank,Salary,Monthly,June,,July,2026,7000.0
