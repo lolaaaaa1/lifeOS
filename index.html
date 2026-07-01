@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
-  <title>lifeOS — Personal Finance</title>
+  <title>lifeOS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -932,6 +932,111 @@
 
     #offline-banner.show { display: block; }
 
+    /* ── Setup screen ────────────────────────────────────────────────────────── */
+    #setup-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    #setup-screen.show { display: flex; }
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      max-width: 400px;
+      width: 100%;
+      margin: 16px;
+    }
+    .setup-title {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .setup-sub {
+      font-size: 13px;
+      color: var(--ink-lt);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    .setup-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .setup-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--ink);
+      outline: none;
+      margin-bottom: 16px;
+    }
+    .setup-input:focus { border-color: var(--accent); }
+    .setup-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .setup-btn:hover { background: var(--accent-dk); }
+    .setup-btn:disabled { opacity: 0.6; cursor: default; }
+    .setup-error {
+      font-size: 12px;
+      color: var(--red);
+      margin-top: 8px;
+      display: none;
+    }
+    .setup-error.show { display: block; }
+    .setup-steps {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      counter-reset: step;
+    }
+    .setup-step {
+      font-size: 12px;
+      color: var(--ink-lt);
+      margin-bottom: 6px;
+      padding-left: 20px;
+      position: relative;
+    }
+    .setup-step::before {
+      content: counter(step) ". ";
+      counter-increment: step;
+      position: absolute;
+      left: 0;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+    }
+    .setup-change-token {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 14px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
     /* ── Placeholder pages ───────────────────────────────────────────────────── */
     .placeholder-page {
       display: flex;
@@ -1638,8 +1743,24 @@
 
 <!-- ── Offline banner ───────────────────────────────────────────────────────── -->
 <div id="offline-banner">
-  Backend offline — start the server with:
-  <code>uvicorn backend.main:app --port 3001</code>
+  GitHub connection failed — reload to reconnect
+</div>
+
+<!-- ── GitHub setup screen ──────────────────────────────────────────────────── -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-title">Connect lifeOS</div>
+    <p class="setup-sub">Your data lives in your private GitHub repo. Enter a Personal Access Token to get started.</p>
+    <div class="setup-label">GitHub Personal Access Token</div>
+    <input id="gh-token-input" class="setup-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+    <button class="setup-btn" onclick="saveGHToken()">Connect</button>
+    <div id="setup-error" class="setup-error"></div>
+    <div class="setup-steps">
+      <div class="setup-step">Go to github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</div>
+      <div class="setup-step">Generate a new token with <strong>repo</strong> scope (full control of private repositories)</div>
+      <div class="setup-step">Paste the token above and tap Connect</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1659,8 +1780,639 @@ const S = {
   editingItemId: null,
 };
 
-const API = 'http://localhost:3001/api';
 const LS_KEY = 'lifeos_budget_items';
+
+/* ════════════════════════════════════════════════════════════════════════════
+   GITHUB-AS-DATABASE LAYER
+   ════════════════════════════════════════════════════════════════════════════ */
+
+// ── CSV utilities ──────────────────────────────────────────────────────────
+
+function _splitCSVLine(line) {
+  const res = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { if (q && line[i+1] === '"') { cur += '"'; i++; } else q = !q; }
+    else if (c === ',' && !q) { res.push(cur); cur = ''; }
+    else cur += c;
+  }
+  res.push(cur);
+  return res;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l => l.replace(/\r$/, ''));
+  if (!lines.length) return { headers: [], rows: [] };
+  const headers = _splitCSVLine(lines[0]);
+  const rows = lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = _splitCSVLine(line);
+    const row = {};
+    headers.forEach((h, i) => { row[h] = vals[i] !== undefined ? vals[i] : ''; });
+    return row;
+  });
+  return { headers, rows };
+}
+
+function serializeCSV(headers, rows) {
+  const q = v => {
+    const s = (v === null || v === undefined) ? '' : String(v);
+    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const out = [headers.map(q).join(',')];
+  rows.forEach(r => out.push(headers.map(h => q(r[h] !== undefined ? r[h] : '')).join(',')));
+  return out.join('\n') + '\n';
+}
+
+// ── GitHub API ─────────────────────────────────────────────────────────────
+
+const GH = {
+  owner: 'lolaaaaa1',
+  repo:  'lifeOS',
+  branch: 'main',
+  get token() { return localStorage.getItem('gh_token') || ''; },
+  base() { return `https://api.github.com/repos/${this.owner}/${this.repo}/contents`; },
+
+  async fetchFile(path) {
+    const res = await fetch(`${this.base()}/${path}?ref=${this.branch}&_=${Date.now()}`, {
+      headers: { Authorization: `token ${this.token}`, Accept: 'application/vnd.github.v3+json' },
+    });
+    if (!res.ok) throw new Error(`GitHub ${res.status} fetching ${path}`);
+    const json = await res.json();
+    const b64  = json.content.replace(/\s/g, '');
+    const bin  = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return { text: new TextDecoder().decode(bytes), sha: json.sha };
+  },
+
+  async writeFile(path, content, sha, message) {
+    const bytes = new TextEncoder().encode(content);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const res = await fetch(`${this.base()}/${path}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${this.token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message, content: btoa(binary), sha, branch: this.branch }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(`GitHub write ${res.status}: ${err.message || path}`);
+    }
+    return res.json();
+  },
+};
+
+// ── In-memory data store ───────────────────────────────────────────────────
+
+const DATA = {
+  _c: {},
+
+  get(path) { return this._c[path]; },
+
+  async load(path) {
+    const { text, sha } = await GH.fetchFile(path);
+    const { headers, rows } = parseCSV(text);
+    this._c[path] = { headers, rows, sha };
+    return this._c[path];
+  },
+
+  async save(path, message = 'update data') {
+    const d = this._c[path];
+    if (!d) throw new Error(`${path} not loaded`);
+    const content = serializeCSV(d.headers, d.rows);
+    const result  = await GH.writeFile(path, content, d.sha, message);
+    d.sha = result.content.sha;
+  },
+
+  async loadAll() {
+    await Promise.all([
+      this.load('data/financeOS.csv'),
+      this.load('data/income.csv'),
+      this.load('data/days.csv'),
+      this.load('data/items.csv'),
+      this.load('data/transactions.csv'),
+    ]);
+  },
+};
+
+// Shorthand accessors to cached data
+function FIN()    { return DATA.get('data/financeOS.csv')   || { headers: [], rows: [] }; }
+function INC()    { return DATA.get('data/income.csv')       || { headers: [], rows: [] }; }
+function DAYS_D() { return DATA.get('data/days.csv')         || { headers: [], rows: [] }; }
+function ITMS()   { return DATA.get('data/items.csv')        || { headers: [], rows: [] }; }
+function TXNS()   { return DATA.get('data/transactions.csv') || { headers: [], rows: [] }; }
+
+// ── Calculation helpers ────────────────────────────────────────────────────
+
+const _DAYS_META = new Set(['Day','Month','Year','DayName','MonthYearToUse']);
+const _WEEKDAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function _portionCol(name)   { return name.replace(/ /g, '') + 'Portion'; }
+function _daysItemCols(hdrs) { return hdrs.filter(h => !_DAYS_META.has(h)); }
+
+function _incPrefixes() {
+  const ps = ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName.replace(/ /g, ''));
+  return ps.sort((a, b) => b.length - a.length);
+}
+
+function _colToItem(col, prefixes) {
+  for (const p of prefixes) { if (col.startsWith(p)) return col.slice(p.length); }
+  return null;
+}
+
+function _ensureCol(entry, col) {
+  if (!entry.headers.includes(col)) {
+    entry.headers.push(col);
+    entry.rows.forEach(r => { if (r[col] === undefined) r[col] = ''; });
+  }
+}
+
+function _genTxnId(rows) {
+  const now = new Date();
+  const dd  = String(now.getDate()).padStart(2, '0');
+  const mm  = String(now.getMonth() + 1).padStart(2, '0');
+  const yy  = now.getFullYear();
+  const prefix   = `${dd}${mm}${yy}`;
+  const existing = new Set(rows.map(r => r.TransactionID || ''));
+  for (let i = 1; i < 1000; i++) {
+    const tid = `${prefix}${String(i).padStart(2, '0')}`;
+    if (!existing.has(tid)) return tid;
+  }
+  return `${prefix}99`;
+}
+
+function _syncTxnToIncome(item, monthRcv, yearRcv, credit, period) {
+  if (!monthRcv || !yearRcv || !item) return;
+  for (const r of INC().rows) {
+    if (r.Month === monthRcv && r.Year === String(yearRcv) && r.Type === 'Income' && r.Items === item) {
+      r.Amount = String(credit);
+      if (period) r.IncomePeriod = period;
+      return;
+    }
+  }
+}
+
+// ── LocalAPI router ────────────────────────────────────────────────────────
+
+const LocalAPI = {
+  async route(rawPath, opts = {}) {
+    const method = (opts.method || 'GET').toUpperCase();
+    const body   = opts.body ? (typeof opts.body === 'string' ? JSON.parse(opts.body) : opts.body) : {};
+    let m;
+
+    // GET /finance/months
+    if (method === 'GET' && rawPath === '/finance/months') return FIN().rows;
+
+    // GET /finance/months/{month}/{year}
+    if ((m = rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)$/)) && method === 'GET') {
+      return FIN().rows.find(r => r.Month === m[1] && r.Year === m[2]) || {};
+    }
+
+    // PUT /finance/months/{month}/{year}/budget
+    if ((m = rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/budget$/)) && method === 'PUT') {
+      const [, mo, yr] = m; const inc = INC();
+      for (const [name, amount] of Object.entries(body)) {
+        const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
+        if (found) { found.SalaryPortion = String(amount); found.Amount = ''; }
+        else {
+          const row = {}; inc.headers.forEach(h => row[h] = '');
+          Object.assign(row, { Month: mo, Year: yr, Type: 'Budget', Items: name, SalaryPortion: String(amount) });
+          inc.rows.push(row);
+        }
+      }
+      await DATA.save('data/income.csv', `Budget ${mo} ${yr}`);
+      return { ok: true };
+    }
+
+    // PUT /finance/months/{month}/{year}/salary (legacy — no-op)
+    if (rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/salary$/) && method === 'PUT')
+      return { ok: true };
+
+    // GET /budget/items
+    if (method === 'GET' && rawPath === '/budget/items') {
+      const seen = new Set(), out = [];
+      INC().rows.forEach(r => { if (r.Type === 'Budget' && r.Items && !seen.has(r.Items)) { seen.add(r.Items); out.push({ name: r.Items }); } });
+      return out;
+    }
+
+    // POST /budget/items
+    if (method === 'POST' && rawPath === '/budget/items') {
+      const { name } = body;
+      if (!name) throw new Error('name required');
+      const inc = INC();
+      if (inc.rows.some(r => r.Type === 'Budget' && r.Items === name)) throw new Error('item already exists');
+      FIN().rows.forEach(fin => {
+        if (!inc.rows.some(r => r.Type === 'Budget' && r.Items === name && r.Month === fin.Month && r.Year === fin.Year)) {
+          const row = {}; inc.headers.forEach(h => row[h] = '');
+          Object.assign(row, { Month: fin.Month, Year: fin.Year, Type: 'Budget', Items: name });
+          inc.rows.push(row);
+        }
+      });
+      await DATA.save('data/income.csv', `Add budget item ${name}`);
+      const itms = ITMS();
+      if (!itms.rows.some(r => r.ItemName === name)) {
+        itms.rows.push({ ItemName: name, Section: 'Budget', AccountType: '' });
+        await DATA.save('data/items.csv', `Add item ${name}`);
+      }
+      return { ok: true };
+    }
+
+    // PUT /budget/items/{name}
+    if ((m = rawPath.match(/^\/budget\/items\/(.+)$/)) && method === 'PUT') {
+      const oldName = decodeURIComponent(m[1]); const inc = INC();
+      inc.rows.forEach(r => { if (r.Type === 'Budget' && r.Items === oldName) r.Items = body.name; });
+      await DATA.save('data/income.csv', `Rename budget item ${oldName}`);
+      return { ok: true };
+    }
+
+    // DELETE /budget/items/{name}
+    if ((m = rawPath.match(/^\/budget\/items\/(.+)$/)) && method === 'DELETE') {
+      const name = decodeURIComponent(m[1]); const inc = INC();
+      inc.rows = inc.rows.filter(r => !(r.Type === 'Budget' && r.Items === name));
+      await DATA.save('data/income.csv', `Delete budget item ${name}`);
+      return { ok: true };
+    }
+
+    // GET /budget-meta/{month}/{year}
+    if ((m = rawPath.match(/^\/budget-meta\/([^/]+)\/(\d+)$/)) && method === 'GET') {
+      const [, mo, yr] = m; const out = {};
+      INC().rows.filter(r => r.Month === mo && r.Year === yr && r.Type === 'Budget')
+        .forEach(r => { out[r.Items] = r.CalculatedType || ''; });
+      return out;
+    }
+
+    // PUT /budget-meta/{month}/{year}/{name}
+    if ((m = rawPath.match(/^\/budget-meta\/([^/]+)\/(\d+)\/(.+)$/)) && method === 'PUT') {
+      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
+      const calcType = body.calculatedType || '';
+      const inc = INC();
+      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
+      if (found) { found.CalculatedType = calcType; }
+      else {
+        const row = {}; inc.headers.forEach(h => row[h] = '');
+        Object.assign(row, { Month: mo, Year: yr, Type: 'Budget', Items: name, CalculatedType: calcType });
+        inc.rows.push(row);
+      }
+      await DATA.save('data/income.csv', `Budget meta ${name}`);
+      return { ok: true };
+    }
+
+    // GET /items
+    if (method === 'GET' && rawPath === '/items') return ITMS().rows;
+
+    // POST /items
+    if (method === 'POST' && rawPath === '/items') {
+      const { itemName, section = 'Budget', accountType = '' } = body;
+      if (!itemName) throw new Error('itemName required');
+      const itms = ITMS();
+      if (itms.rows.some(r => r.ItemName === itemName)) throw new Error('item already exists');
+      itms.rows.push({ ItemName: itemName, Section: section, AccountType: accountType });
+      await DATA.save('data/items.csv', `Add item ${itemName}`);
+      return { ok: true };
+    }
+
+    // PUT /items/{name}
+    if ((m = rawPath.match(/^\/items\/(.+)$/)) && method === 'PUT') {
+      const name = decodeURIComponent(m[1]); const itms = ITMS();
+      const found = itms.rows.find(r => r.ItemName === name);
+      if (!found) throw new Error('item not found');
+      found.ItemName    = body.itemName    || name;
+      found.Section     = body.section     || found.Section;
+      found.AccountType = body.accountType !== undefined ? body.accountType : found.AccountType;
+      await DATA.save('data/items.csv', `Update item ${name}`);
+      return { ok: true };
+    }
+
+    // DELETE /items/{name}
+    if ((m = rawPath.match(/^\/items\/(.+)$/)) && method === 'DELETE') {
+      const name = decodeURIComponent(m[1]); const itms = ITMS();
+      itms.rows = itms.rows.filter(r => r.ItemName !== name);
+      await DATA.save('data/items.csv', `Delete item ${name}`);
+      return { ok: true };
+    }
+
+    // GET /income/sources  ← before /income/{month}/{year}
+    if (method === 'GET' && rawPath === '/income/sources')
+      return ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName);
+
+    // GET /income/year/{year}/totals  ← before /income/{month}/{year}
+    if ((m = rawPath.match(/^\/income\/year\/(\d+)\/totals$/)) && method === 'GET') {
+      const yr = m[1]; const totals = {};
+      INC().rows.forEach(r => {
+        if (r.Year === yr && r.Type === 'Budget' && r.Items && r.CalculatedType !== 'Calculated')
+          totals[r.Items] = (totals[r.Items] || 0) + (parseFloat(r.SalaryPortion) || 0);
+      });
+      return totals;
+    }
+
+    // GET/POST /income/{month}/{year}
+    if (m = rawPath.match(/^\/income\/([^/]+)\/(\d+)$/)) {
+      const [, mo, yr] = m;
+      if (method === 'GET') return INC().rows.filter(r => r.Month === mo && r.Year === yr);
+      if (method === 'POST') {
+        const { name, period = 'Monthly' } = body;
+        if (!name) throw new Error('name required');
+        const inc = INC();
+        if (inc.rows.some(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name))
+          throw new Error('already exists for this month');
+        const col = _portionCol(name); _ensureCol(inc, col);
+        const row = {}; inc.headers.forEach(h => row[h] = '');
+        Object.assign(row, { Month: mo, Year: yr, Type: 'Income', Items: name, IncomePeriod: period });
+        inc.rows.push(row);
+        await DATA.save('data/income.csv', `Add income ${name} ${mo} ${yr}`);
+        const itms = ITMS();
+        if (!itms.rows.some(r => r.ItemName === name)) {
+          itms.rows.push({ ItemName: name, Section: 'Income', AccountType: '' });
+          await DATA.save('data/items.csv', `Add income item ${name}`);
+        }
+        return { ok: true };
+      }
+    }
+
+    // PUT /income/{month}/{year}/{name}/portion
+    if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/(.+)\/portion$/)) && method === 'PUT') {
+      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
+      const col = _portionCol(name); const inc = INC(); _ensureCol(inc, col);
+      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name);
+      if (!found) throw new Error('income source not found');
+      found[col] = String(body.amount || '');
+      await DATA.save('data/income.csv', `Income portion ${name} ${mo} ${yr}`);
+      return { ok: true };
+    }
+
+    // PUT /income/{month}/{year}/{name}/meta
+    if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/(.+)\/meta$/)) && method === 'PUT') {
+      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
+      const inc = INC();
+      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name);
+      if (!found) throw new Error('income source not found');
+      found.Items = body.name || name;
+      if (body.period) found.IncomePeriod = body.period;
+      await DATA.save('data/income.csv', `Income meta ${name} ${mo} ${yr}`);
+      return { ok: true };
+    }
+
+    // PUT /income/{month}/{year}/budget/{name}/daily  ← before generic /{name}
+    if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/budget\/(.+)\/daily$/)) && method === 'PUT') {
+      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
+      // 1. applies in income.csv
+      const inc = INC();
+      _WEEKDAYS.forEach(d => _ensureCol(inc, `${d}Applies`));
+      const incRow = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
+      if (incRow) _WEEKDAYS.forEach(d => { incRow[`${d}Applies`] = body[`${d.toLowerCase()}_applies`] === false ? 'false' : 'true'; });
+      await DATA.save('data/income.csv', `Daily applies ${name} ${mo} ${yr}`);
+      // 2. per-day amounts in days.csv
+      const daysData = DAYS_D(); const prefixes = _incPrefixes();
+      let colName = _daysItemCols(daysData.headers).find(c => _colToItem(c, prefixes) === name);
+      if (!colName) {
+        const primary = (INC().rows.find(r => r.Type === 'Income' && r.IncomePeriod === 'Monthly') || {}).Items || '';
+        colName = primary.replace(/ /g, '') + name || name;
+      }
+      _ensureCol(daysData, colName);
+      for (const row of daysData.rows) {
+        if (row.Month === mo && row.Year === yr) {
+          const dn = row.DayName;
+          const applies = body[`${dn.toLowerCase()}_applies`] !== false;
+          const amt = applies ? body[dn.toLowerCase()] : '';
+          row[colName] = (amt !== undefined && amt !== '') ? String(amt) : '';
+        }
+      }
+      await DATA.save('data/days.csv', `Daily amounts ${name} ${mo} ${yr}`);
+      // 3. period total
+      const period = `${mo} ${yr}`; const newPrefixes = _incPrefixes();
+      const newCols = _daysItemCols(daysData.headers); let total = 0;
+      daysData.rows.filter(r => r.MonthYearToUse === period).forEach(r => {
+        newCols.forEach(c => { if (_colToItem(c, newPrefixes) === name) total += parseFloat(r[c]) || 0; });
+      });
+      return { ok: true, total };
+    }
+
+    // PUT/DELETE /income/{month}/{year}/{name}
+    if (m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/(.+)$/)) {
+      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
+      if (method === 'PUT') {
+        const inc = INC();
+        const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name);
+        if (!found) throw new Error('income source not found');
+        found.Amount = String(body.amount || '');
+        await DATA.save('data/income.csv', `Income amount ${name} ${mo} ${yr}`);
+        return { ok: true };
+      }
+      if (method === 'DELETE') {
+        const inc = INC();
+        inc.rows = inc.rows.filter(r => !(r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name));
+        await DATA.save('data/income.csv', `Delete income ${name} ${mo} ${yr}`);
+        return { ok: true };
+      }
+    }
+
+    // GET /days/on/{date_str}
+    if ((m = rawPath.match(/^\/days\/on\/(.+)$/)) && method === 'GET') {
+      const dateStr = m[1];
+      const t = dateStr === 'today' ? new Date() : new Date(dateStr + 'T00:00:00');
+      const td = t.getDate(), tm = MONTH_NAMES[t.getMonth()], ty = String(t.getFullYear());
+      const daysData = DAYS_D(); const prefixes = _incPrefixes();
+      const itemCols = _daysItemCols(daysData.headers); const amounts = {};
+      for (const row of daysData.rows) {
+        if (String(row.Day) === String(td) && row.Month === tm && row.Year === ty) {
+          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) amounts[item] = (amounts[item] || 0) + (parseFloat(row[c]) || 0); });
+          break;
+        }
+      }
+      const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][t.getDay()];
+      const iso = `${ty}-${String(t.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
+      return { date: iso, dayName, amounts };
+    }
+
+    // GET /days/today/summary
+    if (method === 'GET' && rawPath === '/days/today/summary') {
+      const today = new Date();
+      const td = today.getDate(), tm = MONTH_NAMES[today.getMonth()], ty = String(today.getFullYear());
+      const daysData = DAYS_D(); const prefixes = _incPrefixes();
+      const itemCols = _daysItemCols(daysData.headers);
+      const daily = {}, yearlyTotals = {}; let periodName = '';
+      for (const row of daysData.rows) {
+        if (String(row.Day) === String(td) && row.Month === tm && row.Year === ty) {
+          periodName = row.MonthYearToUse || '';
+          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) daily[item] = (daily[item] || 0) + (parseFloat(row[c]) || 0); });
+        }
+        if (row.Year === ty) {
+          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) yearlyTotals[item] = (yearlyTotals[item] || 0) + (parseFloat(row[c]) || 0); });
+        }
+      }
+      const periodTotals = {};
+      if (periodName) {
+        daysData.rows.filter(r => r.MonthYearToUse === periodName).forEach(row =>
+          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) periodTotals[item] = (periodTotals[item] || 0) + (parseFloat(row[c]) || 0); })
+        );
+      }
+      const periodBudget = { ...periodTotals };
+      if (periodName) {
+        const lastSpace = periodName.lastIndexOf(' ');
+        const pMonth = periodName.slice(0, lastSpace), pYear = periodName.slice(lastSpace + 1);
+        INC().rows.forEach(r => {
+          if (r.Month === pMonth && r.Year === pYear && r.Type === 'Budget' && r.CalculatedType !== 'Calculated')
+            periodBudget[r.Items] = parseFloat(r.SalaryPortion) || 0;
+        });
+      }
+      const iso = `${ty}-${String(today.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
+      return { date: iso, period: periodName, daily, periodBudget, yearlyTotals };
+    }
+
+    // GET /days/{month}/{year}/totals
+    if ((m = rawPath.match(/^\/days\/([^/]+)\/(\d+)\/totals$/)) && method === 'GET') {
+      const [, mo, yr] = m; const period = `${mo} ${yr}`;
+      const daysData = DAYS_D(); const prefixes = _incPrefixes();
+      const itemCols = _daysItemCols(daysData.headers); const totals = {};
+      daysData.rows.filter(r => r.MonthYearToUse === period).forEach(row =>
+        itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) totals[item] = (totals[item] || 0) + (parseFloat(row[c]) || 0); })
+      );
+      return totals;
+    }
+
+    // GET /days/{month}/{year}/{name}/amounts
+    if ((m = rawPath.match(/^\/days\/([^/]+)\/(\d+)\/(.+)\/amounts$/)) && method === 'GET') {
+      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
+      const daysData = DAYS_D(); const prefixes = _incPrefixes();
+      const itemCols = _daysItemCols(daysData.headers);
+      const colName  = itemCols.find(c => _colToItem(c, prefixes) === name) || name;
+      const amounts  = {};
+      for (const row of daysData.rows) {
+        if (row.Month === mo && row.Year === yr && !(row.DayName in amounts))
+          amounts[row.DayName] = parseFloat(row[colName]) || 0;
+      }
+      const applies = {};
+      _WEEKDAYS.forEach(d => applies[d] = true);
+      const incRow = INC().rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
+      if (incRow) _WEEKDAYS.forEach(d => { if (String(incRow[`${d}Applies`]).toLowerCase() === 'false') applies[d] = false; });
+      const result = {};
+      _WEEKDAYS.forEach(d => result[d] = { amount: amounts[d] || 0, applies: applies[d] });
+      return result;
+    }
+
+    // GET /account-defs
+    if (method === 'GET' && rawPath === '/account-defs')
+      return ITMS().rows.filter(r => r.Section === 'Accounts').map(r => ({ AccountName: r.ItemName, Type: r.AccountType || '' }));
+
+    // POST /account-defs
+    if (method === 'POST' && rawPath === '/account-defs') {
+      const { accountName, type = 'Bank' } = body;
+      if (!accountName) throw new Error('accountName required');
+      const itms = ITMS();
+      if (itms.rows.some(r => r.ItemName === accountName && r.Section === 'Accounts')) throw new Error('account already exists');
+      itms.rows.push({ ItemName: accountName, Section: 'Accounts', AccountType: type });
+      await DATA.save('data/items.csv', `Add account ${accountName}`);
+      return { ok: true };
+    }
+
+    // PUT /account-defs/{name}
+    if ((m = rawPath.match(/^\/account-defs\/(.+)$/)) && method === 'PUT') {
+      const name = decodeURIComponent(m[1]);
+      const { accountName: newName = name, type: newType = '' } = body;
+      const itms = ITMS();
+      const found = itms.rows.find(r => r.ItemName === name && r.Section === 'Accounts');
+      if (!found) throw new Error('account not found');
+      found.ItemName = newName; if (newType) found.AccountType = newType;
+      await DATA.save('data/items.csv', `Update account ${name}`);
+      if (newName !== name) {
+        const txns = TXNS();
+        txns.rows.forEach(r => { if (r.AccountName === name) r.AccountName = newName; });
+        await DATA.save('data/transactions.csv', `Rename account ${name}`);
+      }
+      return { ok: true };
+    }
+
+    // DELETE /account-defs/{name}
+    if ((m = rawPath.match(/^\/account-defs\/(.+)$/)) && method === 'DELETE') {
+      const name = decodeURIComponent(m[1]);
+      const itms = ITMS();
+      itms.rows = itms.rows.filter(r => !(r.ItemName === name && r.Section === 'Accounts'));
+      await DATA.save('data/items.csv', `Delete account ${name}`);
+      const txns = TXNS();
+      txns.rows = txns.rows.filter(r => r.AccountName !== name);
+      await DATA.save('data/transactions.csv', `Delete account txns ${name}`);
+      return { ok: true };
+    }
+
+    // GET /accounts
+    if (method === 'GET' && rawPath === '/accounts') return TXNS().rows;
+
+    // DELETE /accounts/transaction/{id}
+    if ((m = rawPath.match(/^\/accounts\/transaction\/(.+)$/)) && method === 'DELETE') {
+      const id = decodeURIComponent(m[1]); const txns = TXNS();
+      txns.rows = txns.rows.filter(r => r.TransactionID !== id);
+      await DATA.save('data/transactions.csv', `Delete txn ${id}`);
+      return { ok: true };
+    }
+
+    // POST /accounts/transaction
+    if (method === 'POST' && rawPath === '/accounts/transaction') {
+      const txns = TXNS();
+      const row = {}; txns.headers.forEach(h => row[h] = '');
+      Object.assign(row, {
+        TransactionID: _genTxnId(txns.rows),
+        AccountName:   body.accountName   || '',
+        Item:          body.item          || '',
+        IncomePeriod:  body.incomePeriod  || '',
+        MonthReceived: body.monthReceived || '',
+        YearReceived:  String(body.yearReceived  || ''),
+        MonthFor:      body.monthFor      || '',
+        YearFor:       String(body.yearFor       || ''),
+        Credit:        String(parseFloat(body.credit || 0)),
+      });
+      txns.rows.push(row);
+      await DATA.save('data/transactions.csv', `Add txn ${row.TransactionID}`);
+      const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
+      if (incomeSet.has(row.Item)) {
+        _syncTxnToIncome(row.Item, row.MonthReceived, row.YearReceived, parseFloat(row.Credit), row.IncomePeriod);
+        await DATA.save('data/income.csv', `Sync income ${row.Item}`);
+      }
+      return { ok: true };
+    }
+
+    // PUT /accounts/transaction
+    if (method === 'PUT' && rawPath === '/accounts/transaction') {
+      const txns = TXNS(); const tid = body.transactionId || '';
+      const row = txns.rows.find(r => tid && r.TransactionID === tid) ||
+                  txns.rows.find(r => r.AccountName === (body.oldAccountName || body.accountName) &&
+                                      r.Item         === (body.oldItem        || body.item) &&
+                                      r.MonthFor     === (body.oldMonthFor    || body.monthFor) &&
+                                      r.YearFor      === String(body.oldYearFor || body.yearFor));
+      if (!row) throw new Error('transaction not found');
+      row.AccountName   = body.accountName   || row.AccountName;
+      row.Item          = body.item          || row.Item;
+      row.MonthFor      = body.monthFor      || row.MonthFor;
+      row.YearFor       = String(body.yearFor      || row.YearFor);
+      row.Credit        = String(parseFloat(body.credit !== undefined ? body.credit : row.Credit) || 0);
+      row.IncomePeriod  = body.incomePeriod  || row.IncomePeriod;
+      row.MonthReceived = body.monthReceived || row.MonthReceived;
+      row.YearReceived  = String(body.yearReceived || row.YearReceived);
+      await DATA.save('data/transactions.csv', `Update txn ${row.TransactionID}`);
+      const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
+      if (incomeSet.has(row.Item)) {
+        _syncTxnToIncome(row.Item, row.MonthReceived, row.YearReceived, parseFloat(row.Credit), row.IncomePeriod);
+        await DATA.save('data/income.csv', `Sync income ${row.Item}`);
+      }
+      return { ok: true };
+    }
+
+    // DELETE /accounts/{acct}/transaction/{item}/{month}/{year}
+    if ((m = rawPath.match(/^\/accounts\/(.+)\/transaction\/(.+)\/(.+)\/(.+)$/)) && method === 'DELETE') {
+      const a = decodeURIComponent(m[1]), it = decodeURIComponent(m[2]),
+            mf = decodeURIComponent(m[3]), yf = decodeURIComponent(m[4]);
+      const txns = TXNS();
+      txns.rows = txns.rows.filter(r => !(r.AccountName === a && r.Item === it && r.MonthFor === mf && r.YearFor === yf));
+      await DATA.save('data/transactions.csv', `Delete txn ${a} ${it}`);
+      return { ok: true };
+    }
+
+    throw new Error(`LocalAPI: unhandled ${method} ${rawPath}`);
+  },
+};
 
 /* ── "All months" (whole-year) scope ───────────────────────────────────────── */
 function isAllMonths() {
@@ -1713,20 +2465,51 @@ const fmtPct = (n) => `${parseFloat(n).toFixed(1)}%`;
 const $ = (id) => document.getElementById(id);
 
 async function apiFetch(path, opts = {}) {
-  const url = `${API}${path}`;
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opts,
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  // handle plain text
-  const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')) return res.json();
-  return res.text();
+  return LocalAPI.route(path, opts);
 }
 
 function showOfflineBanner(show) {
   $('offline-banner').classList.toggle('show', show);
+}
+
+function showSetupScreen(errMsg) {
+  $('setup-screen').classList.add('show');
+  const errEl = $('setup-error');
+  if (errMsg) { errEl.textContent = errMsg; errEl.classList.add('show'); }
+  else errEl.classList.remove('show');
+}
+
+async function saveGHToken() {
+  const token = $('gh-token-input').value.trim();
+  if (!token) {
+    const errEl = $('setup-error');
+    errEl.textContent = 'Please enter a token.';
+    errEl.classList.add('show');
+    return;
+  }
+  localStorage.setItem('gh_token', token);
+  const btn = $('setup-screen').querySelector('.setup-btn');
+  btn.textContent = 'Connecting…'; btn.disabled = true;
+  $('setup-error').classList.remove('show');
+  try {
+    await DATA.loadAll();
+    $('setup-screen').classList.remove('show');
+    const hashPage  = window.location.hash.replace('#', '');
+    const startPage = VALID_PAGES.includes(hashPage) ? hashPage : 'dashboard';
+    navigate(startPage);
+    loadBudgetItems();
+    try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
+    await fetchMonths();
+    if (S.currentPage === 'budget')      renderBudgetPage();
+    if (S.currentPage === 'budget-plan') renderBpPage();
+  } catch (err) {
+    localStorage.removeItem('gh_token');
+    const errEl = $('setup-error');
+    errEl.textContent = 'Connection failed: ' + err.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.textContent = 'Connect'; btn.disabled = false;
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -3755,18 +4538,27 @@ document.addEventListener('keydown', (e) => {
    INIT
    ════════════════════════════════════════════════════════════════════════════ */
 async function init() {
-  // restore page from URL hash
-  const hashPage = window.location.hash.replace('#', '');
+  const token = localStorage.getItem('gh_token');
+  if (!token) { showSetupScreen(); return; }
+
+  if ($('monthTriggerValue')) $('monthTriggerValue').textContent = 'Loading…';
+
+  try {
+    await DATA.loadAll();
+  } catch (err) {
+    showOfflineBanner(true);
+    if ($('monthTriggerValue')) $('monthTriggerValue').textContent = 'Error';
+    return;
+  }
+
+  const hashPage  = window.location.hash.replace('#', '');
   const startPage = VALID_PAGES.includes(hashPage) ? hashPage : 'dashboard';
   navigate(startPage);
 
   loadBudgetItems();
-  // load account defs + transactions early so income page knows which sources are account-managed
-  Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')])
-    .then(([defs, rows]) => { AC.defs = defs || []; AC.rows = rows || []; })
-    .catch(() => {});
+  try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
   await fetchMonths();
-  if (S.currentPage === 'budget') renderBudgetPage();
+  if (S.currentPage === 'budget')      renderBudgetPage();
   if (S.currentPage === 'budget-plan') renderBpPage();
 }
 
