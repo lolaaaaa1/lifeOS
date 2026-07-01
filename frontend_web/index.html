@@ -1,0 +1,3776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
+  <title>lifeOS — Personal Finance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & tokens ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f5f0e8;
+      --surface:   #faf7f2;
+      --accent:    #5c6650;
+      --accent-dk: #2c3024;
+      --ink:       #1a1f16;
+      --ink-lt:    #4a5240;
+      --muted:     #8a9080;
+      --border:    #e0dbd0;
+      --red:       #a8533f;
+      --green:     #3a6b4a;
+      --gold:      #8a6a30;
+      --sidebar-w: 260px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────────────── */
+    #app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────────── */
+    #sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--accent-dk);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .sidebar-logo .wordmark {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 22px;
+      color: #faf7f2;
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar-logo .tagline {
+      font-size: 11px;
+      color: rgba(250,247,242,0.4);
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(250,247,242,0.3);
+      padding: 12px 12px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: rgba(250,247,242,0.55);
+      font-size: 13.5px;
+      font-weight: 400;
+      transition: background 0.15s, color 0.15s;
+      user-select: none;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.07);
+      color: rgba(250,247,242,0.85);
+    }
+
+    .nav-item.active {
+      background: rgba(255,255,255,0.12);
+      color: #faf7f2;
+      font-weight: 500;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    /* ── Month selector ──────────────────────────────────────────────────────── */
+    .month-selector {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 14px 12px;
+      position: relative;
+    }
+
+    .month-selector-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: background 0.15s;
+      user-select: none;
+    }
+
+    .month-selector-trigger:hover { background: rgba(255,255,255,0.1); }
+
+    .month-trigger-left { display: flex; flex-direction: column; gap: 1px; }
+    .month-trigger-weeks { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.04em; line-height: 1.2; }
+
+    .month-trigger-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(250,247,242,0.35);
+    }
+
+    .month-trigger-value {
+      font-size: 13px;
+      font-weight: 500;
+      color: #faf7f2;
+    }
+
+    .month-trigger-caret {
+      color: rgba(250,247,242,0.4);
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+
+    .month-trigger-caret.open { transform: rotate(180deg); }
+
+    .month-dropdown {
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 12px;
+      right: 12px;
+      background: #1e231a;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      display: none;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .month-dropdown.open { display: block; }
+
+    .month-dropdown-item {
+      padding: 9px 14px;
+      font-size: 13px;
+      color: rgba(250,247,242,0.6);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+
+    .month-dropdown-item:hover { background: rgba(255,255,255,0.07); color: #faf7f2; }
+    .month-dropdown-item.selected { color: #faf7f2; font-weight: 500; background: rgba(255,255,255,0.1); }
+
+    /* ── Main content ────────────────────────────────────────────────────────── */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    .page { display: none; padding: 40px 44px 60px; max-width: 960px; }
+    .page.active { display: block; }
+
+    /* ── Page header ─────────────────────────────────────────────────────────── */
+    .page-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .page-title {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 34px;
+      color: var(--ink);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      margin-bottom: 32px;
+    }
+
+    .page-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .page-header-row .page-title { margin-bottom: 0; }
+
+    /* ── KPI cards ───────────────────────────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+
+    .kpi-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .kpi-value {
+      font-family: 'Fraunces', serif;
+      font-weight: 400;
+      font-size: 28px;
+      color: var(--ink);
+      letter-spacing: -0.5px;
+    }
+
+    .kpi-value.positive { color: var(--green); }
+    .kpi-value.negative { color: var(--red); }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Salary card ─────────────────────────────────────────────────────────── */
+    .salary-card {
+      background: var(--accent-dk);
+      border-radius: 14px;
+      padding: 26px 28px;
+      margin-bottom: 28px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      position: relative;
+    }
+
+    .salary-card:hover { opacity: 0.95; }
+
+    .salary-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .salary-card-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: rgba(250,247,242,0.45);
+    }
+
+    .salary-card-edit-hint {
+      font-size: 11px;
+      color: rgba(250,247,242,0.3);
+    }
+
+    .salary-card-amount {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 40px;
+      color: #faf7f2;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .salary-card-amount.empty {
+      font-size: 22px;
+      font-style: normal;
+      opacity: 0.45;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    .salary-split {
+      display: flex;
+      gap: 28px;
+      margin-bottom: 16px;
+    }
+
+    .salary-split-item { display: flex; flex-direction: column; gap: 2px; }
+
+    .salary-split-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(250,247,242,0.35);
+    }
+
+    .salary-split-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: rgba(250,247,242,0.85);
+    }
+
+    .salary-progress-wrap {
+      background: rgba(255,255,255,0.1);
+      border-radius: 50px;
+      height: 4px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .salary-progress-fill {
+      height: 100%;
+      background: rgba(250,247,242,0.55);
+      border-radius: 50px;
+      transition: width 0.4s ease;
+    }
+
+    .salary-progress-text {
+      font-size: 11px;
+      color: rgba(250,247,242,0.35);
+    }
+
+    /* ── Budget section ──────────────────────────────────────────────────────── */
+    .budget-section { margin-bottom: 28px; }
+
+    .budget-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .budget-section-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+    }
+
+    .budget-section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .budget-section-total {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .budget-items { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── Dashboard ──────────────────────────────────────────────────────────── */
+    .dash-section { margin-bottom: 28px; }
+
+    .dash-section-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .dash-section-hdr.collapsible { cursor: pointer; user-select: none; }
+    .dash-section-hdr.collapsible:hover .dash-section-label { color: var(--ink-lt); }
+
+    .dash-section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      transition: color 0.15s;
+    }
+
+    .dash-chevron {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1;
+      transition: transform 0.2s;
+    }
+
+    .dash-section-body {
+      overflow: hidden;
+      max-height: 2400px;
+      transition: max-height 0.3s ease;
+    }
+    .dash-section-body.closed { max-height: 0; }
+
+    .dash-swiper {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .dash-swiper::-webkit-scrollbar { display: none; }
+
+    .dash-slide {
+      min-width: 100%;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+      padding: 20px 0 4px;
+    }
+
+    .dash-slide-period {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 22px;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+      margin-bottom: 16px;
+    }
+
+    .dash-items {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dash-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .dash-item-row:first-child { border-top: 1px solid var(--border); }
+
+    .dash-item-name { font-size: 14px; color: var(--ink-lt); }
+
+    .dash-item-amount {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .dash-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 14px 0 0;
+    }
+
+    .dash-total-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .dash-total-amount {
+      font-family: 'Fraunces', serif;
+      font-weight: 400;
+      font-size: 24px;
+      color: var(--ink);
+      letter-spacing: -0.4px;
+    }
+
+    .dash-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 14px 0 0;
+    }
+
+    .dash-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+    .dash-dot.active { background: var(--accent); }
+
+    .budget-item-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .budget-item-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .budget-item-left { flex: 1; min-width: 0; }
+
+    .budget-item-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .budget-item-sublabel {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .budget-item-right { text-align: right; flex-shrink: 0; }
+
+    .budget-item-amount {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .budget-item-pct {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .budget-item-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+
+    .budget-item-bar-wrap {
+      margin-top: 10px;
+      background: var(--border);
+      border-radius: 50px;
+      height: 3px;
+      overflow: hidden;
+    }
+
+    .budget-item-bar-fill {
+      height: 100%;
+      border-radius: 50px;
+      transition: width 0.4s ease;
+    }
+
+    .bar-obligation { background: var(--gold); }
+    .bar-saving     { background: var(--green); }
+
+    /* ── Account transaction sub-rows ───────────────────────────────────────── */
+    .txn-list {
+      display: none;
+      margin: 12px -16px -14px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      border-radius: 0 0 12px 12px;
+      padding: 0 16px 4px;
+    }
+
+    .txn-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .txn-row:last-of-type { border-bottom: none; }
+
+    .txn-row-left { flex: 1; min-width: 0; }
+
+    .txn-row-item {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--ink-lt);
+      margin-bottom: 2px;
+    }
+
+    .txn-row-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+    }
+
+    .txn-row-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .txn-row-amount {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .txn-add-btn {
+      display: block;
+      width: 100%;
+      padding: 10px 0;
+      color: var(--muted);
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: color 0.15s;
+    }
+    .txn-add-btn:hover { color: var(--accent); }
+    .bar-living     { background: var(--accent); }
+
+    /* ── Buttons ─────────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent-dk);
+      color: #faf7f2;
+      padding: 10px 20px;
+    }
+
+    .btn-primary:hover { background: #1e231a; }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-lt);
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: var(--border); }
+
+    .btn-icon {
+      background: transparent;
+      color: var(--muted);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+
+    .btn-icon:hover { background: var(--border); color: var(--ink-lt); }
+
+    .btn-icon.danger:hover { background: #fdecea; color: var(--red); border-color: #f5c8c0; }
+
+    .btn-sm {
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    /* ── Empty state ─────────────────────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+
+    .empty-state-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink-lt);
+      margin-bottom: 6px;
+    }
+
+    .empty-state-sub { font-size: 13px; }
+
+    /* ── Modal overlay ───────────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26,31,22,0.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(26,31,22,0.2);
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+      opacity: 0;
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 22px;
+      color: var(--ink);
+      letter-spacing: -0.3px;
+      margin-bottom: 24px;
+    }
+
+    .modal-header .modal-title {
+      flex: 1;
+      margin-bottom: 0;
+      font-size: 18px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 28px;
+    }
+
+    /* ── Form elements ───────────────────────────────────────────────────────── */
+    .form-field { margin-bottom: 20px; }
+
+    .form-label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(92,102,80,0.15);
+    }
+
+    .form-input:disabled {
+      background: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ── Toggle group ────────────────────────────────────────────────────────── */
+    .toggle-group {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 7px 14px;
+      border-radius: 50px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent-dk);
+      color: #faf7f2;
+    }
+
+    /* ── Offline banner ──────────────────────────────────────────────────────── */
+    #offline-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-dk);
+      color: rgba(250,247,242,0.9);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      z-index: 200;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      display: none;
+      max-width: 520px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    #offline-banner code {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      background: rgba(255,255,255,0.1);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    #offline-banner.show { display: block; }
+
+    /* ── Placeholder pages ───────────────────────────────────────────────────── */
+    .placeholder-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .placeholder-page .ph-icon {
+      font-size: 48px;
+      opacity: 0.3;
+      margin-bottom: 16px;
+    }
+
+    .placeholder-page h2 {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 24px;
+      color: var(--ink-lt);
+      margin-bottom: 8px;
+    }
+
+    .placeholder-page p { font-size: 13px; }
+
+    /* ── Scrollbar ───────────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ── Mobile header ───────────────────────────────────────────────────────── */
+    #mobile-header {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: calc(52px + env(safe-area-inset-top, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+      background: var(--accent-dk);
+      z-index: 150;
+      align-items: center;
+      padding-left: 8px;
+      padding-right: 4px;
+      gap: 4px;
+    }
+
+    #mobile-hamburger {
+      background: none; border: none; cursor: pointer;
+      padding: 10px; color: rgba(250,247,242,0.85);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #mobile-title {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 19px;
+      color: #faf7f2;
+      flex: 1;
+      letter-spacing: -0.3px;
+    }
+
+    #mobile-month-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: rgba(250,247,242,0.55);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50px;
+      padding: 5px 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Sidebar overlay ─────────────────────────────────────────────────────── */
+    #sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(26,31,22,0.5);
+      z-index: 190;
+    }
+
+    #sidebar-overlay.open { display: block; }
+
+    /* ── Bottom nav ──────────────────────────────────────────────────────────── */
+    #bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 150;
+      align-items: stretch;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .bnav-item {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; cursor: pointer; border: none; background: none;
+      color: var(--muted); font-size: 9px;
+      font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 9px 4px 8px;
+      transition: color 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .bnav-item.active { color: var(--accent-dk); }
+
+    .bnav-item svg {
+      width: 20px; height: 20px;
+      stroke-width: 1.5;
+      transition: transform 0.1s;
+    }
+
+    .bnav-item:active svg { transform: scale(0.88); }
+
+    /* ── Responsive: iPad (≤ 1024px) ────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      :root { --sidebar-w: 220px; }
+      .page { padding: 32px 28px 48px; }
+    }
+
+    /* ── Responsive: iPhone (≤ 768px) ───────────────────────────────────────── */
+    @media (max-width: 768px) {
+      #mobile-header { display: flex; }
+      #bottom-nav    { display: flex; }
+
+      #sidebar {
+        position: fixed;
+        left: 0; top: 0; bottom: 0;
+        z-index: 200;
+        transform: translateX(-100%);
+        transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
+        width: 280px !important;
+        min-width: 280px !important;
+        box-shadow: 6px 0 32px rgba(0,0,0,0.35);
+        padding-top: env(safe-area-inset-top, 0px) !important;
+      }
+
+      #sidebar.open { transform: translateX(0); }
+
+      #app {
+        padding-top: calc(52px + env(safe-area-inset-top, 0px));
+      }
+
+      #main {
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .page {
+        padding: 24px 16px 32px;
+        max-width: 100%;
+      }
+
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .kpi-card { padding: 16px; }
+
+      .kpi-value { font-size: 22px; }
+
+      .page-title { font-size: 26px; margin-bottom: 20px; }
+
+      .page-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .page-header-row .page-title { margin-bottom: 0; }
+
+      .salary-card { padding: 20px; margin-bottom: 20px; }
+
+      .salary-card-amount { font-size: 30px; }
+
+      .salary-split { gap: 16px; flex-wrap: wrap; }
+
+      .budget-section { margin-bottom: 20px; }
+
+      /* centered window on mobile — same as desktop, just narrower */
+      .modal {
+        width: calc(100% - 32px);
+        overflow-y: auto;
+        max-height: calc(100vh - 40px);
+        /* extra space at bottom so keyboard covers empty area, not content */
+        padding-bottom: 160px;
+      }
+    }
+
+    /* ── Tiny phone (≤ 390px) ────────────────────────────────────────────────── */
+    @media (max-width: 390px) {
+      .budget-item-actions { gap: 2px; }
+      .btn-icon { padding: 4px 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Mobile header (hidden on desktop) -->
+<header id="mobile-header">
+  <button id="mobile-hamburger" onclick="toggleMobileSidebar()" aria-label="Menu">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M3 6h16M3 11h16M3 16h16"/>
+    </svg>
+  </button>
+  <span id="mobile-title">lifeOS</span>
+  <span class="month-selector" style="border-top:none;padding:0;position:relative;">
+    <span id="mobile-month-pill" onclick="toggleMobileMonthDropdown()">Period</span>
+    <div class="month-dropdown" id="mobileMonthDropdown" style="top:calc(100% + 8px);bottom:auto;left:auto;right:0;width:180px;"></div>
+  </span>
+</header>
+
+<!-- Sidebar overlay (mobile only) -->
+<div id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+<div id="app">
+  <!-- ── Sidebar ───────────────────────────────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="wordmark">lifeOS</div>
+      <div class="tagline">Personal Finance</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Finance</div>
+      <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1" y="1" width="6" height="6" rx="1.5"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5"/>
+        </svg>
+        Dashboard
+      </button>
+      <button class="nav-item" data-page="transactions" onclick="navigate('transactions')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 5h12M2 8h8M2 11h5"/>
+        </svg>
+        Transactions
+      </button>
+      <button class="nav-item" data-page="budget" onclick="navigate('budget')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="8" cy="8" r="6.5"/>
+          <path d="M8 4.5v7M5.5 6.5c0-1.1.9-2 2.5-2s2.5.9 2.5 2-1 1.5-2.5 2-2.5.9-2.5 2 .9 2 2.5 2 2.5-.9 2.5-2"/>
+        </svg>
+        Income
+      </button>
+      <button class="nav-item" data-page="budget-plan" onclick="navigate('budget-plan')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1.5" y="1.5" width="13" height="13" rx="2"/>
+          <path d="M4 5.5h8M4 8h6M4 10.5h4"/>
+        </svg>
+        Budget
+      </button>
+      <button class="nav-item" data-page="accounts" onclick="navigate('accounts')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1.5" y="3.5" width="13" height="9" rx="2"/>
+          <path d="M1.5 6.5h13"/>
+          <rect x="3.5" y="8.5" width="3" height="1.5" rx="0.5"/>
+        </svg>
+        Accounts
+      </button>
+
+      <div class="nav-section-label" style="margin-top:8px;">Planning</div>
+      <button class="nav-item" data-page="goals" onclick="navigate('goals')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 8A6 6 0 1 1 8 2"/>
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M14 2l-3 3M14 2h-3M14 2v3"/>
+        </svg>
+        Goals
+      </button>
+      <button class="nav-item" data-page="loans" onclick="navigate('loans')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 4h10a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/>
+          <path d="M4 8v3.5M8 8v3.5M12 8v3.5M2 11.5h12"/>
+        </svg>
+        Loans
+      </button>
+    </nav>
+
+    <!-- Month selector -->
+    <div class="month-selector">
+      <div class="month-selector-trigger" id="monthTrigger" onclick="toggleMonthDropdown()">
+        <div class="month-trigger-left">
+          <span class="month-trigger-label">Period</span>
+          <span class="month-trigger-value" id="monthTriggerValue">Loading…</span>
+          <span class="month-trigger-weeks" id="monthTriggerWeeks"></span>
+        </div>
+        <span class="month-trigger-caret" id="monthCaret">▼</span>
+      </div>
+      <div class="month-dropdown" id="monthDropdown"></div>
+    </div>
+  </aside>
+
+  <!-- ── Main content ──────────────────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- Dashboard page -->
+    <div class="page active" id="page-dashboard">
+      <div id="dash-calc-items"></div>
+    </div>
+
+    <!-- Budget page -->
+    <div class="page" id="page-budget">
+      <div class="page-header-row">
+        <div>
+          <div class="page-eyebrow">Finance</div>
+          <div class="page-title">Income</div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddIncomeModal()" style="margin-top:12px;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2v10M2 7h10"/></svg>
+          Add Income
+        </button>
+      </div>
+
+      <!-- View toggle -->
+      <div style="display:flex;gap:0;margin-bottom:20px;background:var(--border);border-radius:50px;padding:3px;width:fit-content;">
+        <button id="icViewMonthFor" onclick="setIncomeView('monthFor')"
+          style="border:none;background:var(--accent-dk);color:#faf7f2;border-radius:50px;padding:7px 18px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;transition:all 0.15s;">
+          Month For
+        </button>
+        <button id="icViewMonthRecv" onclick="setIncomeView('monthReceived')"
+          style="border:none;background:transparent;color:var(--muted);border-radius:50px;padding:7px 18px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;transition:all 0.15s;">
+          Month Received
+        </button>
+      </div>
+
+      <!-- Income sources by period -->
+      <div id="incomeSections"></div>
+    </div>
+
+    <!-- Budget page -->
+    <div class="page" id="page-budget-plan">
+      <div class="page-header-row">
+        <div>
+          <div class="page-eyebrow">Finance</div>
+          <div class="page-title">Budget</div>
+        </div>
+        <button class="btn btn-primary" onclick="openBudgetItemModal(null)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2v10M2 7h10"/></svg>
+          Add Item
+        </button>
+      </div>
+
+      <!-- View toggle -->
+      <div style="display:flex;gap:0;margin-bottom:20px;background:var(--border);border-radius:50px;padding:3px;width:fit-content;">
+        <button id="bpViewItem" onclick="setBudgetView('item')"
+          style="border:none;background:transparent;color:var(--muted);border-radius:50px;padding:7px 18px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;transition:all 0.15s;">
+          By Item
+        </button>
+        <button id="bpViewIncome" onclick="setBudgetView('income')"
+          style="border:none;background:var(--accent-dk);color:#faf7f2;border-radius:50px;padding:7px 18px;font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;transition:all 0.15s;">
+          By Income
+        </button>
+      </div>
+
+      <!-- Item list -->
+      <div id="bpGroups"></div>
+    </div>
+
+    <!-- Transactions page -->
+    <div class="page" id="page-transactions">
+      <div class="placeholder-page">
+        <div class="ph-icon">↕</div>
+        <h2>Transactions</h2>
+        <p>Coming soon — transaction tracking will appear here.</p>
+      </div>
+    </div>
+
+    <!-- Accounts page -->
+    <div class="page" id="page-accounts">
+      <div class="page-content">
+        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span style="font-size:13px;font-weight:600;opacity:.5;letter-spacing:.05em;text-transform:uppercase;">Accounts</span>
+          <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()">+ Add Account</button>
+        </div>
+        <div id="accountsList"></div>
+      </div>
+    </div>
+
+    <!-- Goals page -->
+    <div class="page" id="page-goals">
+      <div class="placeholder-page">
+        <div class="ph-icon">🎯</div>
+        <h2>Goals</h2>
+        <p>Coming soon — savings goals will appear here.</p>
+      </div>
+    </div>
+
+    <!-- Loans page -->
+    <div class="page" id="page-loans">
+      <div class="placeholder-page">
+        <div class="ph-icon">🏦</div>
+        <h2>Loans</h2>
+        <p>Coming soon — loan tracking will appear here.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── Add / Edit Account modal ───────────────────────────────────────── -->
+<div class="modal-overlay" id="addAccountModalOverlay" onclick="closeAddAccountModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="addAccountModalTitle">Add Account</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeAddAccountModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAccountDef()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Account Name</label>
+      <input id="acctDefName" class="form-input" type="text" placeholder="e.g. Ecobank">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Account Type</label>
+      <div class="toggle-row" id="accountTypeToggle">
+        <button class="toggle-btn active" onclick="setAccountType('Bank')">Bank</button>
+        <button class="toggle-btn" onclick="setAccountType('Mobile Money')">MoMo</button>
+        <button class="toggle-btn" onclick="setAccountType('Cash')">Cash</button>
+        <button class="toggle-btn" onclick="setAccountType('Investment')">Investment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Record Transaction modal ───────────────────────────────────────── -->
+<div class="modal-overlay" id="accountModalOverlay" onclick="closeAccountModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="accountModalTitle">Record Transaction</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeAccountModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAccountTxn()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Account</label>
+      <div id="acctTxnAccountDisplay" class="form-input" style="background:rgba(0,0,0,0.04);cursor:default;"></div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Item</label>
+      <select id="acctTxnItem" class="form-input" onchange="onAcctItemChange(this.value)"></select>
+    </div>
+    <div class="form-field" id="acctIncomePeriodField">
+      <label class="form-label">Income Period</label>
+      <div class="toggle-row" id="acctIncomePeriodToggle">
+        <button class="toggle-btn active" onclick="setAcctIncomePeriod('Monthly')">Monthly</button>
+        <button class="toggle-btn" onclick="setAcctIncomePeriod('Weekly')">Weekly</button>
+        <button class="toggle-btn" onclick="setAcctIncomePeriod('Variable')">Variable</button>
+      </div>
+    </div>
+    <div id="acctMonthForRow" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-field">
+        <label class="form-label">Month For</label>
+        <select id="acctTxnMonthFor" class="form-input"></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Year For</label>
+        <input id="acctTxnYearFor" class="form-input" type="number" placeholder="2026">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-field">
+        <label class="form-label">Month Received</label>
+        <select id="acctTxnMonthRecv" class="form-input"></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Year Received</label>
+        <input id="acctTxnYearRecv" class="form-input" type="number" placeholder="2026">
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Credit (GHS)</label>
+      <input id="acctTxnCredit" class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
+    </div>
+  </div>
+</div>
+
+<!-- Bottom nav (mobile only) -->
+<nav id="bottom-nav">
+  <button class="bnav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
+      <rect x="1" y="1" width="6" height="6" rx="1.5"/>
+      <rect x="9" y="1" width="6" height="6" rx="1.5"/>
+      <rect x="1" y="9" width="6" height="6" rx="1.5"/>
+      <rect x="9" y="9" width="6" height="6" rx="1.5"/>
+    </svg>
+    Home
+  </button>
+  <button class="bnav-item" data-page="transactions" onclick="navigate('transactions')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
+      <path d="M2 5h12M2 8h8M2 11h5"/>
+    </svg>
+    Txns
+  </button>
+  <button class="bnav-item" data-page="budget" onclick="navigate('budget')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
+      <circle cx="8" cy="8" r="6.5"/>
+      <path d="M8 4.5v7M5.5 6.5c0-1.1.9-2 2.5-2s2.5.9 2.5 2-1 1.5-2.5 2-2.5.9-2.5 2 .9 2 2.5 2 2.5-.9 2.5-2"/>
+    </svg>
+    Income
+  </button>
+  <button class="bnav-item" data-page="budget-plan" onclick="navigate('budget-plan')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
+      <rect x="1.5" y="1.5" width="13" height="13" rx="2"/>
+      <path d="M4 5.5h8M4 8h6M4 10.5h4"/>
+    </svg>
+    Budget
+  </button>
+  <button class="bnav-item" data-page="accounts" onclick="navigate('accounts')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
+      <rect x="1.5" y="3.5" width="13" height="9" rx="2"/>
+      <path d="M1.5 6.5h13"/>
+      <rect x="3.5" y="8.5" width="3" height="1.5" rx="0.5"/>
+    </svg>
+    Accounts
+  </button>
+</nav>
+
+<!-- ── Salary modal ─────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="salaryModalOverlay" onclick="closeSalaryModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="salaryModalTitle">Set Salary</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeSalaryModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="saveSalaryBtn" onclick="saveSalary()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Salary Type</label>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="salaryTypeFixed" onclick="setSalaryType('fixed')">Fixed Amount</button>
+        <button class="toggle-btn" id="salaryTypePct" onclick="setSalaryType('pct')">% of Income</button>
+      </div>
+    </div>
+    <div class="form-field" id="salaryAmountField">
+      <label class="form-label" for="salaryAmountInput">Amount (GHS)</label>
+      <input class="form-input" type="number" id="salaryAmountInput" placeholder="0.00" min="0" step="0.01" />
+    </div>
+    <div class="form-field" id="salaryPctField" style="display:none;">
+      <label class="form-label">% of Income</label>
+      <input class="form-input" disabled placeholder="Not built yet" />
+      <div class="form-hint">Percentage-based salary entry is not yet available.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Salary breakdown modal ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="salaryHistoryOverlay" onclick="closeSalaryHistory(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="salaryBreakdownTitle">Salary</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeSalaryHistory()">Close</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button id="sbTabUsed"   onclick="setSbTab('used')"   style="flex:1;padding:8px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Used</button>
+      <button id="sbTabUnused" onclick="setSbTab('unused')" style="flex:1;padding:8px;font-size:13px;font-weight:600;background:transparent;color:inherit;border:none;border-radius:8px;cursor:pointer;opacity:.45;">Unused</button>
+    </div>
+    <div id="salaryHistoryList"></div>
+  </div>
+</div>
+
+<!-- ── Add income source modal ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="addIncomeModalOverlay" onclick="closeAddIncomeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Add Income Source</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeAddIncomeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAddIncome()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="addIncomeName">Name</label>
+      <input class="form-input" type="text" id="addIncomeName" placeholder="e.g. Salary, Company Bonus…" />
+    </div>
+  </div>
+</div>
+
+<!-- ── Income amount modal ────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="incomeAmountModalOverlay" onclick="closeIncomeAmountModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="incomeAmountModalTitle">Edit</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeIncomeAmountModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveIncomeAmount()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Period</label>
+      <div class="toggle-group">
+        <button class="toggle-btn" data-income-edit-period="Monthly"  onclick="setIncomeEditPeriod('Monthly')">Monthly</button>
+        <button class="toggle-btn" data-income-edit-period="Quarterly" onclick="setIncomeEditPeriod('Quarterly')">Quarterly</button>
+        <button class="toggle-btn" data-income-edit-period="Variable" onclick="setIncomeEditPeriod('Variable')">Variable</button>
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Amount (GHS)</label>
+      <input class="form-input" type="number" id="incomeAmountInput" placeholder="0.00" min="0" step="0.01" />
+    </div>
+    <div class="form-field">
+      <label class="form-label" id="incomePortionLabel">Portion (GHS)</label>
+      <input class="form-input" type="number" id="incomePortionInput" placeholder="0.00" min="0" step="0.01" />
+      <div class="form-hint">Amount allocated from this source this month</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Income page item modal ────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="itemModalOverlay" onclick="closeItemModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="itemModalTitle">Add Item</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeItemModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="saveItemBtn" onclick="saveItem()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="itemCatInput">Category Name</label>
+      <input class="form-input" type="text" id="itemCatInput" placeholder="e.g. Rent, Groceries, DSTV…" />
+    </div>
+    <div class="form-field">
+      <label class="form-label">Entry Method</label>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="itemSalaryTypeGhs" onclick="setItemSalaryType('ghs')">GHS Amount</button>
+        <button class="toggle-btn" id="itemSalaryTypePct" onclick="setItemSalaryType('pct')">% of Salary</button>
+      </div>
+    </div>
+    <div class="form-field" id="itemAmountFieldWrap">
+      <label class="form-label" id="itemAmountLabel" for="itemAmountInput">Amount (GHS)</label>
+      <input class="form-input" type="number" id="itemAmountInput" placeholder="0.00" min="0" step="0.01" oninput="onItemAmountInput()" />
+      <div class="form-hint" id="itemAmountHint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Budget: add/rename item (name only → becomes column in financeOS.csv) ── -->
+<div class="modal-overlay" id="bpItemModalOverlay" onclick="closeBpItemModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="bpItemModalTitle">Add Item</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeBpItemModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBpItem()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label" for="bpItemName">Name</label>
+      <input class="form-input" type="text" id="bpItemName" placeholder="e.g. Rent, Groceries, Savings…" />
+    </div>
+    <div class="form-field">
+      <label class="form-label">Days Basis</label>
+      <div class="toggle-row" id="bpItemCalcTypeToggle">
+        <button class="toggle-btn active" id="bpItemCalcActual" onclick="setBpItemCalcType('Actual')">Actual</button>
+        <button class="toggle-btn" id="bpItemCalcCalculated" onclick="setBpItemCalcType('Calculated')">Calculated</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Budget: set monthly amount for one item ────────────────────────────── -->
+<div class="modal-overlay" id="bpAmountModalOverlay" onclick="closeBpAmountModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="bpAmountModalTitle">Set Amount</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeBpAmountModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBpAmount()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label" id="bpAmountLabel">Amount (GHS)</label>
+      <input class="form-input" type="number" id="bpAmountInput" placeholder="0.00" min="0" step="0.01" oninput="onBpAmountInput()" />
+      <div class="form-hint" id="bpAmountHint"></div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Days Basis</label>
+      <div class="toggle-row" id="calcTypeToggle">
+        <button class="toggle-btn active" id="calcTypeActual" onclick="setBpCalcType('Actual')">Actual</button>
+        <button class="toggle-btn" id="calcTypeCalculated" onclick="setBpCalcType('Calculated')">Calculated</button>
+      </div>
+      <div class="form-hint" id="calcTypeHint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Daily amounts modal (Calculated items) ───────────────────────────────── -->
+<div class="modal-overlay" id="dailyAmountOverlay" onclick="closeDailyAmountModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="dailyAmountTitle">Food</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeDailyAmountModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveDailyAmounts()">Save</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="switchDailyToActual()" style="flex:1;padding:7px;font-size:13px;font-weight:600;background:transparent;color:inherit;border:none;border-radius:8px;cursor:pointer;opacity:.45;">Actual</button>
+      <button style="flex:1;padding:7px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Calculated</button>
+    </div>
+    <div id="dailyWeeksHint" style="font-size:13px;opacity:.55;margin-bottom:14px;"></div>
+    <div id="dailyDaysRows"></div>
+    <div id="dailyTotalHint" style="font-size:13px;opacity:.6;padding-top:8px;border-top:1px solid rgba(0,0,0,0.08);margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- ── Offline banner ───────────────────────────────────────────────────────── -->
+<div id="offline-banner">
+  Backend offline — start the server with:
+  <code>uvicorn backend.main:app --port 3001</code>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════════
+   APP STATE
+   ════════════════════════════════════════════════════════════════════════════ */
+const S = {
+  currentPage:   'dashboard',
+  months:        [],          // [{Month, Year, SalaryType, SalaryAmount, SalaryPercentage}]
+  currentMonth:  null,        // {Month, Year}
+  monthData:     null,        // fetched single-month data
+  budgetItems:   [],          // localStorage
+  // modal state
+  salaryType:    'fixed',
+  itemType:      'Obligation',
+  itemSalaryType:'ghs',
+  editingItemId: null,
+};
+
+const API = 'http://localhost:3001/api';
+const LS_KEY = 'lifeos_budget_items';
+
+/* ── "All months" (whole-year) scope ───────────────────────────────────────── */
+function isAllMonths() {
+  return !!(S.currentMonth && !S.currentMonth.Month);
+}
+function monthsInScope() {
+  if (!S.currentMonth) return [];
+  if (S.currentMonth.Month) return [S.currentMonth];
+  return S.months.filter(m => String(m.Year) === String(S.currentMonth.Year));
+}
+function requireSpecificMonth(msg) {
+  if (isAllMonths()) {
+    alert(msg || 'Select a specific month first — "All" is a read-only yearly summary.');
+    return false;
+  }
+  return !!S.currentMonth;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   UTILITIES
+   ════════════════════════════════════════════════════════════════════════════ */
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function weekdayCounts(year, monthIdx) {
+  // monthIdx is 1-based (Jan=1). Returns {monday:N, tuesday:N, ...}
+  const keys = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const counts = {monday:0,tuesday:0,wednesday:0,thursday:0,friday:0,saturday:0,sunday:0};
+  const daysInMonth = new Date(year, monthIdx, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    counts[keys[new Date(year, monthIdx - 1, d).getDay()]]++;
+  }
+  return counts;
+}
+
+function calcIncomeRequired() {
+  return Object.values(BP.monthAmounts).reduce((s, v) => s + (v || 0), 0);
+}
+
+function nextMonthName(monthName) {
+  const idx = MONTH_NAMES.indexOf(monthName);
+  return idx >= 0 ? MONTH_NAMES[(idx + 1) % 12] : 'Next';
+}
+
+const fmtGHS = (n) => {
+  const num = parseFloat(n) || 0;
+  return `GH₵ ${num.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const fmtPct = (n) => `${parseFloat(n).toFixed(1)}%`;
+
+const $ = (id) => document.getElementById(id);
+
+async function apiFetch(path, opts = {}) {
+  const url = `${API}${path}`;
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  // handle plain text
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  return res.text();
+}
+
+function showOfflineBanner(show) {
+  $('offline-banner').classList.toggle('show', show);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NAVIGATION
+   ════════════════════════════════════════════════════════════════════════════ */
+const PAGE_TITLES = { dashboard: 'lifeOS', budget: 'Income', 'budget-plan': 'Budget', transactions: 'Transactions', accounts: 'Accounts', goals: 'Goals', loans: 'Loans' };
+const VALID_PAGES = Object.keys(PAGE_TITLES);
+
+function navigate(page) {
+  if (!VALID_PAGES.includes(page)) page = 'dashboard';
+  S.currentPage = page;
+
+  // persist in URL hash (survives reload)
+  history.replaceState(null, '', `#${page}`);
+
+  // toggle page visibility
+  document.querySelectorAll('.page').forEach(el => {
+    el.classList.toggle('active', el.id === `page-${page}`);
+  });
+
+  // toggle sidebar nav active
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+
+  // toggle bottom nav active
+  document.querySelectorAll('.bnav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+
+  // update mobile header title
+  const mTitle = $('mobile-title');
+  if (mTitle) mTitle.textContent = PAGE_TITLES[page] || page;
+
+  // close mobile sidebar on navigate
+  closeMobileSidebar();
+
+  // close any open overlays on page change
+  document.querySelectorAll('.modal-overlay.open').forEach(el => el.classList.remove('open'));
+
+  // hide month selector on dashboard — not needed there
+  const showMonth = page !== 'dashboard';
+  document.querySelectorAll('.month-selector').forEach(el => {
+    el.style.display = showMonth ? '' : 'none';
+  });
+
+  if (page === 'dashboard') renderDashboardCalc();
+  if (page === 'budget') renderBudgetPage();
+  if (page === 'budget-plan') renderBpPage();
+  if (page === 'accounts') renderAccountsPage();
+}
+
+async function renderDashboardCalc() {
+  const container = $('dash-calc-items');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const todayDate = new Date();
+  const todayStr  = todayDate.toISOString().slice(0, 10);
+
+  // Day slides: yesterday, today, tomorrow
+  const dayDates = [-1, 0, 1].map(offset => {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() + offset);
+    return d.toISOString().slice(0, 10);
+  });
+
+  // Month context
+  const curYear     = S.currentMonth ? S.currentMonth.Year  : todayDate.getFullYear();
+  const curMonthStr = S.currentMonth ? S.currentMonth.Month : MONTHS[todayDate.getMonth()];
+  const curMonthIdx = MONTHS.indexOf(curMonthStr);
+
+  // Month slides: prev, current, next
+  const monthSlides = [-1, 0, 1].map(offset => {
+    let idx = curMonthIdx + offset, y = curYear;
+    if (idx < 0)  { idx += 12; y--; }
+    if (idx >= 12){ idx -= 12; y++; }
+    return { Month: MONTHS[idx], Year: y };
+  });
+
+  // Fetch all in parallel
+  const [dayDataArr, todaySummary, yearActTotals, monthDataArr] = await Promise.all([
+    Promise.all(dayDates.map(d => apiFetch(`/days/on/${d}`).catch(() => null))),
+    apiFetch('/days/today/summary').catch(() => ({})),
+    apiFetch(`/income/year/${curYear}/totals`).catch(() => ({})),
+    Promise.all(monthSlides.map(m => Promise.all([
+      apiFetch(`/days/${m.Month}/${m.Year}/totals`).catch(() => ({})),
+      apiFetch(`/income/${m.Month}/${m.Year}`).catch(() => []),
+    ]))),
+  ]);
+
+  // Yearly map: Calculated from days.csv + summed Actual from income.csv
+  const yearlyMap = { ...(todaySummary.yearlyTotals || {}) };
+  Object.entries(yearActTotals).forEach(([k, v]) => { yearlyMap[k] = (yearlyMap[k] || 0) + v; });
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  function makeDashSection(label, openByDefault) {
+    const sec = document.createElement('div');
+    sec.className = 'dash-section';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'dash-section-hdr' + (openByDefault ? '' : ' collapsible');
+
+    const lbl = document.createElement('span');
+    lbl.className = 'dash-section-label';
+    lbl.textContent = label;
+    hdr.appendChild(lbl);
+
+    if (!openByDefault) {
+      const chev = document.createElement('span');
+      chev.className = 'dash-chevron';
+      chev.textContent = '›';
+      hdr.appendChild(chev);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'dash-section-body' + (openByDefault ? '' : ' closed');
+
+    if (!openByDefault) {
+      hdr.addEventListener('click', () => {
+        const nowClosed = body.classList.toggle('closed');
+        hdr.querySelector('.dash-chevron').style.transform = nowClosed ? '' : 'rotate(90deg)';
+        if (!nowClosed) body.dispatchEvent(new Event('dash-opened'));
+      });
+    }
+
+    sec.appendChild(hdr);
+    sec.appendChild(body);
+    return { sec, body };
+  }
+
+  function makeSwiper(slides, startIdx) {
+    const wrap = document.createElement('div');
+    wrap.className = 'dash-swiper';
+
+    slides.forEach(slide => wrap.appendChild(slide));
+
+    // dot indicators
+    const dots = document.createElement('div');
+    dots.className = 'dash-dots';
+    const dotEls = slides.map((_, i) => {
+      const d = document.createElement('span');
+      d.className = 'dash-dot' + (i === startIdx ? ' active' : '');
+      dots.appendChild(d);
+      return d;
+    });
+    wrap.addEventListener('scroll', () => {
+      const idx = Math.round(wrap.scrollLeft / (wrap.offsetWidth || 1));
+      dotEls.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }, { passive: true });
+
+    return { wrap, dots, scrollTo: (idx) => {
+      wrap.scrollLeft = idx * wrap.offsetWidth;
+    }};
+  }
+
+  function makeSlide(periodLabel, amtsMap) {
+    const keys = Object.keys(amtsMap).filter(k => amtsMap[k] > 0);
+    const total = keys.reduce((s, k) => s + (amtsMap[k] || 0), 0);
+
+    const slide = document.createElement('div');
+    slide.className = 'dash-slide';
+
+    const period = document.createElement('div');
+    period.className = 'dash-slide-period';
+    period.textContent = periodLabel;
+    slide.appendChild(period);
+
+    const list = document.createElement('div');
+    list.className = 'dash-items';
+    keys.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'dash-item-row';
+      row.innerHTML = `<span class="dash-item-name">${escHtml(item)}</span><span class="dash-item-amount">${fmtGHS(amtsMap[item] || 0)}</span>`;
+      list.appendChild(row);
+    });
+    slide.appendChild(list);
+
+    const totRow = document.createElement('div');
+    totRow.className = 'dash-total-row';
+    totRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(total)}</span>`;
+    slide.appendChild(totRow);
+
+    return slide;
+  }
+
+  function fmtDayLabel(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+  }
+
+  // ── Daily section (always open, swipeable) ───────────────────────────────
+  const { sec: dailySec, body: dailyBody } = makeDashSection('Daily', true);
+
+  const daySlides = dayDates.map((dateStr, i) => {
+    const amounts = dayDataArr[i]?.amounts || {};
+    return makeSlide(fmtDayLabel(dateStr), amounts);
+  });
+
+  const { wrap: dailyWrap, dots: dailyDots, scrollTo: dailyScrollTo } = makeSwiper(daySlides, 1);
+  dailyBody.appendChild(dailyWrap);
+  dailyBody.appendChild(dailyDots);
+  container.appendChild(dailySec);
+
+  // Scroll to today (index 1)
+  requestAnimationFrame(() => dailyScrollTo(1));
+
+  // ── Monthly section (collapsed, swipeable) ────────────────────────────────
+  const { sec: monthlySec, body: monthlyBody } = makeDashSection('Monthly', false);
+
+  const monthSlideEls = monthSlides.map((m, i) => {
+    const [dayTotals, incRows] = monthDataArr[i];
+    const periodBudget = { ...dayTotals };
+    (incRows || []).filter(r => r.Type === 'Budget' && (r.CalculatedType || '') !== 'Calculated')
+      .forEach(r => { periodBudget[r.Items] = r.SalaryPortion ? parseFloat(r.SalaryPortion) : 0; });
+    return makeSlide(`${m.Month} ${m.Year}`, periodBudget);
+  });
+
+  const { wrap: monthlyWrap, dots: monthlyDots, scrollTo: monthlyScrollTo } = makeSwiper(monthSlideEls, 1);
+  monthlyBody.appendChild(monthlyWrap);
+  monthlyBody.appendChild(monthlyDots);
+  container.appendChild(monthlySec);
+
+  // When monthly opens, scroll to current month (index 1)
+  monthlyBody.addEventListener('dash-opened', () => {
+    requestAnimationFrame(() => monthlyScrollTo(1));
+  }, { once: false });
+
+  // ── Yearly section (collapsed, static) ───────────────────────────────────
+  const { sec: yearlySec, body: yearlyBody } = makeDashSection('Yearly', false);
+
+  const yearlyKeys = Object.keys(yearlyMap).filter(k => yearlyMap[k] > 0);
+  if (yearlyKeys.length) {
+    const yearSlide = makeSlide(String(curYear), yearlyMap);
+    yearSlide.classList.remove('dash-slide'); // not swipeable, just the content
+    yearlyBody.appendChild(yearSlide);
+  }
+  container.appendChild(yearlySec);
+}
+
+function toggleMobileSidebar() {
+  $('sidebar').classList.toggle('open');
+  $('sidebar-overlay').classList.toggle('open');
+}
+
+function closeMobileSidebar() {
+  $('sidebar').classList.remove('open');
+  $('sidebar-overlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MONTH SELECTOR
+   ════════════════════════════════════════════════════════════════════════════ */
+function toggleMonthDropdown() {
+  const dd = $('monthDropdown');
+  const caret = $('monthCaret');
+  const isOpen = dd.classList.toggle('open');
+  caret.classList.toggle('open', isOpen);
+}
+
+function closeMonthDropdown() {
+  $('monthDropdown').classList.remove('open');
+  $('monthCaret').classList.remove('open');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.month-selector')) closeMonthDropdown();
+});
+
+function buildMonthDropdownInto(dd) {
+  dd.innerHTML = '';
+  const years = [...new Set(S.months.map(m => String(m.Year)))].sort();
+  years.forEach(year => {
+    const allDiv = document.createElement('div');
+    allDiv.className = 'month-dropdown-item';
+    allDiv.style.fontWeight = '600';
+    allDiv.textContent = `All ${year}`;
+    const allSel = S.currentMonth && !S.currentMonth.Month && String(S.currentMonth.Year) === year;
+    if (allSel) allDiv.classList.add('selected');
+    allDiv.onclick = () => {
+      selectMonth('', parseInt(year));
+      closeMonthDropdown();
+      closeMobileMonthDropdown();
+    };
+    dd.appendChild(allDiv);
+
+    S.months.filter(m => String(m.Year) === year).forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'month-dropdown-item';
+      div.style.paddingLeft = '24px';
+      div.textContent = `${m.Month} ${m.Year}`;
+      const isSel = S.currentMonth && m.Month === S.currentMonth.Month && m.Year == S.currentMonth.Year;
+      if (isSel) div.classList.add('selected');
+      div.onclick = () => {
+        selectMonth(m.Month, m.Year);
+        closeMonthDropdown();
+        closeMobileMonthDropdown();
+      };
+      dd.appendChild(div);
+    });
+  });
+}
+
+function renderMonthDropdown() {
+  buildMonthDropdownInto($('monthDropdown'));
+  const mobileDd = $('mobileMonthDropdown');
+  if (mobileDd) buildMonthDropdownInto(mobileDd);
+}
+
+function toggleMobileMonthDropdown() {
+  const dd = $('mobileMonthDropdown');
+  dd.classList.toggle('open');
+}
+
+function closeMobileMonthDropdown() {
+  const dd = $('mobileMonthDropdown');
+  if (dd) dd.classList.remove('open');
+}
+
+function updateMonthTrigger() {
+  if (S.currentMonth) {
+    const label = isAllMonths() ? `All ${S.currentMonth.Year}` : `${S.currentMonth.Month} ${S.currentMonth.Year}`;
+    $('monthTriggerValue').textContent = label;
+    const pill = $('mobile-month-pill');
+    const wk = !isAllMonths() && S.monthData && S.monthData.PersonalFinanceNumberOfWeeks;
+    if (pill) pill.textContent = wk ? `${label} · ${wk}w` : label;
+    const weeksEl = $('monthTriggerWeeks');
+    if (weeksEl) weeksEl.textContent = wk ? `${wk} week${wk == 1 ? '' : 's'}` : '';
+  }
+}
+
+async function selectMonth(month, year) {
+  S.currentMonth = { Month: month, Year: year };
+  updateMonthTrigger();
+  renderMonthDropdown();
+  await fetchMonthData();
+  if (S.currentPage === 'budget') renderBudgetPage();
+  if (S.currentPage === 'budget-plan') renderBpPage();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   API CALLS
+   ════════════════════════════════════════════════════════════════════════════ */
+async function fetchMonths() {
+  try {
+    const months = await apiFetch('/finance/months');
+    S.months = months;
+    showOfflineBanner(false);
+
+    // default to current month/year
+    const now = new Date();
+    const monthNames = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+    const curMonthName = monthNames[now.getMonth()];
+    const curYear = now.getFullYear();
+
+    // find in months list; fall back to first
+    let found = months.find(m => m.Month === curMonthName && parseInt(m.Year) === curYear);
+    if (!found && months.length > 0) found = months[0];
+
+    if (found) {
+      S.currentMonth = { Month: found.Month, Year: parseInt(found.Year) };
+    }
+
+    updateMonthTrigger();
+    renderMonthDropdown();
+    await fetchMonthData();
+  } catch (err) {
+    showOfflineBanner(true);
+    $('monthTriggerValue').textContent = 'Offline';
+  }
+}
+
+async function fetchMonthData() {
+  if (!S.currentMonth) return;
+  if (isAllMonths()) {
+    S.monthData = null;
+    updateMonthTrigger();
+    return;
+  }
+  try {
+    const data = await apiFetch(`/finance/months/${S.currentMonth.Month}/${S.currentMonth.Year}`);
+    S.monthData = data;
+    showOfflineBanner(false);
+  } catch (err) {
+    showOfflineBanner(true);
+    S.monthData = null;
+  }
+  updateMonthTrigger();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LOCAL STORAGE — BUDGET ITEMS
+   ════════════════════════════════════════════════════════════════════════════ */
+function loadBudgetItems() {
+  try {
+    S.budgetItems = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  } catch { S.budgetItems = []; }
+}
+
+function saveBudgetItems() {
+  localStorage.setItem(LS_KEY, JSON.stringify(S.budgetItems));
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BUDGET PAGE RENDER
+   ════════════════════════════════════════════════════════════════════════════ */
+/* ── Income state ───────────────────────────────────────────────────────────── */
+const IC = { sources: [], period: 'Monthly', view: 'monthFor', incomeSources: new Set() };
+
+function getTotalIncome() {
+  return IC.sources.reduce((s, src) => s + (parseFloat(src.Amount || '0') || 0), 0);
+}
+
+async function renderBudgetPage() {
+  await Promise.all([
+    loadBpData(),
+    apiFetch('/accounts').then(r => { AC.rows = r || []; }).catch(() => {}),
+  ]);
+  renderIncomeSections();
+}
+
+function buildIncomeSummaryCard() {
+  const total     = getTotalIncome();
+  const allocated = calcIncomeRequired();
+  const remaining = total - allocated;
+  const pct       = total > 0 ? Math.min(100, (allocated / total) * 100) : 0;
+  const label     = S.currentMonth ? `TOTAL INCOME · ${S.currentMonth.Month.toUpperCase()} ${S.currentMonth.Year}` : 'TOTAL INCOME';
+  const amtText   = total > 0 ? fmtGHS(total) : 'Add income →';
+
+  const card = document.createElement('div');
+  card.className = 'salary-card';
+  card.style.cursor = 'pointer';
+  card.onclick = openSalaryHistory;
+  card.innerHTML = `
+    <div class="salary-card-top">
+      <span class="salary-card-label">${label}</span>
+    </div>
+    <div class="salary-card-amount${total > 0 ? '' : ' empty'}">${amtText}</div>
+    <div class="salary-split">
+      <div class="salary-split-item">
+        <span class="salary-split-label">Allocated</span>
+        <span class="salary-split-value">${fmtGHS(allocated)}</span>
+      </div>
+      <div class="salary-split-item">
+        <span class="salary-split-label">Remaining</span>
+        <span class="salary-split-value">${fmtGHS(Math.max(0, remaining))}</span>
+      </div>
+    </div>
+    <div class="salary-progress-wrap">
+      <div class="salary-progress-fill" style="width:${pct}%"></div>
+    </div>
+    <div class="salary-progress-text">${pct.toFixed(0)}% allocated</div>`;
+  return card;
+}
+
+
+function syncIncomeToggle() {
+  const base = 'border:none;border-radius:50px;padding:7px 18px;font-family:\'DM Mono\',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;transition:all 0.15s;';
+  const active   = base + 'background:var(--accent-dk);color:#faf7f2;';
+  const inactive = base + 'background:transparent;color:var(--muted);';
+  const mf = $('icViewMonthFor');
+  const mr = $('icViewMonthRecv');
+  const periodName = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Month : '';
+  if (mf) {
+    mf.style.cssText = IC.view === 'monthFor' ? active : inactive;
+    mf.textContent = periodName ? `For ${periodName}` : 'Month For';
+  }
+  if (mr) {
+    mr.style.cssText = IC.view === 'monthReceived' ? active : inactive;
+    mr.textContent = periodName ? `Received in ${periodName}` : 'Month Received';
+  }
+}
+
+function setIncomeView(view) {
+  IC.view = view;
+  renderIncomeSections();
+}
+
+function renderIncomeSections() {
+  const container = $('incomeSections');
+  container.innerHTML = '';
+
+  syncIncomeToggle();
+
+  if (IC.view === 'monthReceived') {
+    renderIncomeByReceived(container);
+    return;
+  }
+
+  if (!IC.sources.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">💰</div>
+      <div class="empty-state-title">No income sources yet</div>
+      <div class="empty-state-sub">Tap "+ Add Income" to add your income for this month.</div>
+    </div>`;
+    return;
+  }
+
+  const PERIODS = ['Monthly', 'Quarterly', 'Variable'];
+  PERIODS.forEach(period => {
+    const srcs = IC.sources.filter(s =>
+      period === 'Variable'
+        ? !['Monthly', 'Quarterly'].includes(s.IncomePeriod)
+        : s.IncomePeriod === period
+    );
+    if (!srcs.length) return;
+
+    const total = srcs.reduce((s, src) => s + (parseFloat(src.Amount || '0') || 0), 0);
+    const section = document.createElement('div');
+    section.className = 'budget-section';
+    section.innerHTML = `
+      <div class="budget-section-header">
+        <span class="budget-section-title">${period}</span>
+        <div class="budget-section-line"></div>
+        <span class="budget-section-total">${total > 0 ? fmtGHS(total) : '—'}</span>
+      </div>`;
+
+    const list = document.createElement('div');
+    list.className = 'budget-items';
+    srcs.forEach(src => list.appendChild(buildIncomeCard(src)));
+    section.appendChild(list);
+
+
+    container.appendChild(section);
+  });
+}
+
+function renderIncomeByReceived(container) {
+  const curM = S.currentMonth ? S.currentMonth.Month : '';
+  const curY = S.currentMonth ? String(S.currentMonth.Year) : '';
+  const periodLabel = curM ? `${curM.toUpperCase()} ${curY}` : '';
+
+  // filter income transactions received in this period
+  const txns = AC.rows.filter(r =>
+    IC.incomeSources.has(r.Item) &&
+    r.MonthReceived === curM && String(r.YearReceived || '') === curY
+  );
+
+  if (!txns.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">💰</div>
+      <div class="empty-state-title">No income received in ${periodLabel || 'this period'}</div>
+      <div class="empty-state-sub">Transactions with Month Received = ${curM || 'this period'} will appear here.</div>
+    </div>`;
+    return;
+  }
+
+  // group by Item
+  const groups = {};
+  txns.forEach(r => {
+    const key = r.Item || '';
+    if (!groups[key]) groups[key] = { item: key, period: r.IncomePeriod || '', total: 0, txns: [] };
+    groups[key].total += parseFloat(r.Credit) || 0;
+    groups[key].txns.push(r);
+  });
+
+  Object.values(groups).forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'salary-card';
+    card.style.cssText = 'margin-bottom:12px;';
+    card.innerHTML = `
+      <div class="salary-card-top">
+        <span class="salary-card-label">${escHtml(g.item.toUpperCase())} · ${periodLabel}</span>
+        <span style="font-size:11px;opacity:.5;">${escHtml(g.period)}</span>
+      </div>
+      <div class="salary-card-amount">${fmtGHS(g.total)}</div>`;
+    container.appendChild(card);
+  });
+}
+
+function buildIncomeCard(src) {
+  const amount    = parseFloat(src.Amount || '0') || 0;
+  const name      = src.Items;
+  const allocated = calcIncomeRequired();
+  const remaining = amount - allocated;
+  const over      = remaining < 0;
+  const pct       = amount > 0 ? Math.min(100, (allocated / amount) * 100) : 0;
+
+  // check if this income source is managed via an accounts transaction
+  const curM = S.currentMonth ? S.currentMonth.Month : '';
+  const curY = S.currentMonth ? String(S.currentMonth.Year) : '';
+  const viaAccounts = AC.rows.some(r =>
+    r.Item === name && r.MonthFor === curM && (r.YearFor === curY || r.Yearfor === curY));
+
+  const card = document.createElement('div');
+  card.className = 'salary-card';
+  card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
+  card.onclick = (e) => {
+    if (e.target.closest('button')) return;
+    openSalaryHistory();
+  };
+  card.innerHTML = `
+    <div class="salary-card-top">
+      <span class="salary-card-label">${escHtml(name.toUpperCase())} · ${S.currentMonth ? S.currentMonth.Month + ' ' + S.currentMonth.Year : ''}</span>
+      <div style="display:flex;gap:6px;">
+        ${viaAccounts
+          ? `<span style="font-size:11px;opacity:.5;padding:3px 8px;align-self:center;">via Accounts</span>`
+          : `<button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;" onclick="openIncomeAmountModal('${escHtml(name)}')">Edit</button>`}
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;" onclick="deleteIncomeSource('${escHtml(name)}')">Remove</button>
+      </div>
+    </div>
+    <div class="salary-card-amount${amount > 0 ? '' : ' empty'}">${amount > 0 ? fmtGHS(amount) : '—'}</div>
+    ${amount > 0 ? `
+    <div class="salary-split">
+      <div class="salary-split-item">
+        <span class="salary-split-label">Required</span>
+        <span class="salary-split-value">${allocated > 0 ? fmtGHS(allocated) : '—'}</span>
+      </div>
+      <div class="salary-split-item">
+        <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">${S.currentMonth ? nextMonthName(S.currentMonth.Month) : 'Next'}</span>
+        <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
+      </div>
+    </div>
+    <div class="salary-progress-wrap">
+      <div class="salary-progress-fill" style="width:${pct}%;${over ? 'background:#a8533f;' : ''}"></div>
+    </div>
+    <div class="salary-progress-text" style="${over ? 'color:#a8533f;' : ''}">${over ? 'Over budget' : pct.toFixed(0) + '% budgeted'}</div>` : ''}`;
+  return card;
+}
+
+function buildItemCard(item, salary) {
+  const amt = parseFloat(item.amount) || 0;
+  const pct = salary > 0 ? (amt / salary) * 100 : 0;
+
+  const barClass = item.type === 'Obligation' ? 'bar-obligation'
+                 : item.type === 'Saving'     ? 'bar-saving'
+                                               : 'bar-living';
+
+  const sublabel = item.salaryType === 'pct' ? '% of salary' : 'GHS amount';
+
+  const card = document.createElement('div');
+  card.className = 'budget-item-card';
+  card.innerHTML = `
+    <div class="budget-item-main">
+      <div class="budget-item-left">
+        <div class="budget-item-name">${escHtml(item.cat)}</div>
+        <div class="budget-item-sublabel">${sublabel}</div>
+      </div>
+      <div class="budget-item-right">
+        <div class="budget-item-amount">${fmtGHS(amt)}</div>
+        <div class="budget-item-pct">${salary > 0 ? fmtPct(pct) + ' of salary' : '—'}</div>
+      </div>
+      <div class="budget-item-actions">
+        <button class="btn btn-icon" title="Edit" onclick="openItemModal('${item.id}')">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M2 10.5l1.5-4 7-7 2.5 2.5-7 7-4 1.5z"/><path d="M8.5 2l2.5 2.5"/>
+          </svg>
+        </button>
+        <button class="btn btn-icon danger" title="Delete" onclick="deleteItem('${item.id}')">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M2 3h9M5 3V2h3v1M3.5 3l.5 8h5l.5-8"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="budget-item-bar-wrap">
+      <div class="budget-item-bar-fill ${barClass}" style="width:${Math.min(100, pct)}%"></div>
+    </div>
+  `;
+  return card;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   INCOME MODALS
+   ════════════════════════════════════════════════════════════════════════════ */
+
+function setIncomePeriod(p) {
+  IC.period = p;
+  document.querySelectorAll('[data-income-period]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.incomePeriod === p);
+  });
+}
+
+function openAddIncomeModal() {
+  $('addIncomeName').value = '';
+  setIncomePeriod('Monthly');
+  $('addIncomeModalOverlay').classList.add('open');
+  setTimeout(() => $('addIncomeName').focus(), 80);
+}
+
+function closeAddIncomeModal(event) {
+  if (event && event.target !== $('addIncomeModalOverlay')) return;
+  $('addIncomeModalOverlay').classList.remove('open');
+}
+
+async function saveAddIncome() {
+  const name = $('addIncomeName').value.trim();
+  if (!name) { $('addIncomeName').focus(); return; }
+  if (!requireSpecificMonth()) return;
+  try {
+    await apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  } catch (e) { alert('Error: ' + e.message); return; }
+  $('addIncomeModalOverlay').classList.remove('open');
+  renderBudgetPage();
+}
+
+let _incomeEditName = null;
+let _incomeEditPeriod = 'Monthly';
+
+function setIncomeEditPeriod(p) {
+  _incomeEditPeriod = p;
+  document.querySelectorAll('[data-income-edit-period]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.incomeEditPeriod === p);
+  });
+}
+
+function openIncomeAmountModal(name) {
+  if (!requireSpecificMonth()) return;
+  _incomeEditName = name;
+  $('incomeAmountModalTitle').textContent = name;
+  const src = IC.sources.find(s => s.Items === name);
+  const current = src ? parseFloat(src.Amount || '0') || 0 : 0;
+  const period = src ? (src.IncomePeriod || 'Variable') : 'Monthly';
+  setIncomeEditPeriod(period);
+  $('incomeAmountInput').value = current > 0 ? current : '';
+  // auto-fill portion from total budget allocation
+  const totalAllocated = calcIncomeRequired();
+  $('incomePortionInput').value = totalAllocated > 0 ? totalAllocated : '';
+  $('incomePortionLabel').textContent = `${name} Portion (GHS)`;
+  $('incomeAmountModalOverlay').classList.add('open');
+  setTimeout(() => $('incomeAmountInput').focus(), 80);
+}
+
+function closeIncomeAmountModal(event) {
+  if (event && event.target !== $('incomeAmountModalOverlay')) return;
+  $('incomeAmountModalOverlay').classList.remove('open');
+  _incomeEditName = null;
+}
+
+async function saveIncomeAmount() {
+  const amount  = parseFloat($('incomeAmountInput').value) || 0;
+  const portion = parseFloat($('incomePortionInput').value) || 0;
+  if (!_incomeEditName || !S.currentMonth) return;
+  try {
+    await Promise.all([
+      apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(_incomeEditName)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ amount }),
+      }),
+      apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(_incomeEditName)}/meta`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: _incomeEditName, period: _incomeEditPeriod }),
+      }),
+      apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(_incomeEditName)}/portion`, {
+        method: 'PUT',
+        body: JSON.stringify({ amount: portion }),
+      }),
+    ]);
+  } catch (e) { alert('Error: ' + e.message); return; }
+  $('incomeAmountModalOverlay').classList.remove('open');
+  _incomeEditName = null;
+  renderBudgetPage();
+}
+
+async function deleteIncomeSource(name) {
+  if (!requireSpecificMonth()) return;
+  if (!confirm(`Remove "${name}" from this month?`)) return;
+  try {
+    await apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  } catch (e) { alert('Error: ' + e.message); return; }
+  renderBudgetPage();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SALARY HISTORY
+   ════════════════════════════════════════════════════════════════════════════ */
+const SB = { tab: 'used', items: [], salary: 0 };
+
+async function openSalaryHistory() {
+  if (!requireSpecificMonth('Select a specific month to view this breakdown.')) return;
+  $('salaryBreakdownTitle').textContent = `${S.currentMonth.Month} ${S.currentMonth.Year}`;
+  $('salaryHistoryOverlay').classList.add('open');
+  $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Loading…</div>';
+
+  try {
+    const allRows = await apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}`);
+    SB.salary = getTotalIncome();
+    SB.items  = allRows
+      .filter(r => r.Type === 'Budget')
+      .map(r => ({ name: r.Items, amount: parseFloat(r.SalaryPortion || '0') || 0 }));
+  } catch {
+    $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
+    return;
+  }
+
+  renderSbAll();
+}
+
+
+function sbItemRow(it) {
+  const { salary } = SB;
+  const pct = salary > 0 && it.amount > 0 ? ` · ${((it.amount / salary) * 100).toFixed(1)}%` : '';
+  const noAmt = it.amount === 0;
+  const unset = isCalcUnset(it.name);
+  const row = document.createElement('div');
+  row.style = `display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
+  row.innerHTML = `
+    <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
+    <span style="font-size:14px;font-weight:${noAmt ? '400' : '500'};${noAmt ? 'opacity:.35;' : ''}">${noAmt ? 'tap to set' : fmtGHS(it.amount)}</span>`;
+  row.onclick = () => openSbAmountEdit(it.name);
+  return row;
+}
+
+function sbTotalsRow(items) {
+  const { salary } = SB;
+  const allocated = items.reduce((s, it) => s + it.amount, 0);
+  const remaining = salary - allocated;
+  const over = remaining < 0;
+  const foot = document.createElement('div');
+  foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;flex-direction:column;gap:6px;';
+  foot.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:13px;opacity:.6;"><span>Allocated</span><span>${fmtGHS(allocated)}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;color:${over ? '#a8533f' : 'inherit'};"><span>${over ? 'Over by' : 'Remaining'}</span><span>${fmtGHS(Math.abs(remaining))}</span></div>`;
+  return foot;
+}
+
+function sbSalaryHdr() {
+  const hdr = document.createElement('div');
+  hdr.style = 'display:flex;justify-content:space-between;align-items:center;padding:4px 0 12px;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:4px;';
+  hdr.innerHTML = `<span style="font-size:13px;letter-spacing:.06em;opacity:.5;">SALARY</span><strong style="font-size:17px;">${SB.salary > 0 ? fmtGHS(SB.salary) : '—'}</strong>`;
+  return hdr;
+}
+
+function setSbTab(tab) {
+  SB.tab = tab;
+  const activeStyle   = 'flex:1;padding:8px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;opacity:1;';
+  const inactiveStyle = 'flex:1;padding:8px;font-size:13px;font-weight:600;background:transparent;color:inherit;border:none;border-radius:8px;cursor:pointer;opacity:.45;';
+  $('sbTabUsed').style.cssText   = tab === 'used'   ? activeStyle : inactiveStyle;
+  $('sbTabUnused').style.cssText = tab === 'unused' ? activeStyle : inactiveStyle;
+  tab === 'used' ? renderSbUsed() : renderSbUnused();
+}
+
+function renderSbUsed() {
+  const list = $('salaryHistoryList');
+  list.innerHTML = '';
+  list.appendChild(sbSalaryHdr());
+  const items = [...SB.items.filter(it => it.amount > 0)].sort((a, b) => isCalc(a.name) ? -1 : isCalc(b.name) ? 1 : 0);
+  if (!items.length) {
+    const e = document.createElement('div');
+    e.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
+    e.textContent = 'No amounts set yet.';
+    list.appendChild(e);
+    return;
+  }
+  items.forEach(it => list.appendChild(sbItemRow(it)));
+  list.appendChild(sbTotalsRow(items));
+}
+
+function renderSbUnused() {
+  const list = $('salaryHistoryList');
+  list.innerHTML = '';
+  list.appendChild(sbSalaryHdr());
+  const items = SB.items.filter(it => it.amount === 0);
+  if (!items.length) {
+    const e = document.createElement('div');
+    e.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
+    e.textContent = 'All items have amounts set.';
+    list.appendChild(e);
+    return;
+  }
+  items.forEach(it => list.appendChild(sbItemRow(it)));
+}
+
+
+function renderSbAll() {
+  setSbTab(SB.tab || 'used');
+}
+
+function openSbAmountEdit(itemName) {
+  BP.items = SB.items.map(it => ({ Id: it.name, Name: it.name, Type: '' }));
+  openBpAmountModal(itemName, itemName);
+}
+
+function closeSalaryHistory(event) {
+  if (event && event.target !== $('salaryHistoryOverlay')) return;
+  $('salaryHistoryOverlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SALARY MODAL
+   ════════════════════════════════════════════════════════════════════════════ */
+function openSalaryModal() {
+  // populate
+  const md = S.monthData;
+  const existingAmt = md ? (parseFloat(md.SalaryAmount) || '') : '';
+  const existingType = md && md.SalaryType === 'pct' ? 'pct' : 'fixed';
+
+  setSalaryType(existingType);
+  $('salaryAmountInput').value = existingAmt || '';
+
+  if (S.currentMonth) {
+    $('salaryModalTitle').textContent = `Set Salary — ${S.currentMonth.Month} ${S.currentMonth.Year}`;
+  }
+
+  $('salaryModalOverlay').classList.add('open');
+}
+
+function closeSalaryModal(event) {
+  if (event && event.target !== $('salaryModalOverlay')) return;
+  $('salaryModalOverlay').classList.remove('open');
+}
+
+function setSalaryType(type) {
+  S.salaryType = type;
+  $('salaryTypeFixed').classList.toggle('active', type === 'fixed');
+  $('salaryTypePct').classList.toggle('active', type === 'pct');
+  $('salaryAmountField').style.display = type === 'fixed' ? '' : 'none';
+  $('salaryPctField').style.display    = type === 'pct'   ? '' : 'none';
+  $('saveSalaryBtn').disabled = type === 'pct';
+}
+
+async function saveSalary() {
+  if (!S.currentMonth) return;
+  const amount = parseFloat($('salaryAmountInput').value) || 0;
+
+  $('saveSalaryBtn').textContent = 'Saving…';
+  $('saveSalaryBtn').disabled = true;
+
+  try {
+    await apiFetch(`/finance/months/${S.currentMonth.Month}/${S.currentMonth.Year}/salary`, {
+      method: 'PUT',
+      body: JSON.stringify({ salaryType: 'fixed', salaryAmount: amount }),
+    });
+    showOfflineBanner(false);
+    // refresh
+    await fetchMonthData();
+    renderBudgetPage();
+    $('salaryModalOverlay').classList.remove('open');
+  } catch (err) {
+    showOfflineBanner(true);
+  } finally {
+    $('saveSalaryBtn').textContent = 'Save';
+    $('saveSalaryBtn').disabled = false;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BUDGET ITEM MODAL
+   ════════════════════════════════════════════════════════════════════════════ */
+function openItemModal(id) {
+  S.editingItemId = id;
+  const isEdit = !!id && id !== 'null';
+
+  $('itemModalTitle').textContent = isEdit ? 'Edit Budget Item' : 'Add Budget Item';
+
+  if (isEdit) {
+    const item = S.budgetItems.find(it => it.id === id);
+    if (!item) return;
+    $('itemCatInput').value = item.cat;
+    setItemType(item.type);
+    setItemSalaryType(item.salaryType);
+    if (item.salaryType === 'pct') {
+      $('itemAmountInput').value = parseFloat(item.salaryPct) || '';
+    } else {
+      $('itemAmountInput').value = parseFloat(item.salaryAmount) || '';
+    }
+    onItemAmountInput();
+  } else {
+    $('itemCatInput').value = '';
+    setItemType('Obligation');
+    setItemSalaryType('ghs');
+    $('itemAmountInput').value = '';
+    $('itemAmountHint').textContent = '';
+  }
+
+  $('itemModalOverlay').classList.add('open');
+}
+
+function closeItemModal(event) {
+  if (event && event.target !== $('itemModalOverlay')) return;
+  $('itemModalOverlay').classList.remove('open');
+  S.editingItemId = null;
+}
+
+function setItemType(type) {
+  S.itemType = type;
+  document.querySelectorAll('[data-item-type]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.itemType === type);
+  });
+}
+
+function setItemSalaryType(type) {
+  S.itemSalaryType = type;
+  $('itemSalaryTypeGhs').classList.toggle('active', type === 'ghs');
+  $('itemSalaryTypePct').classList.toggle('active', type === 'pct');
+
+  if (type === 'ghs') {
+    $('itemAmountLabel').textContent = 'Amount (GHS)';
+    $('itemAmountInput').placeholder = '0.00';
+    $('itemAmountInput').step = '0.01';
+  } else {
+    $('itemAmountLabel').textContent = '% of Salary';
+    $('itemAmountInput').placeholder = '0';
+    $('itemAmountInput').step = '0.1';
+  }
+
+  // reset and update hint
+  onItemAmountInput();
+}
+
+function onItemAmountInput() {
+  const salary = getSalaryAmount();
+  const val = parseFloat($('itemAmountInput').value) || 0;
+  const hintEl = $('itemAmountHint');
+
+  if (S.itemSalaryType === 'ghs') {
+    if (salary > 0 && val > 0) {
+      const pct = (val / salary) * 100;
+      hintEl.textContent = `= ${fmtPct(pct)} of salary`;
+    } else if (salary === 0 && val > 0) {
+      hintEl.textContent = 'Set salary first to see percentage';
+    } else {
+      hintEl.textContent = '';
+    }
+  } else {
+    if (salary > 0 && val > 0) {
+      const ghs = (val / 100) * salary;
+      hintEl.textContent = `= ${fmtGHS(ghs)} from salary`;
+    } else if (salary === 0 && val > 0) {
+      hintEl.textContent = 'Set salary first to calculate amount';
+    } else {
+      hintEl.textContent = '';
+    }
+  }
+}
+
+function saveItem() {
+  const cat = $('itemCatInput').value.trim();
+  if (!cat) { $('itemCatInput').focus(); return; }
+
+  const rawVal = parseFloat($('itemAmountInput').value) || 0;
+  const salary = getSalaryAmount();
+
+  let salaryAmount, salaryPct, amount;
+
+  if (S.itemSalaryType === 'ghs') {
+    salaryAmount = rawVal;
+    salaryPct    = salary > 0 ? (rawVal / salary) * 100 : 0;
+    amount       = rawVal;
+  } else {
+    salaryPct    = rawVal;
+    salaryAmount = salary > 0 ? (rawVal / 100) * salary : 0;
+    amount       = salaryAmount;
+  }
+
+  const isEdit = !!S.editingItemId && S.editingItemId !== 'null';
+
+  if (isEdit) {
+    const idx = S.budgetItems.findIndex(it => it.id === S.editingItemId);
+    if (idx !== -1) {
+      S.budgetItems[idx] = { ...S.budgetItems[idx], cat, type: S.itemType, salaryType: S.itemSalaryType, salaryAmount, salaryPct, amount };
+    }
+  } else {
+    S.budgetItems.push({
+      id: `item_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      cat,
+      type:         S.itemType,
+      salaryType:   S.itemSalaryType,
+      salaryAmount,
+      salaryPct,
+      amount,
+    });
+  }
+
+  saveBudgetItems();
+  $('itemModalOverlay').classList.remove('open');
+  S.editingItemId = null;
+  renderBudgetPage();
+}
+
+function deleteItem(id) {
+  S.budgetItems = S.budgetItems.filter(it => it.id !== id);
+  saveBudgetItems();
+  renderBudgetPage();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BUDGET PLAN PAGE
+   ════════════════════════════════════════════════════════════════════════════ */
+
+const BP = {
+  items:          [],   // [{Id, Name, Type}] from /api/budget/items
+  monthAmounts:   {},   // {itemId: amount} — period total from days.csv (Calculated) or SalaryPortion (Actual)
+  calculatedTypes:{},   // {itemId: 'Actual'|'Calculated'}
+  dailyApplies:   {},   // {itemId: {monday:bool, ...}} — which days apply (from income.csv)
+  view:           'income',
+  editingId:      null, // item being edited in definition modal
+  amountItemId:   null, // item for which we're setting monthly amount
+  itemType:     'Obligation',
+};
+
+async function loadBpData() {
+  try {
+    const [rawBp, rawSrc] = await Promise.all([
+      apiFetch('/budget/items'),
+      apiFetch('/income/sources'),
+    ]);
+    BP.items = rawBp.map(it => ({ Id: it.name, Name: it.name, Type: '' }));
+    IC.incomeSources = new Set(rawSrc || []);
+  } catch { BP.items = []; IC.incomeSources = new Set(); }
+
+  const scope = monthsInScope();
+  if (!scope.length) return;
+
+  const DAYS_LC = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const amounts = {}, calcTypes = {}, dailyApp = {}, hasAmt = new Set();
+  const isCurrentMonth = (m) => S.currentMonth && m.Month === S.currentMonth.Month && String(m.Year) === String(S.currentMonth.Year);
+
+  for (const m of scope) {
+    let allRows = [];
+    try { allRows = await apiFetch(`/income/${m.Month}/${m.Year}`); } catch {}
+
+    // Calculated items: totals come from days.csv summed by MonthYearToUse period
+    let daysTotals = {};
+    try { daysTotals = await apiFetch(`/days/${m.Month}/${m.Year}/totals`); } catch {}
+
+    allRows.filter(r => r.Type === 'Budget').forEach(r => {
+      calcTypes[r.Items] = r.CalculatedType || calcTypes[r.Items] || '';
+
+      // applies booleans for the daily amounts modal
+      const app = {};
+      DAYS_LC.forEach(d => {
+        const appVal = r[(d.charAt(0).toUpperCase()+d.slice(1))+'Applies'];
+        app[d] = !appVal || appVal.toLowerCase() !== 'false';
+      });
+      if (scope.length === 1 || isCurrentMonth(m)) {
+        dailyApp[r.Items] = app;
+      }
+
+      let v;
+      if ((r.CalculatedType || '') === 'Calculated') {
+        v = daysTotals[r.Items] || 0;
+        if (v > 0) hasAmt.add(r.Items);
+      } else {
+        const raw = r.SalaryPortion;
+        v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
+        if (raw !== '' && raw !== null && raw !== undefined) hasAmt.add(r.Items);
+      }
+      amounts[r.Items] = (amounts[r.Items] || 0) + v;
+    });
+  }
+
+  BP.monthAmounts    = amounts;
+  BP.hasAmount       = hasAmt;
+  BP.calculatedTypes = calcTypes;
+  BP.dailyApplies    = dailyApp;
+
+  // IC.sources: build from transactions with MonthFor = current period scope
+  const icTotals = {};
+  for (const m of scope) {
+    AC.rows
+      .filter(r => IC.incomeSources.has(r.Item) && r.MonthFor === m.Month && String(r.YearFor || '') === String(m.Year))
+      .forEach(r => {
+        if (!icTotals[r.Item]) icTotals[r.Item] = { Items: r.Item, Amount: 0, IncomePeriod: r.IncomePeriod || '' };
+        icTotals[r.Item].Amount += parseFloat(r.Credit) || 0;
+      });
+  }
+  IC.sources = Object.values(icTotals);
+}
+
+function getSalaryAmount() {
+  return getTotalIncome();
+}
+
+function renderBpPage() {
+  if (S.currentPage !== 'budget-plan') return;
+  loadBpData().then(() => renderBpGroups());
+}
+
+function renderBpSalaryBar() {
+  const salary = getSalaryAmount();
+  const allocated = BP.items.reduce((s, it) => s + (BP.monthAmounts[it.Id] ?? 0), 0);
+  const remaining = salary - allocated;
+  const pct = salary > 0 ? Math.min(100, (allocated / salary) * 100) : 0;
+
+  $('bpSalaryAmt').textContent  = salary > 0 ? fmtGHS(salary) : 'Set salary on Income page →';
+  $('bpAllocated').textContent  = fmtGHS(allocated);
+  $('bpRemaining').textContent  = salary > 0 ? fmtGHS(remaining) : '—';
+  $('bpProgressFill').style.width = pct + '%';
+  $('bpProgressFill').style.background = pct > 100 ? '#a8533f' : 'rgba(250,247,242,0.6)';
+  $('bpProgressText').textContent = salary > 0 ? `${fmtPct(pct)} allocated` : 'Set salary first';
+}
+
+function renderBpGroups() {
+  const container = $('bpGroups');
+  container.innerHTML = '';
+
+  if (BP.items.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <div class="empty-state-title">No budget items yet</div>
+      <div class="empty-state-sub">Tap "+ Add Item" to define your budget categories.</div>
+    </div>`;
+    return;
+  }
+
+  if (BP.view === 'income') {
+    renderBpByIncome(container);
+  } else {
+    renderBpByItem(container, BP.items);
+  }
+}
+
+function renderBpByItem(container, items) {
+  const list = document.createElement('div');
+  list.className = 'budget-items';
+  const sorted = [...items].sort((a, b) => isCalc(a.Id) ? -1 : isCalc(b.Id) ? 1 : 0);
+  sorted.forEach(item => list.appendChild(buildBpCard(item)));
+  container.appendChild(list);
+}
+
+function renderBpByIncome(container) {
+  const required = Object.values(BP.monthAmounts).reduce((s, v) => s + v, 0);
+  const periodLabel = isAllMonths()
+    ? `All ${S.currentMonth.Year}`
+    : (S.currentMonth ? S.currentMonth.Month.toUpperCase() + ' ' + S.currentMonth.Year : '');
+
+  // One card per income source with a non-zero amount
+  IC.sources.filter(src => (parseFloat(src.Amount || '0') || 0) > 0).forEach(src => {
+    const name = src.Items;
+    const card = document.createElement('div');
+    card.className = 'salary-card';
+    card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
+    card.onclick = (e) => { if (!e.target.closest('button')) openSalaryHistory(); };
+    card.innerHTML = `
+      <div class="salary-card-top">
+        <span class="salary-card-label">${escHtml(name.toUpperCase())} — REQUIRED · ${periodLabel}</span>
+      </div>
+      <div class="salary-card-amount${required > 0 ? '' : ' empty'}">${required > 0 ? fmtGHS(required) : '—'}</div>`;
+    container.appendChild(card);
+  });
+
+  if (!IC.sources.some(s => (parseFloat(s.Amount || '0') || 0) > 0)) {
+    container.innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Add income on the Income page first.</div>';
+  }
+}
+
+function isCalc(itemId) {
+  return (BP.calculatedTypes[itemId] || '') === 'Calculated';
+}
+
+function isCalcUnset(itemId) {
+  if ((BP.calculatedTypes[itemId] || '') !== 'Calculated') return false;
+  return !(BP.monthAmounts[itemId] > 0);
+}
+
+function buildBpCard(item) {
+  const raw    = BP.monthAmounts[item.Id];
+  const amount = raw ?? 0;
+  const isSet  = raw !== null && raw !== undefined;
+  const salary = getSalaryAmount();
+  const pct = salary > 0 ? (amount / salary) * 100 : 0;
+  const unset = isCalcUnset(item.Id);
+
+  const card = document.createElement('div');
+  card.className = 'budget-item-card';
+  if (unset) card.style.borderLeft = '3px solid #d4a017';
+  card.innerHTML = `
+    <div class="budget-item-main">
+      <div class="budget-item-left">
+        <div class="budget-item-name">${escHtml(item.Name)}</div>
+        <div class="budget-item-sublabel" style="${unset ? 'color:#d4a017;' : ''}">${(BP.calculatedTypes[item.Id] || '') === 'Calculated' ? (unset ? 'Calculated — tap to set daily' : 'Calculated') : ''}</div>
+      </div>
+      <div class="budget-item-right" style="cursor:pointer;" onclick="openBpAmountModal('${escHtml(item.Id)}','${escHtml(item.Name)}')">
+        <div class="budget-item-amount">${isSet ? fmtGHS(amount) : '—'}</div>
+        <div class="budget-item-pct">${salary > 0 && isSet ? fmtPct(pct) + ' of salary' : isSet ? '' : 'tap to set'}</div>
+      </div>
+      <div class="budget-item-actions">
+        <button class="btn btn-icon" onclick="openBudgetItemModal('${escHtml(item.Id)}')" title="Edit">✎</button>
+        <button class="btn btn-icon danger" onclick="deleteBpItem('${escHtml(item.Id)}')" title="Delete">✕</button>
+      </div>
+    </div>`;
+  return card;
+}
+
+function buildBpSection(title, items, total) {
+  const wrap = document.createElement('div');
+  wrap.className = 'budget-section';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'budget-section-header';
+  hdr.innerHTML = `
+    <span class="budget-section-title">${escHtml(title)}</span>
+    <div class="budget-section-line"></div>
+    <span class="budget-section-total">${fmtGHS(total)}</span>`;
+  wrap.appendChild(hdr);
+
+  const list = document.createElement('div');
+  list.className = 'budget-items';
+
+  items.forEach(item => {
+    const amount = BP.monthAmounts[item.Id] || 0;
+    const salary = getSalaryAmount();
+    const pct = salary > 0 ? (amount / salary) * 100 : 0;
+    const barClass = item.Type === 'Saving' ? 'bar-saving' : item.Type === 'Living' ? 'bar-living' : 'bar-obligation';
+
+    const card = document.createElement('div');
+    card.className = 'budget-item-card';
+    card.innerHTML = `
+      <div class="budget-item-main">
+        <div class="budget-item-left">
+          <div class="budget-item-name">${escHtml(item.Name)}</div>
+          <div class="budget-item-sublabel">${escHtml(item.Type)}</div>
+        </div>
+        <div class="budget-item-right" style="cursor:pointer;" onclick="openBpAmountModal('${escHtml(item.Id)}','${escHtml(item.Name)}')">
+          <div class="budget-item-amount">${amount > 0 ? fmtGHS(amount) : '—'}</div>
+          <div class="budget-item-pct">${salary > 0 && amount > 0 ? fmtPct(pct) + ' of salary' : 'tap to set'}</div>
+        </div>
+        <div class="budget-item-actions">
+          <button class="btn btn-icon" onclick="openBudgetItemModal('${escHtml(item.Id)}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="deleteBpItem('${escHtml(item.Id)}')" title="Delete">✕</button>
+        </div>
+      </div>
+      <div class="budget-item-bar-wrap">
+        <div class="budget-item-bar-fill ${barClass}" style="width:${Math.min(100,pct)}%"></div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  wrap.appendChild(list);
+  return wrap;
+}
+
+function setBudgetView(view) {
+  BP.view = view;
+  $('bpViewItem').style.background   = view === 'item'   ? 'var(--accent-dk)' : 'transparent';
+  $('bpViewItem').style.color        = view === 'item'   ? '#faf7f2' : 'var(--muted)';
+  $('bpViewIncome').style.background = view === 'income' ? 'var(--accent-dk)' : 'transparent';
+  $('bpViewIncome').style.color      = view === 'income' ? '#faf7f2' : 'var(--muted)';
+  renderBpGroups();
+}
+
+// ── Item definition modal ────────────────────────────────────────────────────
+
+function setBpItemType(type) {
+  BP.itemType = type;
+  document.querySelectorAll('[data-bp-type]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.bpType === type);
+  });
+}
+
+function setBpItemCalcType(type) {
+  BP._newItemCalcType = type;
+  $('bpItemCalcActual').classList.toggle('active', type === 'Actual');
+  $('bpItemCalcCalculated').classList.toggle('active', type === 'Calculated');
+}
+
+function openBudgetItemModal(id) {
+  BP.editingId = id || null;
+  if (id) {
+    const item = BP.items.find(it => it.Id === id);
+    if (!item) return;
+    $('bpItemModalTitle').textContent = 'Edit Item';
+    $('bpItemName').value = item.Name;
+    setBpItemType(item.Type);
+    setBpItemCalcType(BP.calculatedTypes[id] || 'Actual');
+  } else {
+    $('bpItemModalTitle').textContent = 'Add Budget Item';
+    $('bpItemName').value = '';
+    setBpItemType('Obligation');
+    setBpItemCalcType('Actual');
+  }
+  $('bpItemModalOverlay').classList.add('open');
+  setTimeout(() => $('bpItemName').focus(), 80);
+}
+
+function closeBpItemModal(event) {
+  if (event && event.target !== $('bpItemModalOverlay')) return;
+  $('bpItemModalOverlay').classList.remove('open');
+  BP.editingId = null;
+}
+
+async function saveBpItem() {
+  const name      = $('bpItemName').value.trim();
+  const calcType  = BP._newItemCalcType || 'Actual';
+  if (!name) { $('bpItemName').focus(); return; }
+
+  try {
+    if (BP.editingId) {
+      await apiFetch(`/budget/items/${BP.editingId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, type: BP.itemType }),
+      });
+    } else {
+      await apiFetch('/budget/items', {
+        method: 'POST',
+        body: JSON.stringify({ name, type: BP.itemType }),
+      });
+    }
+  } catch (e) { alert('Error saving item: ' + e.message); return; }
+
+  // save CalculatedType only when a specific month is selected (not All mode)
+  if (S.currentMonth && !isAllMonths()) {
+    const itemName = BP.editingId || name;
+    BP.calculatedTypes[itemName] = calcType;
+    try {
+      await apiFetch(`/budget-meta/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(name)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ calculatedType: calcType }),
+      });
+    } catch {}
+  }
+
+  $('bpItemModalOverlay').classList.remove('open');
+  BP.editingId = null;
+  renderBpPage();
+}
+
+async function deleteBpItem(id) {
+  if (!confirm('Remove this budget item?')) return;
+  try {
+    await apiFetch(`/budget/items/${id}`, { method: 'DELETE' });
+  } catch (e) { alert('Error deleting: ' + e.message); return; }
+  renderBpPage();
+}
+
+// ── Monthly amount modal ─────────────────────────────────────────────────────
+
+function setBpCalcType(type) {
+  BP._calcType = type;
+  $('calcTypeActual').classList.toggle('active', type === 'Actual');
+  $('calcTypeCalculated').classList.toggle('active', type === 'Calculated');
+  if (type === 'Calculated' && BP.amountItemId) {
+    $('bpAmountModalOverlay').classList.remove('open');
+    openDailyAmountModal(BP.amountItemId);
+    return;
+  }
+  // hint: show which count applies
+  const wk  = S.monthData && S.monthData.PersonalFinanceNumberOfWeeks;
+  const days = S.monthData && S.monthData.ActualNumberOfDays;
+  const hint = $('calcTypeHint');
+  if (type === 'Calculated' && wk) hint.textContent = `Using ${wk} week${wk == 1 ? '' : 's'}`;
+  else if (type === 'Actual' && days) hint.textContent = `Using ${days} days`;
+  else hint.textContent = '';
+}
+
+function openBpAmountModal(itemId, itemName) {
+  if (!requireSpecificMonth()) return;
+  BP.amountItemId = itemId;
+  $('bpAmountModalTitle').textContent = itemName;
+  $('bpAmountLabel').textContent = `Amount — ${S.currentMonth ? S.currentMonth.Month + ' ' + S.currentMonth.Year : ''}`;
+  const current = BP.monthAmounts[itemId] ?? null;
+  $('bpAmountInput').value = current !== null ? current : '';
+  onBpAmountInput();
+  $('bpAmountModalOverlay').classList.add('open');
+  const savedType = BP.calculatedTypes[itemId] || 'Actual';
+  setBpCalcType(savedType);
+  if (savedType !== 'Calculated') setTimeout(() => $('bpAmountInput').focus(), 80);
+}
+
+function closeBpAmountModal(event) {
+  if (event && event.target !== $('bpAmountModalOverlay')) return;
+  $('bpAmountModalOverlay').classList.remove('open');
+  BP.amountItemId = null;
+}
+
+// ── Daily amounts modal ──────────────────────────────────────────────────────
+
+let _dailyItemName = null;
+let _dailyApplies = { monday:true, tuesday:true, wednesday:true, thursday:true, friday:true, saturday:true, sunday:true };
+
+function getWeekdayCounts(monthName, year) {
+  const MONTH_MAP_JS = {January:0,February:1,March:2,April:3,May:4,June:5,July:6,August:7,September:8,October:9,November:10,December:11};
+  const mo = MONTH_MAP_JS[monthName];
+  if (mo === undefined) return {monday:4,tuesday:4,wednesday:4,thursday:4,friday:4,saturday:4,sunday:4};
+  const KEYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const counts = {monday:0,tuesday:0,wednesday:0,thursday:0,friday:0,saturday:0,sunday:0};
+  const d = new Date(year, mo, 1);
+  while (d.getMonth() === mo) {
+    counts[KEYS[d.getDay()]]++;
+    d.setDate(d.getDate() + 1);
+  }
+  return counts;
+}
+
+async function openDailyAmountModal(itemName) {
+  _dailyItemName = itemName;
+  $('dailyAmountTitle').textContent = itemName;
+  const wk = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
+  $('dailyWeeksHint').textContent = `${wk} weeks · ${S.currentMonth ? S.currentMonth.Month + ' ' + S.currentMonth.Year : ''}`;
+
+  // Fetch per-weekday amounts from days.csv via API
+  let dayData = {};
+  if (S.currentMonth) {
+    try {
+      dayData = await apiFetch(`/days/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(itemName)}/amounts`);
+    } catch {}
+  }
+
+  const DAYS_INFO = [
+    { key:'monday',    label:'Mon' },
+    { key:'tuesday',   label:'Tue' },
+    { key:'wednesday', label:'Wed' },
+    { key:'thursday',  label:'Thu' },
+    { key:'friday',    label:'Fri' },
+    { key:'saturday',  label:'Sat' },
+    { key:'sunday',    label:'Sun' },
+  ];
+
+  _dailyApplies = {};
+  DAYS_INFO.forEach(d => {
+    const cap = d.key.charAt(0).toUpperCase() + d.key.slice(1);
+    const fromApi = dayData[cap];
+    _dailyApplies[d.key] = fromApi ? fromApi.applies !== false : true;
+  });
+
+  const container = $('dailyDaysRows');
+  container.innerHTML = '';
+  DAYS_INFO.forEach(d => {
+    const cap     = d.key.charAt(0).toUpperCase() + d.key.slice(1);
+    const applies = _dailyApplies[d.key];
+    const amt     = dayData[cap] ? (dayData[cap].amount || 0) : 0;
+    const val     = amt > 0 ? amt : '';
+    const row = document.createElement('div');
+    row.style = 'display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,0.06);';
+    row.innerHTML = `
+      <button id="applyBtn_${d.key}" onclick="toggleDayApply('${d.key}')"
+        style="width:52px;padding:5px 0;font-size:11px;font-weight:600;border:none;border-radius:6px;cursor:pointer;flex-shrink:0;line-height:1.3;
+               background:${applies ? 'var(--accent)' : 'rgba(0,0,0,0.08)'};
+               color:${applies ? '#fff' : 'rgba(0,0,0,0.35)'};">
+        ${d.label}<br><span style="font-size:10px;opacity:.8;">×${wk}</span>
+      </button>
+      <input id="daily_${d.key}" type="number" min="0" placeholder="0"
+        style="width:70px;flex:none;padding:7px 10px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:14px;background:${applies ? '' : 'rgba(0,0,0,0.04)'};opacity:${applies ? '1' : '0.4'};"
+        value="${val}" ${applies ? '' : 'disabled'} oninput="onDailyInput()">
+      <span id="dailyResult_${d.key}" style="font-size:12px;opacity:.55;flex:1;text-align:right;white-space:nowrap;"></span>`;
+    container.appendChild(row);
+  });
+
+  onDailyInput();
+  $('dailyAmountOverlay').classList.add('open');
+  setTimeout(() => { const f = container.querySelector('input:not([disabled])'); if(f) f.focus(); }, 80);
+}
+
+function toggleDayApply(dayKey) {
+  _dailyApplies[dayKey] = !_dailyApplies[dayKey];
+  const applies = _dailyApplies[dayKey];
+  const btn   = $(`applyBtn_${dayKey}`);
+  const input = $(`daily_${dayKey}`);
+  btn.style.background = applies ? 'var(--accent)' : 'rgba(0,0,0,0.08)';
+  btn.style.color      = applies ? '#fff' : 'rgba(0,0,0,0.35)';
+  input.disabled       = !applies;
+  input.style.opacity  = applies ? '1' : '0.4';
+  input.style.background = applies ? '' : 'rgba(0,0,0,0.04)';
+  if (!applies) input.value = '';
+  onDailyInput();
+}
+
+function closeDailyAmountModal(event) {
+  if (event && event.target !== $('dailyAmountOverlay')) return;
+  $('dailyAmountOverlay').classList.remove('open');
+  _dailyItemName = null;
+}
+
+function switchDailyToActual() {
+  const name = _dailyItemName;
+  if (!name) return;
+  $('dailyAmountOverlay').classList.remove('open');
+  _dailyItemName = null;
+  BP.calculatedTypes[name] = 'Actual';
+  BP._calcType = 'Actual';
+  openBpAmountModal(name, name);
+}
+
+function onDailyInput() {
+  const _year     = parseInt(S.currentMonth ? S.currentMonth.Year : new Date().getFullYear());
+  const _monthIdx = S.currentMonth ? (MONTH_NAMES.indexOf(S.currentMonth.Month) + 1) : (new Date().getMonth() + 1);
+  const _dc       = weekdayCounts(_year, _monthIdx);
+  const KEYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  let itemTotal = 0;
+  KEYS.forEach(k => {
+    const resultEl = $(`dailyResult_${k}`);
+    if (!_dailyApplies[k]) {
+      if (resultEl) resultEl.textContent = '';
+      return;
+    }
+    const amt = parseFloat($(`daily_${k}`) ? $(`daily_${k}`).value : '0') || 0;
+    const cnt = _dc[k] || 0;
+    itemTotal += amt * cnt;
+    if (resultEl) resultEl.textContent = amt > 0 ? `${amt} × ${cnt} = ${fmtGHS(amt * cnt)}` : '';
+  });
+  const hint = $('dailyTotalHint');
+  hint.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">
+      <span style="opacity:.6;">Total</span>
+      <span style="font-weight:600;">${fmtGHS(itemTotal)}</span>
+    </div>`;
+}
+
+async function saveDailyAmounts() {
+  if (!_dailyItemName || !S.currentMonth) return;
+  const KEYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const body = {};
+  KEYS.forEach(k => {
+    body[k]             = parseFloat($(`daily_${k}`) ? $(`daily_${k}`).value : '0') || 0;
+    body[`${k}_applies`] = _dailyApplies[k] !== false;
+  });
+  try {
+    const res = await apiFetch(
+      `/income/${S.currentMonth.Month}/${S.currentMonth.Year}/budget/${encodeURIComponent(_dailyItemName)}/daily`,
+      { method: 'PUT', body: JSON.stringify(body) }
+    );
+    BP.dailyApplies[_dailyItemName]  = Object.fromEntries(KEYS.map(k => [k, body[`${k}_applies`]]));
+    BP.monthAmounts[_dailyItemName]  = res.total ?? 0;
+    BP.hasAmount.add(_dailyItemName);
+    BP.calculatedTypes[_dailyItemName] = 'Calculated';
+    $('dailyAmountOverlay').classList.remove('open');
+    _dailyItemName = null;
+    if ($('salaryHistoryOverlay').classList.contains('open')) renderSbAll();
+    renderBpGroups();
+  } catch (e) { alert('Error saving: ' + e.message); }
+}
+
+function onBpAmountInput() {
+  const salary = getSalaryAmount();
+  const val = parseFloat($('bpAmountInput').value) || 0;
+  const hint = $('bpAmountHint');
+  if (salary > 0 && val > 0) {
+    hint.textContent = `= ${fmtPct((val / salary) * 100)} of salary`;
+  } else if (!salary && val > 0) {
+    hint.textContent = 'Set salary on the Income page to see %';
+  } else {
+    hint.textContent = '';
+  }
+}
+
+async function saveBpAmount() {
+  const val      = parseFloat($('bpAmountInput').value) || 0;
+  const calcType = BP._calcType || 'Actual';
+  if (!BP.amountItemId || !S.currentMonth) return;
+  const savedId = BP.amountItemId;
+  BP.monthAmounts[savedId]    = val;
+  BP.calculatedTypes[savedId] = calcType;
+  try {
+    await Promise.all([
+      apiFetch(`/finance/months/${S.currentMonth.Month}/${S.currentMonth.Year}/budget`, {
+        method: 'PUT',
+        body: JSON.stringify({ [savedId]: val }),
+      }),
+      apiFetch(`/budget-meta/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(savedId)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ calculatedType: calcType }),
+      }),
+    ]);
+  } catch (e) { alert('Error saving: ' + e.message); return; }
+
+  $('bpAmountModalOverlay').classList.remove('open');
+  BP.amountItemId = null;
+  // update SB cache and re-render breakdown if open
+  SB.items = SB.items.map(it => it.name === savedId ? { ...it, amount: val } : it);
+  if ($('salaryHistoryOverlay').classList.contains('open')) renderSbAll();
+  renderBpGroups();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ACCOUNTS
+   ════════════════════════════════════════════════════════════════════════════ */
+const AC = {
+  defs: [],          // account definitions [{AccountName, Type}]
+  rows: [],          // transactions [{AccountName, Item, ...}]
+  editingDef: null,  // accountName being edited in addAccountModal
+  editingTxn: null,  // {accountName, item, monthFor, yearFor}
+  type: 'Bank',
+  incomePeriod: 'Monthly'
+};
+
+const ACCOUNT_TYPE_ICONS = {
+  'Bank': '🏦', 'Mobile Money': '📱', 'Cash': '💵', 'Investment': '📈'
+};
+const AC_MONTHS = ['January','February','March','April','May','June',
+                   'July','August','September','October','November','December'];
+
+async function renderAccountsPage() {
+  try {
+    [AC.defs, AC.rows] = await Promise.all([
+      apiFetch('/account-defs'),
+      apiFetch('/accounts'),
+    ]);
+  } catch { AC.defs = []; AC.rows = []; }
+  renderAccountsList();
+}
+
+function renderAccountsList() {
+  const container = $('accountsList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!AC.defs.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">💳</div>
+      <div class="empty-state-title">No accounts yet</div>
+      <div class="empty-state-sub">Tap "+ Add Account" to get started.</div>
+    </div>`;
+    return;
+  }
+
+  const totalBal = AC.rows.reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+  const summary = document.createElement('div');
+  summary.className = 'salary-card';
+  summary.style.marginBottom = '16px';
+  summary.innerHTML = `
+    <div class="salary-card-top"><span class="salary-card-label">TOTAL BALANCE</span></div>
+    <div class="salary-card-amount">${fmtGHS(totalBal)}</div>`;
+  container.appendChild(summary);
+
+  const list = document.createElement('div');
+  list.className = 'budget-items';
+
+  AC.defs.forEach(def => {
+    const name  = def.AccountName;
+    const type  = def.Type || 'Bank';
+    const icon  = ACCOUNT_TYPE_ICONS[type] || '💳';
+    const safeN = escHtml(name);
+    const txns  = AC.rows.filter(r => r.AccountName === name);
+    const bal   = txns.reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+
+    const card = document.createElement('div');
+    card.className = 'budget-item-card';
+
+    // transaction list (hidden by default)
+    const txnContainer = document.createElement('div');
+    txnContainer.className = 'txn-list';
+
+    txns.forEach(r => {
+      const credit    = parseFloat(r.Credit) || 0;
+      const monthFor  = r.MonthFor || '';
+      const yearFor   = r.YearFor  || '';
+      const monthRecv = r.MonthReceived || '';
+      const yearRecv  = r.YearReceived  || '';
+      const txnId  = escHtml(r.TransactionID || '');
+      const safeI  = escHtml(r.Item || '');
+      const safeMF = escHtml(monthFor);
+      const safeYF = escHtml(yearFor);
+
+      const forPart  = monthFor  ? `For ${safeMF} ${safeYF}`  : '';
+      const recvPart = monthRecv ? `Recv ${escHtml(monthRecv)} ${escHtml(yearRecv)}` : '';
+      const metaTxt  = [forPart, recvPart].filter(Boolean).join(' · ');
+
+      const row = document.createElement('div');
+      row.className = 'txn-row';
+      row.innerHTML = `
+        <div class="txn-row-left">
+          <div class="txn-row-item">${safeI}</div>
+          ${metaTxt ? `<div class="txn-row-meta">${metaTxt}</div>` : ''}
+        </div>
+        <div class="txn-row-right">
+          <span class="txn-row-amount">${fmtGHS(credit)}</span>
+          <button class="btn btn-icon" onclick="openEditTxnModal('${safeN}','${safeI}','${safeMF}','${safeYF}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','${safeN}','${safeI}','${safeMF}','${safeYF}')" title="Delete">✕</button>
+        </div>`;
+      txnContainer.appendChild(row);
+    });
+
+    const recBtn = document.createElement('button');
+    recBtn.className = 'txn-add-btn';
+    recBtn.textContent = '+ Record Transaction';
+    recBtn.onclick = (e) => { e.stopPropagation(); openAddTxnModal(name); };
+    txnContainer.appendChild(recBtn);
+
+    // card header — click to expand/collapse transactions
+    card.innerHTML = `
+      <div class="budget-item-main" style="cursor:pointer;" onclick="toggleAccountTxns(this)">
+        <div class="budget-item-left">
+          <div class="budget-item-name">${icon} ${safeN}</div>
+          <div class="budget-item-sublabel">${escHtml(type)} · ${txns.length} transaction${txns.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="budget-item-right">
+          <div class="budget-item-amount">${fmtGHS(bal)}</div>
+        </div>
+        <div class="budget-item-actions">
+          <span class="acct-chevron" style="color:var(--muted);font-size:16px;line-height:1;transition:transform 0.2s;">›</span>
+          <button class="btn btn-icon" onclick="event.stopPropagation();openEditAccountModal('${safeN}')" title="Edit account">✎</button>
+          <button class="btn btn-icon danger" onclick="event.stopPropagation();deleteAccount('${safeN}')" title="Delete">✕</button>
+        </div>
+      </div>`;
+    card.appendChild(txnContainer);
+    list.appendChild(card);
+  });
+
+  container.appendChild(list);
+}
+
+function toggleAccountTxns(headerEl) {
+  const txnDiv = headerEl.nextElementSibling;
+  if (!txnDiv) return;
+  const isOpen = txnDiv.style.display === 'block';
+  txnDiv.style.display = isOpen ? 'none' : 'block';
+  headerEl.querySelector('.acct-chevron')?.style && (
+    headerEl.querySelector('.acct-chevron').style.transform = isOpen ? '' : 'rotate(90deg)'
+  );
+}
+
+function acctPopulateMonthSelects() {
+  const opts = `<option value="">—</option>` + AC_MONTHS.map(m => `<option value="${m}">${m}</option>`).join('');
+  [$('acctTxnMonthFor'), $('acctTxnMonthRecv')].forEach(el => { if (el) el.innerHTML = opts; });
+}
+
+function acctPopulateAccountSelect(selected) {
+  AC.txnAccountName = selected || '';
+  const disp = $('acctTxnAccountDisplay');
+  if (!disp) return;
+  const def = AC.defs.find(d => d.AccountName === selected);
+  disp.textContent = def ? `${def.AccountName} (${def.Type})` : (selected || '—');
+}
+
+async function acctPopulateItemSelect(selected) {
+  const sel = $('acctTxnItem');
+  if (!sel) return;
+  let items = [];
+  try { items = await apiFetch('/items'); } catch {}
+  sel.innerHTML = `<option value="">— Select Item —</option>` +
+    items.map(it => `<option value="${escHtml(it.ItemName)}"${it.ItemName === selected ? ' selected' : ''}>[${escHtml(it.Section)}] ${escHtml(it.ItemName)}</option>`).join('');
+  onAcctItemChange(selected || '');
+}
+
+function setAccountType(type) {
+  AC.type = type;
+  const tog = $('accountTypeToggle');
+  if (!tog) return;
+  tog.querySelectorAll('.toggle-btn').forEach(btn => {
+    const t = btn.textContent.trim();
+    btn.classList.toggle('active', t === type || (type === 'Mobile Money' && t === 'MoMo'));
+  });
+}
+
+function setAcctIncomePeriod(period) {
+  AC.incomePeriod = period;
+  const tog = $('acctIncomePeriodToggle');
+  if (tog) {
+    tog.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.trim() === period);
+    });
+  }
+  const row = $('acctMonthForRow');
+  if (row) row.style.display = 'grid';
+}
+
+function onAcctItemChange(val) {
+  const field = $('acctIncomePeriodField');
+  if (field) field.style.display = val ? '' : 'none';
+}
+
+// ── Add / Edit Account Definition ───────────────────────────────────────────
+
+function openAddAccountModal() {
+  AC.editingDef = null;
+  $('addAccountModalTitle').textContent = 'Add Account';
+  $('acctDefName').value = '';
+  setAccountType('Bank');
+  $('addAccountModalOverlay').classList.add('open');
+  setTimeout(() => $('acctDefName').focus(), 80);
+}
+
+function openEditAccountModal(name) {
+  const def = AC.defs.find(d => d.AccountName === name);
+  if (!def) return;
+  AC.editingDef = name;
+  $('addAccountModalTitle').textContent = 'Edit Account';
+  $('acctDefName').value = name;
+  setAccountType(def.Type || 'Bank');
+  $('addAccountModalOverlay').classList.add('open');
+  setTimeout(() => $('acctDefName').focus(), 80);
+}
+
+function closeAddAccountModal(event) {
+  if (event && event.target !== $('addAccountModalOverlay')) return;
+  $('addAccountModalOverlay').classList.remove('open');
+  AC.editingDef = null;
+}
+
+async function saveAccountDef() {
+  const name = $('acctDefName').value.trim();
+  if (!name) { $('acctDefName').focus(); return; }
+  try {
+    if (AC.editingDef) {
+      await apiFetch(`/account-defs/${encodeURIComponent(AC.editingDef)}`, {
+        method: 'PUT', body: JSON.stringify({ accountName: name, type: AC.type }),
+      });
+    } else {
+      await apiFetch('/account-defs', {
+        method: 'POST', body: JSON.stringify({ accountName: name, type: AC.type }),
+      });
+    }
+    [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
+    $('addAccountModalOverlay').classList.remove('open');
+    AC.editingDef = null;
+    renderAccountsList();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ── Record / Edit Transaction ────────────────────────────────────────────────
+
+async function openAddTxnModal(accountName) {
+  acctPopulateMonthSelects();
+  acctPopulateAccountSelect(accountName || '');
+  await acctPopulateItemSelect('');
+  AC.editingTxn = null;
+  $('accountModalTitle').textContent   = 'Record Transaction';
+  $('acctTxnMonthFor').value           = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Month : '';
+  $('acctTxnYearFor').value            = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Year  : '';
+  $('acctTxnMonthRecv').value          = '';
+  $('acctTxnYearRecv').value           = '';
+  $('acctTxnCredit').value             = '';
+  setAcctIncomePeriod('Monthly');
+  if ($('acctIncomePeriodField')) $('acctIncomePeriodField').style.display = 'none';
+  $('accountModalOverlay').classList.add('open');
+}
+
+async function openEditTxnModal(accountName, item, monthFor, yearFor) {
+  acctPopulateMonthSelects();
+  acctPopulateAccountSelect(accountName);
+  await acctPopulateItemSelect(item);
+  const row = AC.rows.find(r =>
+    r.AccountName === accountName && r.Item === item &&
+    r.MonthFor === monthFor && (r.YearFor === yearFor || r.Yearfor === yearFor));
+  if (!row) return;
+  AC.editingTxn = { accountName, item, monthFor, yearFor, transactionId: row.TransactionID || '' };
+  $('accountModalTitle').textContent = 'Edit Transaction';
+  $('acctTxnMonthFor').value         = monthFor;
+  $('acctTxnYearFor').value          = row.YearFor || row.Yearfor || yearFor;
+  $('acctTxnMonthRecv').value        = row.MonthReceived || '';
+  $('acctTxnYearRecv').value         = row.YearReceived  || '';
+  $('acctTxnCredit').value           = row.Credit || '';
+  setAcctIncomePeriod(row.IncomePeriod || 'Monthly');
+  $('accountModalOverlay').classList.add('open');
+}
+
+function closeAccountModal(event) {
+  if (event && event.target !== $('accountModalOverlay')) return;
+  $('accountModalOverlay').classList.remove('open');
+  AC.editingTxn = null;
+}
+
+async function saveAccountTxn() {
+  const accountName = AC.txnAccountName || '';
+  if (!accountName) { alert('No account selected'); return; }
+  const item     = $('acctTxnItem').value;
+  if (!item) { $('acctTxnItem').focus(); return; }
+  const monthFor = $('acctTxnMonthFor').value;
+  const yearFor  = $('acctTxnYearFor').value;
+  const credit   = parseFloat($('acctTxnCredit').value) || 0;
+  const payload  = {
+    accountName,
+    item,
+    incomePeriod:  AC.incomePeriod,
+    monthFor,
+    yearFor,
+    monthReceived: $('acctTxnMonthRecv').value,
+    yearReceived:  $('acctTxnYearRecv').value,
+    credit,
+  };
+  try {
+    if (AC.editingTxn) {
+      await apiFetch('/accounts/transaction', {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...payload,
+          transactionId:  AC.editingTxn.transactionId,
+          oldAccountName: AC.editingTxn.accountName, oldItem: AC.editingTxn.item,
+          oldMonthFor: AC.editingTxn.monthFor, oldYearFor: AC.editingTxn.yearFor,
+        }),
+      });
+    } else {
+      await apiFetch('/accounts/transaction', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
+    $('accountModalOverlay').classList.remove('open');
+    AC.editingTxn = null;
+    renderAccountsList();
+    if (S.currentMonth) await loadBpData(S.currentMonth.Month, S.currentMonth.Year);
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function deleteTxn(transactionId, accountName, item, monthFor, yearFor) {
+  if (!confirm('Delete this transaction?')) return;
+  try {
+    if (transactionId) {
+      await apiFetch(`/accounts/transaction/${encodeURIComponent(transactionId)}`, { method: 'DELETE' });
+    } else {
+      await apiFetch(`/accounts/${encodeURIComponent(accountName)}/transaction/${encodeURIComponent(item)}/${encodeURIComponent(monthFor)}/${encodeURIComponent(yearFor)}`, { method: 'DELETE' });
+    }
+    AC.rows = await apiFetch('/accounts');
+    renderAccountsList();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function deleteAccount(name) {
+  if (!confirm(`Delete "${name}" and all its transactions?`)) return;
+  try {
+    await apiFetch(`/account-defs/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
+    renderAccountsList();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   KEYBOARD
+   ════════════════════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    $('salaryModalOverlay').classList.remove('open');
+    $('itemModalOverlay').classList.remove('open');
+    $('bpItemModalOverlay').classList.remove('open');
+    $('bpAmountModalOverlay').classList.remove('open');
+    $('dailyAmountOverlay').classList.remove('open');
+    $('addIncomeModalOverlay').classList.remove('open');
+    $('incomeAmountModalOverlay').classList.remove('open');
+    $('salaryHistoryOverlay').classList.remove('open');
+    $('accountModalOverlay').classList.remove('open');
+    $('addAccountModalOverlay').classList.remove('open');
+  }
+});
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════════════════════ */
+async function init() {
+  // restore page from URL hash
+  const hashPage = window.location.hash.replace('#', '');
+  const startPage = VALID_PAGES.includes(hashPage) ? hashPage : 'dashboard';
+  navigate(startPage);
+
+  loadBudgetItems();
+  // load account defs + transactions early so income page knows which sources are account-managed
+  Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')])
+    .then(([defs, rows]) => { AC.defs = defs || []; AC.rows = rows || []; })
+    .catch(() => {});
+  await fetchMonths();
+  if (S.currentPage === 'budget') renderBudgetPage();
+  if (S.currentPage === 'budget-plan') renderBpPage();
+}
+
+init();
+</script>
+</body>
+</html>
