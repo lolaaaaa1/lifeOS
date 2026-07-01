@@ -4538,6 +4538,10 @@ document.addEventListener('keydown', (e) => {
    INIT
    ════════════════════════════════════════════════════════════════════════════ */
 async function init() {
+  if (new URLSearchParams(window.location.search).has('reset')) {
+    localStorage.removeItem('gh_token');
+    history.replaceState(null, '', window.location.pathname + window.location.hash);
+  }
   const token = localStorage.getItem('gh_token');
   if (!token) { showSetupScreen(); return; }
 
