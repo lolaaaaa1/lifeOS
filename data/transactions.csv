@@ -85,5 +85,19 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0106202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,June,2026,Expense
 0107202605,Ecobank,,700,,Tithe,Monthly,,,July,2026,Expense
 0107202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,July,2026,Expense
+0101202606,Ecobank,,100,,Department Dues,Monthly,,,January,2026,Expense
+0101202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,January,2026,Expense
+0102202606,Ecobank,,100,,Department Dues,Monthly,,,February,2026,Expense
+0102202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,February,2026,Expense
+0103202606,Ecobank,,100,,Department Dues,Monthly,,,March,2026,Expense
+0103202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,March,2026,Expense
+0104202606,Ecobank,,100,,Department Dues,Monthly,,,April,2026,Expense
+0104202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,April,2026,Expense
+0105202606,Ecobank,,100,,Department Dues,Monthly,,,May,2026,Expense
+0105202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,May,2026,Expense
+0106202606,Ecobank,,100,,Department Dues,Monthly,,,June,2026,Expense
+0106202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,June,2026,Expense
+0107202606,Ecobank,,100,,Department Dues,Monthly,,,July,2026,Expense
+0107202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,July,2026,Expense
 0207202601,Ecobank,,1,,Transfer,Monthly,,,,,Transfer
 0207202601,,Telecel Cash,,1,Transfer,Monthly,,,,,Transfer
