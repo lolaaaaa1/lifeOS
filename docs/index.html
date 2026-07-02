@@ -2254,12 +2254,17 @@ const LocalAPI = {
     if (method === 'GET' && rawPath === '/income/sources')
       return ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName);
 
-    // GET /income/year/{year}/totals  ← before /income/{month}/{year}
-    if ((m = rawPath.match(/^\/income\/year\/(\d+)\/totals$/)) && method === 'GET') {
-      const yr = m[1]; const totals = {};
+    // GET /income/year/{year}/totals[/{upToMonth}]  ← before /income/{month}/{year}
+    if ((m = rawPath.match(/^\/income\/year\/(\d+)\/totals(?:\/([^/]+))?$/)) && method === 'GET') {
+      const yr = m[1]; const upTo = m[2] || null;
+      const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const upToIdx = upTo ? MONTHS.indexOf(upTo) : 11;
+      const totals = {};
       INC().rows.forEach(r => {
-        if (r.Year === yr && r.Type === 'Budget' && r.Items && r.CalculatedType !== 'Calculated')
-          totals[r.Items] = (totals[r.Items] || 0) + (parseFloat(r.ActualAmount || r.SalaryPortion) || 0);
+        if (r.Year === yr && r.Type === 'Budget' && r.Items && r.CalculatedType !== 'Calculated') {
+          if (MONTHS.indexOf(r.Month) <= upToIdx)
+            totals[r.Items] = (totals[r.Items] || 0) + (parseFloat(r.ActualAmount || r.SalaryPortion) || 0);
+        }
       });
       return totals;
     }
@@ -2858,7 +2863,7 @@ async function renderDashboardCalc() {
   const [dayDataArr, todaySummary, yearActTotals, monthDataArr] = await Promise.all([
     Promise.all(dayDates.map(d => apiFetch(`/days/on/${d}`).catch(() => null))),
     apiFetch('/days/today/summary').catch(() => ({})),
-    apiFetch(`/income/year/${curYear}/totals`).catch(() => ({})),
+    apiFetch(`/income/year/${curYear}/totals/${encodeURIComponent(curMonthStr)}`).catch(() => ({})),
     Promise.all(monthSlides.map(m => Promise.all([
       apiFetch(`/days/${m.Month}/${m.Year}/totals`).catch(() => ({})),
       apiFetch(`/income/${m.Month}/${m.Year}`).catch(() => []),
