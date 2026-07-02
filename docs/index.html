@@ -5050,6 +5050,7 @@ async function openEditTxnModal(txnId) {
   setTxnType(type);
   if ($('acctTxnFrom')) $('acctTxnFrom').value = t.accountFrom || '';
   if ($('acctTxnTo'))   $('acctTxnTo').value   = t.accountTo   || '';
+  onAcctTxnToChange();
   await acctPopulateItemSelect(t.item || '', type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null);
   $('accountModalOverlay').classList.add('open');
 }
