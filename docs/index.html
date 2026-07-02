@@ -3844,7 +3844,8 @@ const VID = { source: '', tab: 'used' };
 
 function openVariableIncomeDetail(source) {
   VID.source = source;
-  $('varIncomeDetailTitle').textContent = source;
+  const monthLabel = S.currentMonth && !isAllMonths() ? ` · ${S.currentMonth.Month} ${S.currentMonth.Year}` : '';
+  $('varIncomeDetailTitle').textContent = source + monthLabel;
   $('varIncomeAllocateBtn').onclick = () => { closeVariableIncomeDetail(); openAllocateModal(source); };
   setVidTab(VID.tab || 'used');
   $('varIncomeDetailOverlay').classList.add('open');
@@ -3862,8 +3863,10 @@ function setVidTab(tab) {
   const allBudgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
   const source = VID.source;
   const col = source.replace(/\s+/g, '') + 'Portion'; // e.g. CompanyBonusPortion
+  const filterMonth = S.currentMonth && !isAllMonths() ? S.currentMonth.Month : null;
+  const filterYear  = filterMonth ? String(S.currentMonth.Year) : null;
   const amtByItem = {};
-  INC().rows.filter(r => r.Type === 'Budget').forEach(r => {
+  INC().rows.filter(r => r.Type === 'Budget' && (!filterMonth || (r.Month === filterMonth && String(r.Year) === filterYear))).forEach(r => {
     const v = parseFloat(r[col]) || 0;
     if (v > 0) amtByItem[r.Items] = (amtByItem[r.Items] || 0) + v;
   });
