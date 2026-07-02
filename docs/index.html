@@ -3964,22 +3964,10 @@ async function openSalaryHistory() {
         name:   r.Items,
         amount: (r.CalculatedType || '') === 'Calculated'
           ? parseFloat(r.CalculatedAmount || '0') || 0
-          : parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0,
+          : parseFloat(r.SalaryPortion || '0') || 0,
         paid: r.Paid || ''
       }));
-    // bonus portions per item from income.csv *Portion columns
-    const nonSalarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.ItemName !== 'Salary').map(r => r.ItemName);
     SB.bonusByItem = {};
-    allRows.filter(r => r.Type === 'Budget').forEach(r => {
-      nonSalarySrcs.forEach(src => {
-        const col = src.replace(/\s+/g, '') + 'Portion';
-        const v = parseFloat(r[col]) || 0;
-        if (v > 0) {
-          if (!SB.bonusByItem[r.Items]) SB.bonusByItem[r.Items] = {};
-          SB.bonusByItem[r.Items][src] = (SB.bonusByItem[r.Items][src] || 0) + v;
-        }
-      });
-    });
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
