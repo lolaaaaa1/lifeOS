@@ -31,7 +31,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0102202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,February,2026,Expense
 0103202601,Ecobank,,1000,,Rent,Monthly,,,March,2026,Expense
 0103202601,,National Rental Assistance,,1000,Rent,Monthly,,,March,2026,Expense
-0103202601,Ecobank,,30,,Charges,Monthly,,,March,2026,Expense
+0103202601,Ecobank,,18.5,,Charges,Monthly,,,March,2026,Expense
 0103202602,Ecobank,,120,,Rent Charges,Monthly,,,March,2026,Expense
 0103202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,March,2026,Expense
 0103202603,Ecobank,,140,,Rental Utilities,Monthly,,,March,2026,Expense
@@ -131,8 +131,8 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0102202609,,Others,,580,Food,Monthly,,,February,2026,Expense
 0102202610,Ecobank,,840,,Transport,Monthly,,,February,2026,Expense
 0102202610,,Others,,840,Transport,Monthly,,,February,2026,Expense
-0103202609,Ecobank,,840,,Food,Monthly,,,March,2026,Expense
-0103202609,,Others,,840,Food,Monthly,,,March,2026,Expense
+0103202609,Ecobank,,580,,Food,Monthly,,,March,2026,Expense
+0103202609,,Others,,580,Food,Monthly,,,March,2026,Expense
 0103202610,Ecobank,,840,,Transport,Monthly,,,March,2026,Expense
 0103202610,,Others,,840,Transport,Monthly,,,March,2026,Expense
 0104202608,Ecobank,,1085,,Food,Monthly,,,April,2026,Expense
