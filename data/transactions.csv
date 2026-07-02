@@ -7,3 +7,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 3006202603,,Ecobank,,7000,Salary,Monthly,June,,July,2026,
 0207202601,Ecobank,,1,,,Monthly,,,,,
 0207202601,,Telecel Cash,,1,,Monthly,,,,,
+0207202602,Ecobank,,1000,,Rent,Monthly,,,July,2026,Expense
+0207202602,,National Rental Assistance,,1000,Rent,Monthly,,,July,2026,Expense
