@@ -3538,7 +3538,13 @@ function renderIncomeSections() {
           <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
             onclick="event.stopPropagation();openAllocateModal('${escHtml(src)}')">Allocate</button>
         </div>
-        <div class="salary-card-amount">${fmtGHS(received)}</div>`;
+        <div class="salary-card-amount">${fmtGHS(received)}</div>
+        <div class="salary-split">
+          <div class="salary-split-item">
+            <span class="salary-split-label">Remaining</span>
+            <span class="salary-split-value">${fmtGHS(remaining)}</span>
+          </div>
+        </div>`;
 
       const vlist = document.createElement('div');
       vlist.className = 'budget-items';
