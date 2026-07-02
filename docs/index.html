@@ -1981,26 +1981,48 @@ function _syncTxnToIncome(item, monthRcv, yearRcv, credit, period) {
 
 async function _migrateTxns() {
   const txns = TXNS();
-  _ensureCol(txns, 'AccountFrom');
-  _ensureCol(txns, 'AccountTo');
-  _ensureCol(txns, 'Amount');
   let changed = false;
+  const TARGET = ['TransactionID', 'AccountFrom', 'AccountTo', 'Debit', 'Credit', 'Item', 'IncomePeriod', 'MonthReceived', 'YearReceived', 'MonthFor', 'YearFor'];
+
+  // ── 1. Patch old AccountName → AccountTo ─────────────────────────────────────
   for (const row of txns.rows) {
     if (!row.AccountTo && row.AccountName) {
       row.AccountTo = row.AccountName;
-      row.Amount    = row.Credit || '';
+      if (!row.Amount) row.Amount = row.Credit || '';
       changed = true;
     }
   }
-  // Drop legacy AccountName and Credit columns
-  for (const col of ['AccountName', 'Credit']) {
-    if (txns.headers.includes(col)) {
-      txns.headers = txns.headers.filter(h => h !== col);
-      txns.rows.forEach(r => delete r[col]);
-      changed = true;
+
+  // ── 2. Convert single-row Amount format → double-entry Debit/Credit ──────────
+  const needsDE = txns.rows.some(r => (r.Amount || r.Credit) && !r.Debit);
+  if (needsDE) {
+    const newRows = [], seen = new Set();
+    for (const r of txns.rows) {
+      if (r.Debit !== undefined && r.Credit !== undefined && !r.Amount) { newRows.push(r); continue; }
+      if (seen.has(r.TransactionID)) continue;
+      seen.add(r.TransactionID);
+      const amt = r.Amount || r.Credit || '';
+      const base = {
+        TransactionID: r.TransactionID,
+        Item: r.Item || '', IncomePeriod: r.IncomePeriod || '',
+        MonthReceived: r.MonthReceived || '', YearReceived: r.YearReceived || '',
+        MonthFor: r.MonthFor || '', YearFor: r.YearFor || '',
+      };
+      newRows.push({ ...base, AccountFrom: r.AccountFrom || '', AccountTo: '', Debit: amt, Credit: '' });
+      newRows.push({ ...base, AccountFrom: '', AccountTo: r.AccountTo || '', Debit: '', Credit: amt });
     }
+    txns.rows = newRows;
+    changed = true;
   }
-  if (changed) await DATA.save('data/transactions.csv', 'Drop AccountName/Credit legacy columns');
+
+  // ── 3. Normalize headers ──────────────────────────────────────────────────────
+  if (JSON.stringify(txns.headers) !== JSON.stringify(TARGET)) {
+    txns.headers = TARGET;
+    txns.rows = txns.rows.map(r => { const n = {}; TARGET.forEach(h => n[h] = r[h] !== undefined ? r[h] : ''); return n; });
+    changed = true;
+  }
+
+  if (changed) await DATA.save('data/transactions.csv', 'Migrate to double-entry Debit/Credit');
 }
 
 // ── LocalAPI router ────────────────────────────────────────────────────────
@@ -2402,51 +2424,53 @@ const LocalAPI = {
       return { ok: true };
     }
 
-    // POST /accounts/transaction
+    // POST /accounts/transaction — creates 2 rows (debit leg + credit leg)
     if (method === 'POST' && rawPath === '/accounts/transaction') {
       const txns = TXNS();
-      const row = {}; txns.headers.forEach(h => row[h] = '');
-      Object.assign(row, {
-        TransactionID: _genTxnId(txns.rows),
-        AccountFrom:   body.accountFrom   || '',
-        AccountTo:     body.accountTo     || '',
+      const id = _genTxnId(txns.rows);
+      const amount = String(parseFloat(body.amount || 0));
+      const base = {
+        TransactionID: id,
         Item:          body.item          || '',
         IncomePeriod:  body.incomePeriod  || '',
         MonthReceived: body.monthReceived || '',
-        YearReceived:  String(body.yearReceived  || ''),
+        YearReceived:  String(body.yearReceived || ''),
         MonthFor:      body.monthFor      || '',
-        YearFor:       String(body.yearFor       || ''),
-        Amount:        String(parseFloat(body.amount || 0)),
-      });
-      txns.rows.push(row);
-      await DATA.save('data/transactions.csv', `Add txn ${row.TransactionID}`);
+        YearFor:       String(body.yearFor || ''),
+      };
+      txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '' });
+      txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount });
+      await DATA.save('data/transactions.csv', `Add txn ${id}`);
       const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
-      if (incomeSet.has(row.Item)) {
-        _syncTxnToIncome(row.Item, row.MonthReceived, row.YearReceived, parseFloat(row.Amount), row.IncomePeriod);
-        await DATA.save('data/income.csv', `Sync income ${row.Item}`);
+      if (incomeSet.has(base.Item)) {
+        _syncTxnToIncome(base.Item, base.MonthReceived, base.YearReceived, parseFloat(amount), base.IncomePeriod);
+        await DATA.save('data/income.csv', `Sync income ${base.Item}`);
       }
       return { ok: true };
     }
 
-    // PUT /accounts/transaction
+    // PUT /accounts/transaction — replaces both rows for the transaction
     if (method === 'PUT' && rawPath === '/accounts/transaction') {
       const txns = TXNS(); const tid = body.transactionId || '';
-      const row = txns.rows.find(r => tid && r.TransactionID === tid);
-      if (!row) throw new Error('transaction not found');
-      row.AccountFrom   = body.accountFrom   || row.AccountFrom || '';
-      row.AccountTo     = body.accountTo     || row.AccountTo   || '';
-      row.Item          = body.item          || row.Item;
-      row.MonthFor      = body.monthFor      || row.MonthFor;
-      row.YearFor       = String(body.yearFor      || row.YearFor);
-      row.Amount        = String(parseFloat(body.amount !== undefined ? body.amount : (row.Amount || row.Credit)) || 0);
-      row.IncomePeriod  = body.incomePeriod  || row.IncomePeriod;
-      row.MonthReceived = body.monthReceived || row.MonthReceived;
-      row.YearReceived  = String(body.yearReceived || row.YearReceived);
-      await DATA.save('data/transactions.csv', `Update txn ${row.TransactionID}`);
+      if (!txns.rows.some(r => r.TransactionID === tid)) throw new Error('transaction not found');
+      txns.rows = txns.rows.filter(r => r.TransactionID !== tid);
+      const amount = String(parseFloat(body.amount) || 0);
+      const base = {
+        TransactionID: tid,
+        Item:          body.item          || '',
+        IncomePeriod:  body.incomePeriod  || '',
+        MonthReceived: body.monthReceived || '',
+        YearReceived:  String(body.yearReceived || ''),
+        MonthFor:      body.monthFor      || '',
+        YearFor:       String(body.yearFor || ''),
+      };
+      txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '' });
+      txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount });
+      await DATA.save('data/transactions.csv', `Update txn ${tid}`);
       const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
-      if (incomeSet.has(row.Item)) {
-        _syncTxnToIncome(row.Item, row.MonthReceived, row.YearReceived, parseFloat(row.Amount), row.IncomePeriod);
-        await DATA.save('data/income.csv', `Sync income ${row.Item}`);
+      if (incomeSet.has(base.Item)) {
+        _syncTxnToIncome(base.Item, base.MonthReceived, base.YearReceived, parseFloat(amount), base.IncomePeriod);
+        await DATA.save('data/income.csv', `Sync income ${base.Item}`);
       }
       return { ok: true };
     }
@@ -4259,13 +4283,37 @@ async function renderAccountsPage() {
 }
 
 function _acctBalance(name) {
-  return AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name)
-    .reduce((s, r) => {
-      const amt = parseFloat(r.Amount) || 0;
-      if (r.AccountTo   === name) return s + amt;
-      if (r.AccountFrom === name) return s - amt;
-      return s;
-    }, 0);
+  return AC.rows.reduce((s, r) => {
+    if (r.AccountTo   === name) return s + (parseFloat(r.Credit) || 0);
+    if (r.AccountFrom === name) return s - (parseFloat(r.Debit)  || 0);
+    return s;
+  }, 0);
+}
+
+// Group double-entry rows into logical transactions [{id, accountFrom, accountTo, amount, item, ...}]
+function _groupTxns(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const id = r.TransactionID || '';
+    if (!map.has(id)) map.set(id, { dr: null, cr: null });
+    const g = map.get(id);
+    if (r.AccountFrom && (parseFloat(r.Debit) || 0) > 0) g.dr = r;
+    if (r.AccountTo   && (parseFloat(r.Credit) || 0) > 0) g.cr = r;
+    if (!g.dr && r.AccountFrom) g.dr = r;
+    if (!g.cr && r.AccountTo)   g.cr = r;
+  }
+  return Array.from(map.entries()).map(([id, g]) => ({
+    id,
+    accountFrom:  g.dr?.AccountFrom  || '',
+    accountTo:    g.cr?.AccountTo    || '',
+    amount:       parseFloat(g.dr?.Debit || g.cr?.Credit) || 0,
+    item:         (g.dr || g.cr)?.Item         || '',
+    incomePeriod: (g.dr || g.cr)?.IncomePeriod || '',
+    monthFor:     (g.dr || g.cr)?.MonthFor     || '',
+    yearFor:      (g.dr || g.cr)?.YearFor      || '',
+    monthRecv:    (g.dr || g.cr)?.MonthReceived || '',
+    yearRecv:     (g.dr || g.cr)?.YearReceived  || '',
+  }));
 }
 
 function setAcctTab(tab) {
@@ -4355,7 +4403,11 @@ function _renderWalletsAccountsList(container) {
     const type  = def.Type || 'Bank';
     const icon  = ACCOUNT_TYPE_ICONS[type] || '💳';
     const safeN = escHtml(name);
-    const txns  = AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name);
+    // Collect both legs of every transaction involving this account
+    const relatedIds = new Set(
+      AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name).map(r => r.TransactionID)
+    );
+    const txns = _groupTxns(AC.rows.filter(r => relatedIds.has(r.TransactionID)));
     const bal = _acctBalance(name);
 
     const card = document.createElement('div');
@@ -4365,23 +4417,18 @@ function _renderWalletsAccountsList(container) {
     const txnContainer = document.createElement('div');
     txnContainer.className = 'txn-list';
 
-    txns.forEach(r => {
-      const amt      = parseFloat(r.Amount) || 0;
-      const isCredit = r.AccountTo === name;
-      const sign     = isCredit ? '+' : '−';
-      const color    = isCredit ? 'var(--green)' : 'var(--red)';
-      const txnId    = escHtml(r.TransactionID || '');
-      const isTransfer = r.AccountFrom && r.AccountTo && acctNames.has(r.AccountFrom) && acctNames.has(r.AccountTo);
-      const itemLabel = isTransfer ? 'Transfer' : (r.Item || '—');
-      const safeI    = escHtml(itemLabel);
-      const monthFor  = r.MonthFor || '';
-      const yearFor   = r.YearFor  || '';
-      const monthRecv = r.MonthReceived || '';
-      const yearRecv  = r.YearReceived  || '';
-      const otherAcct = isCredit ? (r.AccountFrom || '—') : (r.AccountTo || '—');
+    txns.forEach(t => {
+      const isCredit   = t.accountTo === name;
+      const sign       = isCredit ? '+' : '−';
+      const color      = isCredit ? 'var(--green)' : 'var(--red)';
+      const txnId      = escHtml(t.id || '');
+      const isTransfer = t.accountFrom && t.accountTo && acctNames.has(t.accountFrom) && acctNames.has(t.accountTo);
+      const itemLabel  = t.item || (isTransfer ? 'Transfer' : '—');
+      const safeI      = escHtml(itemLabel);
+      const otherAcct  = isCredit ? (t.accountFrom || '—') : (t.accountTo || '—');
 
-      const forPart  = monthFor  ? `For ${escHtml(monthFor)} ${escHtml(yearFor)}` : '';
-      const recvPart = monthRecv ? `Recv ${escHtml(monthRecv)} ${escHtml(yearRecv)}` : '';
+      const forPart  = t.monthFor ? `For ${escHtml(t.monthFor)} ${escHtml(t.yearFor)}` : '';
+      const recvPart = t.monthRecv ? `Recv ${escHtml(t.monthRecv)} ${escHtml(t.yearRecv)}` : '';
       const metaTxt  = [forPart, recvPart].filter(Boolean).join(' · ');
 
       const row = document.createElement('div');
@@ -4392,7 +4439,7 @@ function _renderWalletsAccountsList(container) {
           ${metaTxt ? `<div class="txn-row-meta">${metaTxt}</div>` : ''}
         </div>
         <div class="txn-row-right">
-          <span class="txn-row-amount" style="color:${color};">${sign} ${fmtGHS(amt)}</span>
+          <span class="txn-row-amount" style="color:${color};">${sign} ${fmtGHS(t.amount)}</span>
           <button class="btn btn-icon" onclick="openEditTxnModal('${txnId}')" title="Edit">✎</button>
           <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','','','','')" title="Delete">✕</button>
         </div>`;
@@ -4600,30 +4647,28 @@ async function openAddTxnModal(accountName) {
 }
 
 async function openEditTxnModal(txnId) {
-  const row = AC.rows.find(r => r.TransactionID === txnId);
-  if (!row) return;
+  const txnRows = AC.rows.filter(r => r.TransactionID === txnId);
+  if (!txnRows.length) return;
+  const [t] = _groupTxns(txnRows);
+  if (!t) return;
   acctPopulateMonthSelects();
   acctPopulateFromToSelects('');
-  // Detect transaction type
   const acctSet = new Set(AC.defs.map(d => d.AccountName));
-  const hasFrom = !!(row.AccountFrom);
-  const hasTo   = !!row.AccountTo;
   let type = 'expense';
-  if (!hasFrom && hasTo) type = 'income';
-  else if (hasFrom && hasTo && acctSet.has(row.AccountFrom) && acctSet.has(row.AccountTo)) type = 'transfer';
+  if (!t.accountFrom && t.accountTo) type = 'income';
+  else if (t.accountFrom && t.accountTo && acctSet.has(t.accountFrom) && acctSet.has(t.accountTo)) type = 'transfer';
   AC.editingTxn = { transactionId: txnId };
   $('accountModalTitle').textContent = 'Edit Transaction';
-  $('acctTxnMonthFor').value  = row.MonthFor      || '';
-  $('acctTxnYearFor').value   = row.YearFor       || '';
-  $('acctTxnMonthRecv').value = row.MonthReceived || '';
-  $('acctTxnYearRecv').value  = row.YearReceived  || '';
-  $('acctTxnCredit').value    = row.Amount || row.Credit || '';
-  setAcctIncomePeriod(row.IncomePeriod || 'Monthly');
+  $('acctTxnMonthFor').value  = t.monthFor  || '';
+  $('acctTxnYearFor').value   = t.yearFor   || '';
+  $('acctTxnMonthRecv').value = t.monthRecv || '';
+  $('acctTxnYearRecv').value  = t.yearRecv  || '';
+  $('acctTxnCredit').value    = t.amount    || '';
+  setAcctIncomePeriod(t.incomePeriod || 'Monthly');
   setTxnType(type);
-  // Set account values after setTxnType populates items
-  if ($('acctTxnFrom')) $('acctTxnFrom').value = row.AccountFrom || '';
-  if ($('acctTxnTo'))   $('acctTxnTo').value   = row.AccountTo || '';
-  await acctPopulateItemSelect(row.Item || '', type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null);
+  if ($('acctTxnFrom')) $('acctTxnFrom').value = t.accountFrom || '';
+  if ($('acctTxnTo'))   $('acctTxnTo').value   = t.accountTo   || '';
+  await acctPopulateItemSelect(t.item || '', type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null);
   $('accountModalOverlay').classList.add('open');
 }
 
