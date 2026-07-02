@@ -159,6 +159,12 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2811202502,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,November,2025,December,2025,Income
 0207202601,Ecobank,,500,,Transfer,Monthly,,,July,2026,Transfer
 0207202601,,Achieve SOA Exams,,500,Transfer,Monthly,,,July,2026,Transfer
+0104202612,Ecobank,,340,,SOA Exams,Monthly,,,April,2026,Transfer
+0104202612,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,April,2026,Transfer
+0105202612,Ecobank,,340,,SOA Exams,Monthly,,,May,2026,Transfer
+0105202612,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,May,2026,Transfer
+0106202611,Ecobank,,340,,SOA Exams,Monthly,,,June,2026,Transfer
+0106202611,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,June,2026,Transfer
 0101202611,Ecobank,,100,,Trust Fund,Monthly,,,January,2026,Transfer
 0101202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,January,2026,Transfer
 0104202611,Ecobank,,100,,Trust Fund,Monthly,,,April,2026,Transfer
