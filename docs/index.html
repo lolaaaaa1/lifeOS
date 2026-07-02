@@ -2263,10 +2263,11 @@ const LocalAPI = {
       INC().rows.forEach(r => {
         if (r.Year === yr && r.Type === 'Budget' && r.Items) {
           if (MONTHS.indexOf(r.Month) <= upToIdx) {
-            const amt = (r.CalculatedType || '') === 'Calculated'
+            const isCalc = (r.CalculatedType || '') === 'Calculated';
+            const amt = isCalc
               ? parseFloat(r.CalculatedAmount) || 0
               : parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
-            totals[r.Items] = (totals[r.Items] || 0) + amt;
+            if (!isCalc) totals[r.Items] = (totals[r.Items] || 0) + amt; // Calculated handled by days.csv
             const p = parseFloat(r.Paid);
             const pAmt = !isNaN(p) ? p : (r.Paid === 'Paid' || r.Paid === 'Transferred') ? amt : 0;
             paidMap[r.Items] = (paidMap[r.Items] || 0) + pAmt;
