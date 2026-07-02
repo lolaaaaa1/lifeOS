@@ -1814,7 +1814,8 @@
 
 <!-- ── Offline banner ───────────────────────────────────────────────────────── -->
 <div id="offline-banner">
-  GitHub connection failed — reload to reconnect
+  <span id="offline-msg">GitHub connection failed</span>
+  <button onclick="retryConnection()" style="margin-left:12px;background:rgba(255,255,255,0.15);border:none;color:inherit;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;">Retry</button>
 </div>
 
 <!-- ── GitHub setup screen ──────────────────────────────────────────────────── -->
@@ -2629,8 +2630,54 @@ async function apiFetch(path, opts = {}) {
   return LocalAPI.route(path, opts);
 }
 
+let _retryTimer = null;
+let _retryCount = 0;
+
 function showOfflineBanner(show) {
   $('offline-banner').classList.toggle('show', show);
+  if (show) {
+    _scheduleRetry();
+  } else {
+    _retryCount = 0;
+    if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+  }
+}
+
+function _scheduleRetry() {
+  if (_retryTimer) clearTimeout(_retryTimer);
+  const delay = Math.min(5 + _retryCount * 5, 30);
+  let remaining = delay;
+  const msgEl = $('offline-msg');
+  const tick = () => {
+    if (!$('offline-banner').classList.contains('show')) return;
+    msgEl.textContent = `GitHub connection failed — retrying in ${remaining}s`;
+    if (remaining <= 0) { retryConnection(); return; }
+    remaining--;
+    _retryTimer = setTimeout(tick, 1000);
+  };
+  tick();
+}
+
+async function retryConnection() {
+  if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+  const msgEl = $('offline-msg');
+  msgEl.textContent = 'Reconnecting…';
+  _retryCount++;
+  try {
+    await DATA.loadAll();
+    _ensureCol(ITMS(), 'Display');
+    showOfflineBanner(false);
+    const hashPage  = window.location.hash.replace('#', '');
+    const startPage = VALID_PAGES.includes(hashPage) ? hashPage : 'dashboard';
+    navigate(startPage);
+    loadBudgetItems();
+    try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
+    await fetchMonths();
+    if (S.currentPage === 'budget')      renderBudgetPage();
+    if (S.currentPage === 'budget-plan') renderBpPage();
+  } catch {
+    _scheduleRetry();
+  }
 }
 
 function showSetupScreen(errMsg) {
