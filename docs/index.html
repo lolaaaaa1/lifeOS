@@ -2261,9 +2261,13 @@ const LocalAPI = {
       const upToIdx = upTo ? MONTHS.indexOf(upTo) : 11;
       const totals = {};
       INC().rows.forEach(r => {
-        if (r.Year === yr && r.Type === 'Budget' && r.Items && r.CalculatedType !== 'Calculated') {
-          if (MONTHS.indexOf(r.Month) <= upToIdx)
-            totals[r.Items] = (totals[r.Items] || 0) + (parseFloat(r.ActualAmount || r.SalaryPortion) || 0);
+        if (r.Year === yr && r.Type === 'Budget' && r.Items) {
+          if (MONTHS.indexOf(r.Month) <= upToIdx) {
+            const amt = (r.CalculatedType || '') === 'Calculated'
+              ? parseFloat(r.CalculatedAmount) || 0
+              : parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+            totals[r.Items] = (totals[r.Items] || 0) + amt;
+          }
         }
       });
       return totals;
