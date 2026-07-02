@@ -3528,12 +3528,6 @@ function renderIncomeSections() {
       vlist.className = 'budget-items';
 
       Object.values(groups).forEach(g => {
-        const allocated = allocRows
-          .filter(r => r.Source === g.source)
-          .reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
-        const remaining = g.received - allocated;
-        const fullyAllocated = remaining <= 0.01;
-
         const card = document.createElement('div');
         card.className = 'salary-card';
         card.style.cssText = 'margin-bottom:12px;cursor:pointer;';
@@ -3541,24 +3535,10 @@ function renderIncomeSections() {
         card.innerHTML = `
           <div class="salary-card-top">
             <span class="salary-card-label">${escHtml(g.source.toUpperCase())}</span>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
-                onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
-            </div>
+            <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
+              onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
           </div>
-          <div class="salary-card-amount">${fmtGHS(g.received)}</div>
-          ${allocated > 0 ? `
-          <div class="salary-split">
-            <div class="salary-split-item">
-              <span class="salary-split-label">Allocated</span>
-              <span class="salary-split-value">${fmtGHS(allocated)}</span>
-            </div>
-            <div class="salary-split-item">
-              <span class="salary-split-label" style="${!fullyAllocated ? 'color:#d4a017;' : ''}">Remaining</span>
-              <span class="salary-split-value" style="${!fullyAllocated ? 'color:#d4a017;' : ''}">${fmtGHS(Math.max(0, remaining))}</span>
-            </div>
-          </div>
-          ${budgetProgressHtml(allocated, g.received)}` : ''}`;
+          <div class="salary-card-amount">${fmtGHS(g.received)}</div>`;
 
         vlist.appendChild(card);
       });
