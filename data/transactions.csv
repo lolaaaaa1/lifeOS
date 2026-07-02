@@ -13,8 +13,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 3006202606,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,
 107202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,June,,July,2026,
 107202601,,Ecobank,,7000,Salary,Monthly,June,,July,2026,
-107202602,Ecobank,,1,,,Monthly,,,,,
-107202602,,Telecel Cash,,1,,Monthly,,,,,
 3006202608,Ecobank,,1000,,Rent,Monthly,,,January,2026,Expense
 3006202609,,National Rental Assistance,,1000,Rent,Monthly,,,January,2026,Expense
 3006202609,Ecobank,,1000,,Rent,Monthly,,,February,2026,Expense
