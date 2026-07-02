@@ -1,11 +1,31 @@
 TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,TransactionType
-3006202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,May,2026,June,2026,
-3006202601,,Ecobank,,7000,Salary,Monthly,May,2026,June,2026,
-3006202602,Nationwide Medical Insurance,,2500,,Company Bonus,Variable,June,2026,,,
-3006202602,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,
-3006202603,Nationwide Medical Insurance,,7000,,Salary,Monthly,June,,July,2026,
-3006202603,,Ecobank,,7000,Salary,Monthly,June,,July,2026,
-0207202601,Ecobank,,1,,,Monthly,,,,,
-0207202601,,Telecel Cash,,1,,Monthly,,,,,
-0207202602,Ecobank,,1000,,Rent,Monthly,,,July,2026,Expense
-0207202602,,National Rental Assistance,,1000,Rent,Monthly,,,July,2026,Expense
+3006202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,December,2025,January,2026,
+3006202601,,Ecobank,,7000,Salary,Monthly,December,2025,January,2026,
+3006202602,Nationwide Medical Insurance,,7000,,Salary,Monthly,January,2026,February,2026,
+3006202602,,Ecobank,,7000,Salary,Monthly,January,2026,February,2026,
+3006202603,Nationwide Medical Insurance,,7000,,Salary,Monthly,February,2026,March,2026,
+3006202603,,Ecobank,,7000,Salary,Monthly,February,2026,March,2026,
+3006202604,Nationwide Medical Insurance,,7000,,Salary,Monthly,March,2026,April,2026,
+3006202604,,Ecobank,,7000,Salary,Monthly,March,2026,April,2026,
+3006202605,Nationwide Medical Insurance,,7000,,Salary,Monthly,May,2026,June,2026,
+3006202605,,Ecobank,,7000,Salary,Monthly,May,2026,June,2026,
+3006202605,Nationwide Medical Insurance,,2500,,Company Bonus,Variable,June,2026,,,
+3006202606,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,
+107202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,June,,July,2026,
+107202601,,Ecobank,,7000,Salary,Monthly,June,,July,2026,
+107202602,Ecobank,,1,,,Monthly,,,,,
+107202602,,Telecel Cash,,1,,Monthly,,,,,
+3006202608,Ecobank,,1000,,Rent,Monthly,,,January,2026,Expense
+3006202609,,National Rental Assistance,,1000,Rent,Monthly,,,January,2026,Expense
+3006202609,Ecobank,,1000,,Rent,Monthly,,,February,2026,Expense
+3006202610,,National Rental Assistance,,1000,Rent,Monthly,,,February,2026,Expense
+3006202610,Ecobank,,1000,,Rent,Monthly,,,March,2026,Expense
+3006202610,,National Rental Assistance,,1000,Rent,Monthly,,,March,2026,Expense
+3006202611,Ecobank,,1000,,Rent,Monthly,,,April,2026,Expense
+3006202611,,National Rental Assistance,,1000,Rent,Monthly,,,April,2026,Expense
+3006202612,Ecobank,,1000,,Rent,Monthly,,,May,2026,Expense
+3006202612,,National Rental Assistance,,1000,Rent,Monthly,,,May,2026,Expense
+3006202613,Ecobank,,1000,,Rent,Monthly,,,June,2026,Expense
+3006202613,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense
+3006202614,Ecobank,,1000,,Rent,Monthly,,,July,2026,Expense
+3006202614,,National Rental Assistance,,1000,Rent,Monthly,,,July,2026,Expense
