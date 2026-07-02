@@ -2649,6 +2649,21 @@ function calcIncomeRequired() {
   return Object.values(BP.monthAmounts).reduce((s, v) => s + (v || 0), 0);
 }
 
+function budgetProgressHtml(allocated, budget, extraStyle) {
+  const pct      = budget > 0 ? Math.min(100, (allocated / budget) * 100) : 0;
+  const balanced = budget && Math.abs(allocated - budget) <= 0.05;
+  const over     = budget && allocated > budget + 0.05;
+  const color    = balanced ? '#3a6b4a' : over ? '#a8533f' : '';
+  const barColor = balanced ? '#3a6b4a' : over ? '#a8533f' : '';
+  const label    = balanced ? 'Balanced ✓' : over ? 'Over budget' : pct.toFixed(0) + '% budgeted';
+  const s        = extraStyle || '';
+  return `
+    <div class="salary-progress-wrap" style="margin-top:8px;${s}">
+      <div class="salary-progress-fill" style="width:${pct}%;${barColor ? 'background:' + barColor + ';' : ''}"></div>
+    </div>
+    <div class="salary-progress-text" style="${color ? 'color:' + color + ';' : ''}">${label}</div>`;
+}
+
 function nextMonthName(monthName) {
   const idx = MONTH_NAMES.indexOf(monthName);
   return idx >= 0 ? MONTH_NAMES[(idx + 1) % 12] : 'Next';
@@ -3368,18 +3383,11 @@ function buildIncomeCard(src) {
     ${budget !== amount ? `<div style="font-size:12px;opacity:.45;margin-bottom:8px;">Budget: ${fmtGHS(budget)}</div>` : ''}
     <div class="salary-split">
       <div class="salary-split-item">
-        <span class="salary-split-label">Allocated</span>
-        <span class="salary-split-value">${allocated > 0 ? fmtGHS(allocated) : '—'}</span>
-      </div>
-      <div class="salary-split-item">
         <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
         <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
       </div>
     </div>
-    <div class="salary-progress-wrap">
-      <div class="salary-progress-fill" style="width:${pct}%;${over ? 'background:#a8533f;' : ''}"></div>
-    </div>
-    <div class="salary-progress-text" style="${over ? 'color:#a8533f;' : ''}">${over ? 'Over budget' : pct.toFixed(0) + '% budgeted'}</div>` : ''}`;
+    ${budgetProgressHtml(allocated, budget)}` : ''}`;
   return card;
 }
 
@@ -4087,18 +4095,11 @@ function renderBpByIncome(container) {
     const allocSplitHtml = `
       <div class="salary-split" style="margin-top:12px;">
         <div class="salary-split-item">
-          <span class="salary-split-label">Allocated</span>
-          <span class="salary-split-value">${allocated > 0 ? fmtGHS(allocated) : '—'}</span>
-        </div>
-        <div class="salary-split-item">
           <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
           <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
         </div>
       </div>
-      <div class="salary-progress-wrap" style="margin-top:8px;">
-        <div class="salary-progress-fill" style="width:${pct}%;${over ? 'background:#a8533f;' : ''}"></div>
-      </div>
-      <div class="salary-progress-text" style="${over ? 'color:#a8533f;' : ''}">${over ? 'Over budget' : pct.toFixed(0) + '% budgeted'}</div>`;
+      ${budgetProgressHtml(allocated, required)}`;
     card.innerHTML = `
       <div class="salary-card-top">
         <span class="salary-card-label">${escHtml(name.toUpperCase())} — REQUIRED · ${periodLabel}</span>
@@ -4497,6 +4498,21 @@ async function saveDailyAmounts() {
     body[k]             = parseFloat($(`daily_${k}`) ? $(`daily_${k}`).value : '0') || 0;
     body[`${k}_applies`] = _dailyApplies[k] !== false;
   });
+
+  const budget = getBudgetForCurrentMonth();
+  if (budget) {
+    const wk = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
+    let newItemTotal = 0;
+    KEYS.forEach(k => { if (body[`${k}_applies`]) newItemTotal += (body[k] || 0) * wk; });
+    const currentTotal   = calcIncomeRequired();
+    const currentItemVal = BP.monthAmounts[_dailyItemName] || 0;
+    const newTotal       = currentTotal - currentItemVal + newItemTotal;
+    if (newTotal > budget + 0.05) {
+      alert(`Cannot exceed budget of ${fmtGHS(budget)}.\nThis would bring the total to ${fmtGHS(newTotal)}.`);
+      return;
+    }
+  }
+
   try {
     const res = await apiFetch(
       `/income/${S.currentMonth.Month}/${S.currentMonth.Year}/budget/${encodeURIComponent(_dailyItemName)}/daily`,
@@ -4531,6 +4547,18 @@ async function saveBpAmount() {
   const calcType = BP._calcType || 'Actual';
   if (!BP.amountItemId || !S.currentMonth) return;
   const savedId = BP.amountItemId;
+
+  const budget = getBudgetForCurrentMonth();
+  if (budget) {
+    const currentTotal   = calcIncomeRequired();
+    const currentItemVal = BP.monthAmounts[savedId] || 0;
+    const newTotal       = currentTotal - currentItemVal + val;
+    if (newTotal > budget + 0.05) {
+      alert(`Cannot exceed budget of ${fmtGHS(budget)}.\nThis would bring the total to ${fmtGHS(newTotal)}.`);
+      return;
+    }
+  }
+
   BP.monthAmounts[savedId]    = val;
   BP.calculatedTypes[savedId] = calcType;
   try {
