@@ -2335,7 +2335,7 @@ const LocalAPI = {
             const isCalc = (r.CalculatedType || '') === 'Calculated';
             const amt = isCalc
               ? parseFloat(r.CalculatedAmount) || 0
-              : parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+              : parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
             totals[r.Items] = (totals[r.Items] || 0) + amt;
             const p = parseFloat(r.Paid);
             const pAmt = !isNaN(p) ? p : (r.Paid === 'Paid' || r.Paid === 'Transferred') ? amt : 0;
@@ -2518,7 +2518,7 @@ const LocalAPI = {
         const pMonth = periodName.slice(0, lastSpace), pYear = periodName.slice(lastSpace + 1);
         INC().rows.forEach(r => {
           if (r.Month === pMonth && r.Year === pYear && r.Type === 'Budget' && r.CalculatedType !== 'Calculated')
-            periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+            periodBudget[r.Items] = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
         });
       }
       const iso = `${ty}-${String(today.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
@@ -3160,10 +3160,10 @@ async function renderDashboardCalc() {
     const monthPaid = {};
     (incRows || []).filter(r => r.Type === 'Budget').forEach(r => {
       if ((r.CalculatedType || '') !== 'Calculated')
-        periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+        periodBudget[r.Items] = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
       if (r.Paid) {
         const p = parseFloat(r.Paid);
-        const amt = parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+        const amt = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
         const pAmt = !isNaN(p) ? p : (r.Paid === 'Paid' || r.Paid === 'Transferred') ? amt : 0;
         if (pAmt > 0) monthPaid[r.Items] = (monthPaid[r.Items] || 0) + pAmt;
       }
@@ -4388,7 +4388,7 @@ async function loadBpData() {
     rows.filter(r => r.Type === 'Budget' && r.Paid).forEach(r => {
       if (r.Paid === 'Transferred') {
         transferred.add(r.Items);
-        paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.ActualAmount || r.SalaryPortion) || 0);
+        paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0);
       } else {
         paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.Paid) || 0);
       }
@@ -5533,12 +5533,12 @@ async function acctPopulateItemSelect(selected, section) {
       } catch {}
     }
     AC.budgetAmounts = {};
-    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0; });
-    const _budgeted = budgetRows.filter(r => (parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0);
-    const _unbudgeted = budgetRows.filter(r => !((parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0));
+    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0; });
+    const _budgeted = budgetRows.filter(r => (parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0) > 0);
+    const _unbudgeted = budgetRows.filter(r => !((parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0) > 0));
     sel.innerHTML = `<option value="">— Select Item —</option>` +
       [..._budgeted, ..._unbudgeted].map(r => {
-        const hasAmt = (parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0;
+        const hasAmt = (parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0) > 0;
         const isSel = r.Items === selected;
         return `<option value="${escHtml(r.Items)}"${isSel ? ' selected' : ''}${!hasAmt && !isSel ? ' disabled' : ''}>${escHtml(r.Items)}</option>`;
       }).join('');
