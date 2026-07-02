@@ -1738,6 +1738,10 @@
       <div class="modal-title" id="varIncomeDetailTitle">Income Detail</div>
       <button class="btn btn-ghost btn-sm" onclick="closeVariableIncomeDetail()">Close</button>
     </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button id="vidTabUsed"   onclick="setVidTab('used')"   style="flex:1;padding:8px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Used</button>
+      <button id="vidTabUnused" onclick="setVidTab('unused')" style="flex:1;padding:8px;font-size:13px;font-weight:600;background:transparent;color:inherit;border:none;border-radius:8px;cursor:pointer;opacity:.45;">Unused</button>
+    </div>
     <div id="varIncomeDetailList"></div>
     <button class="btn btn-primary" style="width:100%;margin-top:12px;" id="varIncomeAllocateBtn" onclick="">Allocate →</button>
   </div>
@@ -3831,45 +3835,49 @@ async function saveAllocation() {
   renderBudgetPage();
 }
 
-const VID = { source: '' };
+const VID = { source: '', tab: 'used' };
 
 function openVariableIncomeDetail(source) {
   VID.source = source;
   $('varIncomeDetailTitle').textContent = source;
-  $('varIncomeAllocateBtn').onclick = () => {
-    closeVariableIncomeDetail();
-    openAllocateModal(source);
-  };
+  $('varIncomeAllocateBtn').onclick = () => { closeVariableIncomeDetail(); openAllocateModal(source); };
+  setVidTab(VID.tab || 'used');
+  $('varIncomeDetailOverlay').classList.add('open');
+}
+
+function setVidTab(tab) {
+  VID.tab = tab;
+  const on  = 'flex:1;padding:8px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;';
+  const off = 'flex:1;padding:8px;font-size:13px;font-weight:600;background:transparent;color:inherit;border:none;border-radius:8px;cursor:pointer;opacity:.45;';
+  $('vidTabUsed').style.cssText   = tab === 'used'   ? on : off;
+  $('vidTabUnused').style.cssText = tab === 'unused' ? on : off;
 
   const list = $('varIncomeDetailList');
   list.innerHTML = '';
-
   const allBudgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
-  const allocRows = ALLOC().rows.map((r, i) => ({ ...r, _idx: i })).filter(r => r.Source === source);
-
-  // total per budget item across all months
+  const allocRows = ALLOC().rows.map((r, i) => ({ ...r, _idx: i })).filter(r => r.Source === VID.source);
   const amtByItem = {};
-  allocRows.forEach(r => {
-    amtByItem[r.BudgetItem] = (amtByItem[r.BudgetItem] || 0) + (parseFloat(r.Amount) || 0);
-  });
+  allocRows.forEach(r => { amtByItem[r.BudgetItem] = (amtByItem[r.BudgetItem] || 0) + (parseFloat(r.Amount) || 0); });
 
-  allBudgetItems.forEach(name => {
+  const items = tab === 'used'
+    ? allBudgetItems.filter(n => (amtByItem[n] || 0) > 0)
+    : allBudgetItems.filter(n => !(amtByItem[n] > 0));
+
+  if (!items.length) {
+    list.innerHTML = `<div style="padding:20px 0;opacity:.5;text-align:center;font-size:14px;">${tab === 'used' ? 'No allocations yet.' : 'All items have been allocated.'}</div>`;
+    return;
+  }
+
+  items.forEach(name => {
     const amt = amtByItem[name] || 0;
-    const hasAmt = amt > 0;
     const row = document.createElement('div');
-    row.style = `display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${!hasAmt ? 'opacity:.4;' : ''}`;
+    row.style = 'display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;';
     row.innerHTML = `
       <span style="font-size:14px;">${escHtml(name)}</span>
-      <span style="font-size:14px;font-weight:${hasAmt ? '500' : '400'};">${hasAmt ? fmtGHS(amt) : 'tap to set'}</span>`;
-    row.onclick = () => {
-      closeVariableIncomeDetail();
-      openAllocateModal(source);
-      setTimeout(() => { if ($('allocateBudgetItem')) $('allocateBudgetItem').value = name; }, 100);
-    };
+      <span style="font-size:14px;font-weight:${amt > 0 ? '500' : '400'};${amt === 0 ? 'opacity:.4;' : ''}">${amt > 0 ? fmtGHS(amt) : 'tap to set'}</span>`;
+    row.onclick = () => { closeVariableIncomeDetail(); openAllocateModal(VID.source); setTimeout(() => { if ($('allocateBudgetItem')) $('allocateBudgetItem').value = name; }, 100); };
     list.appendChild(row);
   });
-
-  $('varIncomeDetailOverlay').classList.add('open');
 }
 
 function closeVariableIncomeDetail(event) {
