@@ -493,10 +493,10 @@
       border-bottom: 1px solid var(--border);
     }
     .dash-item-row:first-child { border-top: 1px solid var(--border); }
-    .dash-item-row--3col { display: grid; grid-template-columns: 1fr 90px 90px; align-items: baseline; }
+    .dash-item-row--3col { display: grid; grid-template-columns: 1fr 105px 90px; align-items: baseline; }
     .dash-item-row--3col span:nth-child(2) { text-align: right; }
     .dash-item-row--3col span:nth-child(3) { text-align: right; }
-    .dash-table-header { display: grid; grid-template-columns: 1fr 90px 90px; padding: 4px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+    .dash-table-header { display: grid; grid-template-columns: 1fr 105px 90px; padding: 4px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
     .dash-table-header span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
     .dash-table-header span:nth-child(2), .dash-table-header span:nth-child(3) { text-align: right; }
 
@@ -2988,7 +2988,7 @@ async function renderDashboardCalc() {
   function makeSlide(periodLabel, amtsMap, expenses) {
     const keys = Object.keys(amtsMap).filter(k => amtsMap[k] > 0);
     const total = keys.reduce((s, k) => s + (amtsMap[k] || 0), 0);
-    const hasExp = expenses && Object.values(expenses).some(v => v > 0);
+    const showTable = expenses != null;
 
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
@@ -2998,7 +2998,7 @@ async function renderDashboardCalc() {
     period.textContent = periodLabel;
     slide.appendChild(period);
 
-    if (hasExp) {
+    if (showTable) {
       const hdr = document.createElement('div');
       hdr.className = 'dash-table-header';
       hdr.innerHTML = `<span>Item</span><span>Budget</span><span>Left</span>`;
@@ -3013,7 +3013,7 @@ async function renderDashboardCalc() {
       const rem = (amtsMap[item] || 0) - exp;
       const over = rem < 0;
       const remColor = over ? '#a8533f' : '#3a6b4a';
-      if (hasExp) {
+      if (showTable) {
         row.className = 'dash-item-row dash-item-row--3col';
         row.innerHTML = `
           <span class="dash-item-name">${escHtml(item)}</span>
@@ -3049,7 +3049,7 @@ async function renderDashboardCalc() {
   const todayExpenses = todaySummary.dailyExpenses || {};
   const daySlides = dayDates.map((dateStr, i) => {
     const amounts = dayDataArr[i]?.amounts || {};
-    return makeSlide(fmtDayLabel(dateStr), amounts, i === 1 ? todayExpenses : null);
+    return makeSlide(fmtDayLabel(dateStr), amounts, i === 1 ? todayExpenses : {});
   });
 
   const { wrap: dailyWrap, dots: dailyDots, scrollTo: dailyScrollTo } = makeSwiper(daySlides, 1);
