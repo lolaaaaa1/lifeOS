@@ -4556,8 +4556,9 @@ function setTxnType(type) {
   } else {
     grid.style.gridTemplateColumns = '1fr';
     fromField.style.display = '';
-    toField.style.display   = 'none';
+    toField.style.display   = '';
     $('acctFromLabel').textContent = 'From Account';
+    $('acctToLabel').textContent   = 'To (optional)';
   }
   $('acctItemField').style.display         = type === 'transfer' ? 'none' : '';
   $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
@@ -4719,6 +4720,7 @@ async function saveAccountTxn() {
     if (!accountTo) { alert('Select an account'); return; }
   } else if (type === 'expense') {
     accountFrom = $('acctTxnFrom')?.value || '';
+    accountTo   = $('acctTxnTo')?.value   || '';   // optional — who you're paying
     if (!accountFrom) { alert('Select an account'); return; }
   } else {
     accountFrom = $('acctTxnFrom')?.value || '';
