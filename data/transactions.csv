@@ -153,8 +153,8 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0105202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,May,2026,Transfer
 0107202607,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,July,2026,Transfer
 0107202607,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Transfer
-2811202502,Nationwide Medical Insurance,,344.52,,Long Term Savings,Monthly,November,2025,December,2025,Income
-2811202502,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,November,2025,December,2025,Income
+2811202502,Ecobank,,344.52,,Long Term Savings,Monthly,,,December,2025,Transfer
+2811202502,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,,,December,2025,Transfer
 0107202609,Ecobank,,340,,SOA Exams,Monthly,,,July,2026,Transfer
 0107202609,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,July,2026,Transfer
 0104202612,Ecobank,,340,,SOA Exams,Monthly,,,April,2026,Transfer
