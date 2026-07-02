@@ -1548,7 +1548,7 @@
       </div>
       <div class="form-field" id="acctToField" style="display:none;">
         <label class="form-label" id="acctToLabel">Into Account</label>
-        <select id="acctTxnTo" class="form-input"></select>
+        <select id="acctTxnTo" class="form-input" onchange="onAcctTxnToChange()"></select>
       </div>
     </div>
     <div class="form-field" id="acctItemField">
@@ -4896,8 +4896,18 @@ function setTxnType(type) {
   if (recvRow) recvRow.style.display = type === 'transfer' ? 'none' : 'grid';
   const forRow = $('acctMonthForRow');
   if (forRow) forRow.style.display = type === 'transfer' ? 'none' : 'grid';
+  if (type === 'transfer') onAcctTxnToChange();
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
   acctPopulateItemSelect(($('acctTxnItem')?.value) || '', section);
+}
+
+function onAcctTxnToChange() {
+  if (AC.txnType !== 'transfer') return;
+  const toVal = $('acctTxnTo')?.value || '';
+  const def = AC.defs.find(d => d.AccountName === toVal);
+  const isInvestment = (def?.Type || '').toLowerCase() === 'investment';
+  const forRow = $('acctMonthForRow');
+  if (forRow) forRow.style.display = isInvestment ? 'grid' : 'none';
 }
 
 function setAccountType(type) {
