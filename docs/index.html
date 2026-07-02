@@ -2259,7 +2259,7 @@ const LocalAPI = {
       const yr = m[1]; const upTo = m[2] || null;
       const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
       const upToIdx = upTo ? MONTHS.indexOf(upTo) : 11;
-      const totals = {};
+      const totals = {}; let paidTotal = 0;
       INC().rows.forEach(r => {
         if (r.Year === yr && r.Type === 'Budget' && r.Items) {
           if (MONTHS.indexOf(r.Month) <= upToIdx) {
@@ -2267,10 +2267,16 @@ const LocalAPI = {
               ? parseFloat(r.CalculatedAmount) || 0
               : parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
             totals[r.Items] = (totals[r.Items] || 0) + amt;
+            const p = parseFloat(r.Paid);
+            if (!isNaN(p)) paidTotal += p;
+            else if (r.Paid === 'Paid' || r.Paid === 'Transferred') paidTotal += amt;
           }
         }
       });
-      return totals;
+      const ytdSalary = FIN().rows
+        .filter(r => r.Year === yr && MONTHS.indexOf(r.Month) <= upToIdx)
+        .reduce((s, r) => s + (parseFloat(r.SalaryConstraints) || 0), 0);
+      return { items: totals, paidTotal, ytdSalary };
     }
 
     // GET/POST /income/{month}/{year}
@@ -2876,7 +2882,10 @@ async function renderDashboardCalc() {
 
   // Yearly map: Calculated from days.csv + summed Actual from income.csv
   const yearlyMap = { ...(todaySummary.yearlyTotals || {}) };
-  Object.entries(yearActTotals).forEach(([k, v]) => { yearlyMap[k] = (yearlyMap[k] || 0) + v; });
+  const yearlyItems = yearActTotals.items || yearActTotals; // backwards compat
+  Object.entries(yearlyItems).forEach(([k, v]) => { yearlyMap[k] = (yearlyMap[k] || 0) + v; });
+  const ytdPaid   = yearActTotals.paidTotal  || 0;
+  const ytdSalary = yearActTotals.ytdSalary  || 0;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -3018,8 +3027,17 @@ async function renderDashboardCalc() {
   const yearlyKeys = Object.keys(yearlyMap).filter(k => yearlyMap[k] > 0);
   if (yearlyKeys.length) {
     const yearSlide = makeSlide(String(curYear), yearlyMap);
-    yearSlide.classList.remove('dash-slide'); // not swipeable, just the content
+    yearSlide.classList.remove('dash-slide');
     yearlyBody.appendChild(yearSlide);
+    if (ytdSalary > 0) {
+      const ytdRemaining = ytdSalary - ytdPaid;
+      const over = ytdRemaining < 0;
+      const remRow = document.createElement('div');
+      remRow.className = 'dash-total-row';
+      remRow.style.cssText = `margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.08);color:${over ? '#a8533f' : '#3a6b4a'};`;
+      remRow.innerHTML = `<span class="dash-total-label">${over ? 'Over budget' : 'Remaining'}</span><span class="dash-total-amount">${over ? '−' : ''}${fmtGHS(Math.abs(ytdRemaining))}</span>`;
+      yearlyBody.appendChild(remRow);
+    }
   }
   container.appendChild(yearlySec);
 }
