@@ -3058,7 +3058,7 @@ async function renderDashboardCalc() {
       row.innerHTML = `
         <span class="dash-item-name">${escHtml(item)}</span>
         <span class="dash-item-amount">${fmtGHS(allocated)}</span>
-        <span style="font-size:11px;color:${remColor};text-align:right;">${paid > 0 ? `${over ? '−' : ''}${fmtGHS(Math.abs(rem))} rem` : ''}</span>`;
+        <span style="font-size:11px;color:${remColor};text-align:right;">${paid > 0 ? `${over ? '−' : ''}${fmtGHS(Math.abs(rem))}` : ''}</span>`;
       list.appendChild(row);
     });
     slide.appendChild(list);
