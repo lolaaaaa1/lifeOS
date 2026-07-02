@@ -4889,6 +4889,8 @@ function setTxnType(type) {
   $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const recvRow = $('acctMonthRecvRow');
   if (recvRow) recvRow.style.display = type === 'transfer' ? 'none' : 'grid';
+  const forRow = $('acctMonthForRow');
+  if (forRow) forRow.style.display = type === 'transfer' ? 'none' : 'grid';
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
   acctPopulateItemSelect(($('acctTxnItem')?.value) || '', section);
 }
