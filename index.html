@@ -3542,13 +3542,7 @@ function renderIncomeSections() {
             <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
               onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
           </div>
-          <div class="salary-card-amount">${fmtGHS(g.received)}</div>
-          <div class="salary-split">
-            <div class="salary-split-item">
-              <span class="salary-split-label">Remaining</span>
-              <span class="salary-split-value">${fmtGHS(remaining)}</span>
-            </div>
-          </div>`;
+          <div class="salary-card-amount">${fmtGHS(g.received)}</div>`;
 
         const vlist = document.createElement('div');
         vlist.className = 'budget-items';
@@ -3894,6 +3888,17 @@ function setVidTab(tab) {
     row.onclick = () => { closeVariableIncomeDetail(); openAllocateModal(VID.source); setTimeout(() => { if ($('allocateBudgetItem')) $('allocateBudgetItem').value = name; }, 100); };
     list.appendChild(row);
   });
+
+  if (tab === 'used') {
+    const allocated = Object.values(amtByItem).reduce((s, v) => s + v, 0);
+    const received = AC.rows.filter(r => r.Item === source && (parseFloat(r.Credit) || 0) > 0)
+      .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+    const remaining = received - allocated;
+    const foot = document.createElement('div');
+    foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;justify-content:space-between;font-size:14px;font-weight:600;';
+    foot.innerHTML = `<span>Remaining</span><span>${fmtGHS(remaining)}</span>`;
+    list.appendChild(foot);
+  }
 }
 
 function closeVariableIncomeDetail(event) {
