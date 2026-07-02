@@ -3874,7 +3874,7 @@ function setVidTab(tab) {
     row.style = 'display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;';
     row.innerHTML = `
       <span style="font-size:14px;">${escHtml(name)}</span>
-      <span style="font-size:14px;font-weight:${amt > 0 ? '500' : '400'};${amt === 0 ? 'opacity:.4;' : ''}">${amt > 0 ? fmtGHS(amt) : 'tap to set'}</span>`;
+      ${amt > 0 ? `<span style="font-size:14px;font-weight:500;">${fmtGHS(amt)}</span>` : ''}`;
     row.onclick = () => { closeVariableIncomeDetail(); openAllocateModal(VID.source); setTimeout(() => { if ($('allocateBudgetItem')) $('allocateBudgetItem').value = name; }, 100); };
     list.appendChild(row);
   });
