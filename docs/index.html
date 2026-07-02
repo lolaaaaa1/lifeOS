@@ -5389,8 +5389,17 @@ async function openAddTxnModal(accountName, itemName, lockExpense) {
   const monthRecvRow = $('acctMonthRecvRow');
   if (monthForRow)  monthForRow.style.display  = lockExpense ? 'none' : '';
   if (monthRecvRow) monthRecvRow.style.display = lockExpense ? 'none' : '';
-  if (accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
-  if (itemName && $('acctTxnItem')) $('acctTxnItem').value = itemName;
+  const itemField = $('acctItemField');
+  if (itemField && lockExpense && itemName) {
+    itemField.innerHTML = `<label class="form-label">Item</label><div class="form-input" style="background:var(--bg);pointer-events:none;opacity:0.8;">${escHtml(itemName)}</div>`;
+  } else if (itemField && !lockExpense) {
+    if (!itemField.querySelector('select')) {
+      itemField.innerHTML = `<label class="form-label">Item</label><select id="acctTxnItem" class="form-input" onchange="onAcctItemChange(this.value)"></select>`;
+    }
+    if (accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
+    if (itemName && $('acctTxnItem')) $('acctTxnItem').value = itemName;
+  }
+  if (!lockExpense && accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
   $('accountModalOverlay').classList.add('open');
 }
 
