@@ -158,12 +158,12 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0207202601,Ecobank,,500,,Transfer,Monthly,,,July,2026,Transfer
 0207202601,,Achieve SOA Exams,,500,Transfer,Monthly,,,July,2026,Transfer
 0101202611,Ecobank,,100,,Trust Fund,Monthly,,,January,2026,Transfer
-0101202611,,Trust Fund,,100,Trust Fund,Monthly,,,January,2026,Transfer
+0101202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,January,2026,Transfer
 0104202611,Ecobank,,100,,Trust Fund,Monthly,,,April,2026,Transfer
-0104202611,,Trust Fund,,100,Trust Fund,Monthly,,,April,2026,Transfer
+0104202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,April,2026,Transfer
 0105202611,Ecobank,,100,,Trust Fund,Monthly,,,May,2026,Transfer
-0105202611,,Trust Fund,,100,Trust Fund,Monthly,,,May,2026,Transfer
+0105202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,May,2026,Transfer
 0106202610,Ecobank,,100,,Trust Fund,Monthly,,,June,2026,Transfer
-0106202610,,Trust Fund,,100,Trust Fund,Monthly,,,June,2026,Transfer
+0106202610,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,June,2026,Transfer
 0107202608,Ecobank,,100,,Trust Fund,Monthly,,,July,2026,Transfer
-0107202608,,Trust Fund,,100,Trust Fund,Monthly,,,July,2026,Transfer
+0107202608,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,July,2026,Transfer
