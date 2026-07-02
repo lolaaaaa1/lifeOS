@@ -1420,9 +1420,12 @@
     <!-- Accounts page -->
     <div class="page" id="page-accounts">
       <div class="page-content">
-        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <span style="font-size:13px;font-weight:600;opacity:.5;letter-spacing:.05em;text-transform:uppercase;">Accounts</span>
-          <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()">+ Add Account</button>
+        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;">
+          <div class="toggle-row" id="acctTabToggle" style="flex:1;">
+            <button class="toggle-btn active" onclick="setAcctTab('wallets')">Wallets</button>
+            <button class="toggle-btn" onclick="setAcctTab('all')">All</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()">+ Add</button>
         </div>
         <div id="accountsList"></div>
       </div>
@@ -4221,6 +4224,7 @@ const AC = {
   type: 'Bank',
   incomePeriod: 'Monthly',
   display: true,
+  tab: 'wallets',    // 'wallets' | 'all'
 };
 
 const ACCOUNT_TYPE_ICONS = {
@@ -4239,6 +4243,24 @@ async function renderAccountsPage() {
   renderAccountsList();
 }
 
+function _acctBalance(name) {
+  return AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name || r.AccountName === name)
+    .reduce((s, r) => {
+      const amt = parseFloat(r.Amount || r.Credit) || 0;
+      if (r.AccountTo === name || (!r.AccountFrom && r.AccountName === name)) return s + amt;
+      if (r.AccountFrom === name) return s - amt;
+      return s;
+    }, 0);
+}
+
+function setAcctTab(tab) {
+  AC.tab = tab;
+  document.querySelectorAll('#acctTabToggle .toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === tab);
+  });
+  renderAccountsList();
+}
+
 function renderAccountsList() {
   const container = $('accountsList');
   if (!container) return;
@@ -4253,19 +4275,52 @@ function renderAccountsList() {
     return;
   }
 
+  if (AC.tab === 'all') {
+    _renderAllAccountsList(container);
+  } else {
+    _renderWalletsAccountsList(container);
+  }
+}
+
+function _renderAllAccountsList(container) {
+  const list = document.createElement('div');
+  list.className = 'budget-items';
+
+  AC.defs.forEach(def => {
+    const name  = def.AccountName;
+    const type  = def.Type || '';
+    const icon  = ACCOUNT_TYPE_ICONS[type] || '💳';
+    const safeN = escHtml(name);
+    const bal   = _acctBalance(name);
+    const isDisplay = def.Display !== false;
+
+    const card = document.createElement('div');
+    card.className = 'budget-item-card';
+    card.innerHTML = `
+      <div class="budget-item-main">
+        <div class="budget-item-left">
+          <div class="budget-item-name">${icon} ${safeN}</div>
+          <div class="budget-item-sublabel">${escHtml(type || 'Account')}${isDisplay ? '' : ' · track only'}</div>
+        </div>
+        <div class="budget-item-right">
+          <div class="budget-item-amount">${fmtGHS(bal)}</div>
+        </div>
+        <div class="budget-item-actions">
+          <button class="btn btn-icon" onclick="openEditAccountModal('${safeN}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="deleteAccount('${safeN}')" title="Delete">✕</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  container.appendChild(list);
+}
+
+function _renderWalletsAccountsList(container) {
   // Only Display=TRUE accounts contribute to total balance / show as cards
   const displayDefs = AC.defs.filter(def => def.Display !== false);
 
-  const totalBal = displayDefs.reduce((sum, def) => {
-    const name = def.AccountName;
-    const txns = AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name || r.AccountName === name);
-    return sum + txns.reduce((s, r) => {
-      const amt = parseFloat(r.Amount || r.Credit) || 0;
-      if (r.AccountTo === name || (!r.AccountFrom && r.AccountName === name)) return s + amt;
-      if (r.AccountFrom === name) return s - amt;
-      return s;
-    }, 0);
-  }, 0);
+  const totalBal = displayDefs.reduce((sum, def) => sum + _acctBalance(def.AccountName), 0);
 
   const summary = document.createElement('div');
   summary.className = 'salary-card';
@@ -4278,6 +4333,8 @@ function renderAccountsList() {
   const list = document.createElement('div');
   list.className = 'budget-items';
 
+  const acctNames = new Set(AC.defs.map(d => d.AccountName));
+
   displayDefs.forEach(def => {
     const name  = def.AccountName;
     const type  = def.Type || 'Bank';
@@ -4286,12 +4343,7 @@ function renderAccountsList() {
     const txns  = AC.rows.filter(r =>
       r.AccountTo === name || r.AccountFrom === name || r.AccountName === name
     );
-    const bal = txns.reduce((s, r) => {
-      const amt = parseFloat(r.Amount || r.Credit) || 0;
-      if (r.AccountTo === name || (!r.AccountFrom && r.AccountName === name)) return s + amt;
-      if (r.AccountFrom === name) return s - amt;
-      return s;
-    }, 0);
+    const bal = _acctBalance(name);
 
     const card = document.createElement('div');
     card.className = 'budget-item-card';
@@ -4306,16 +4358,16 @@ function renderAccountsList() {
       const sign     = isCredit ? '+' : '−';
       const color    = isCredit ? 'var(--green)' : 'var(--red)';
       const txnId    = escHtml(r.TransactionID || '');
-      const safeI    = escHtml(r.Item || '');
+      const isTransfer = r.AccountFrom && r.AccountTo && acctNames.has(r.AccountFrom) && acctNames.has(r.AccountTo);
+      const itemLabel = isTransfer ? 'Transfer' : (r.Item || '—');
+      const safeI    = escHtml(itemLabel);
       const monthFor  = r.MonthFor || '';
       const yearFor   = r.YearFor  || '';
       const monthRecv = r.MonthReceived || '';
       const yearRecv  = r.YearReceived  || '';
-      const safeMF   = escHtml(monthFor);
-      const safeYF   = escHtml(yearFor);
       const otherAcct = isCredit ? (r.AccountFrom || '—') : (r.AccountTo || r.AccountName || '—');
 
-      const forPart  = monthFor  ? `For ${safeMF} ${safeYF}`  : '';
+      const forPart  = monthFor  ? `For ${escHtml(monthFor)} ${escHtml(yearFor)}` : '';
       const recvPart = monthRecv ? `Recv ${escHtml(monthRecv)} ${escHtml(yearRecv)}` : '';
       const metaTxt  = [forPart, recvPart].filter(Boolean).join(' · ');
 
