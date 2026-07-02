@@ -149,3 +149,9 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0106202609,,Others,,840,Transport,Monthly,,,June,2026,Expense
 0207202601,,,180,,Salary,Monthly,November,2025,December,2025,Income
 0207202601,,Nationwide Medical Insurance,,180,Salary,Monthly,November,2025,December,2025,Income
+0104202610,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,April,2026,Transfer
+0104202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,April,2026,Transfer
+0105202610,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,May,2026,Transfer
+0105202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,May,2026,Transfer
+0107202607,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,July,2026,Transfer
+0107202607,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Transfer

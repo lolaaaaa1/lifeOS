@@ -3518,7 +3518,6 @@ function setSbTab(tab) {
 function renderSbUsed() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  list.appendChild(sbSalaryHdr());
   const items = [...SB.items.filter(it => it.amount > 0)].sort((a, b) => isCalc(a.name) ? -1 : isCalc(b.name) ? 1 : 0);
   if (!items.length) {
     const e = document.createElement('div');
@@ -3534,7 +3533,6 @@ function renderSbUsed() {
 function renderSbUnused() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  list.appendChild(sbSalaryHdr());
   const items = SB.items.filter(it => it.amount === 0);
   if (!items.length) {
     const e = document.createElement('div');
@@ -3923,11 +3921,50 @@ function renderBpByItem(container, items) {
   container.appendChild(list);
 }
 
+function computeMonthContributions() {
+  if (!S.currentMonth || isAllMonths()) return null;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const ABBR   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const curMo  = S.currentMonth.Month;
+  const curYr  = String(S.currentMonth.Year);
+  const curIdx = MONTHS.indexOf(curMo);
+  const period = `${ABBR[curIdx]}-${curYr.slice(2)}`;
+  const prevIdx = (curIdx + 11) % 12;
+  const nextIdx = (curIdx + 1) % 12;
+  const prevMo = MONTHS[prevIdx];
+  const nextMo = MONTHS[nextIdx];
+  const prevYr = curIdx === 0 ? String(parseInt(curYr) - 1) : curYr;
+  const nextYr = curIdx === 11 ? String(parseInt(curYr) + 1) : curYr;
+  let prev = 0, curr = 0, next = 0;
+  const daysRows = DAYS_D().rows;
+  BP.items.forEach(item => {
+    const total = BP.monthAmounts[item.Id] || 0;
+    if ((BP.calculatedTypes[item.Id] || '') === 'Calculated') {
+      const col = 'Salary' + item.Id.replace(/\s+/g, '');
+      daysRows.filter(r => r.MonthYearToUse === period).forEach(r => {
+        const v = parseFloat(r[col]) || 0;
+        if (r.Month === prevMo && String(r.Year) === prevYr) prev += v;
+        else if (r.Month === curMo && String(r.Year) === curYr) curr += v;
+        else if (r.Month === nextMo && String(r.Year) === nextYr) next += v;
+      });
+    } else {
+      curr += total;
+    }
+  });
+  return {
+    prev, curr, next,
+    prevLabel: `${ABBR[prevIdx]} ${prevYr.slice(2)}`,
+    currLabel: `${ABBR[curIdx]} ${curYr.slice(2)}`,
+    nextLabel: `${ABBR[nextIdx]} ${nextYr.slice(2)}`
+  };
+}
+
 function renderBpByIncome(container) {
   const required = Object.values(BP.monthAmounts).reduce((s, v) => s + v, 0);
   const periodLabel = isAllMonths()
     ? `All ${S.currentMonth.Year}`
     : (S.currentMonth ? S.currentMonth.Month.toUpperCase() + ' ' + S.currentMonth.Year : '');
+  const contrib = computeMonthContributions();
 
   // One card per income source with a non-zero amount
   IC.sources.filter(src => (parseFloat(src.Amount || '0') || 0) > 0).forEach(src => {
@@ -3936,11 +3973,27 @@ function renderBpByIncome(container) {
     card.className = 'salary-card';
     card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
     card.onclick = (e) => { if (!e.target.closest('button')) openSalaryHistory(); };
+    const splitHtml = contrib ? `
+      <div class="salary-split" style="margin-top:14px;margin-bottom:0;">
+        <div class="salary-split-item">
+          <span class="salary-split-label">${escHtml(contrib.prevLabel)}</span>
+          <span class="salary-split-value">${contrib.prev > 0 ? fmtGHS(contrib.prev) : '—'}</span>
+        </div>
+        <div class="salary-split-item">
+          <span class="salary-split-label">${escHtml(contrib.currLabel)}</span>
+          <span class="salary-split-value">${contrib.curr > 0 ? fmtGHS(contrib.curr) : '—'}</span>
+        </div>
+        <div class="salary-split-item">
+          <span class="salary-split-label">${escHtml(contrib.nextLabel)}</span>
+          <span class="salary-split-value">${contrib.next > 0 ? fmtGHS(contrib.next) : '—'}</span>
+        </div>
+      </div>` : '';
     card.innerHTML = `
       <div class="salary-card-top">
         <span class="salary-card-label">${escHtml(name.toUpperCase())} — REQUIRED · ${periodLabel}</span>
       </div>
-      <div class="salary-card-amount${required > 0 ? '' : ' empty'}">${required > 0 ? fmtGHS(required) : '—'}</div>`;
+      <div class="salary-card-amount${required > 0 ? '' : ' empty'}">${required > 0 ? fmtGHS(required) : '—'}</div>
+      ${splitHtml}`;
     container.appendChild(card);
   });
 
