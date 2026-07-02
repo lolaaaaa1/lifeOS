@@ -1491,21 +1491,28 @@
       <button class="btn btn-ghost btn-sm" onclick="closeAccountModal()">Cancel</button>
       <button class="btn btn-primary btn-sm" onclick="saveAccountTxn()">Save</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="form-field">
-        <label class="form-label">From</label>
+    <!-- Transaction type -->
+    <div class="toggle-row" id="txnTypeToggle" style="margin-bottom:4px;">
+      <button class="toggle-btn" onclick="setTxnType('income')">Income</button>
+      <button class="toggle-btn active" onclick="setTxnType('expense')">Expense</button>
+      <button class="toggle-btn" onclick="setTxnType('transfer')">Transfer</button>
+    </div>
+    <!-- Account selects — layout controlled by setTxnType() -->
+    <div id="acctFromToGrid" style="display:grid;grid-template-columns:1fr;gap:10px;">
+      <div class="form-field" id="acctFromField">
+        <label class="form-label" id="acctFromLabel">From Account</label>
         <select id="acctTxnFrom" class="form-input"></select>
       </div>
-      <div class="form-field">
-        <label class="form-label">To</label>
+      <div class="form-field" id="acctToField" style="display:none;">
+        <label class="form-label" id="acctToLabel">Into Account</label>
         <select id="acctTxnTo" class="form-input"></select>
       </div>
     </div>
-    <div class="form-field">
+    <div class="form-field" id="acctItemField">
       <label class="form-label">Item</label>
       <select id="acctTxnItem" class="form-input" onchange="onAcctItemChange(this.value)"></select>
     </div>
-    <div class="form-field" id="acctIncomePeriodField">
+    <div class="form-field" id="acctIncomePeriodField" style="display:none;">
       <label class="form-label">Income Period</label>
       <div class="toggle-row" id="acctIncomePeriodToggle">
         <button class="toggle-btn active" onclick="setAcctIncomePeriod('Monthly')">Monthly</button>
@@ -1523,7 +1530,7 @@
         <input id="acctTxnYearFor" class="form-input" type="number" placeholder="2026">
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <div id="acctMonthRecvRow" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-field">
         <label class="form-label">Month Received</label>
         <select id="acctTxnMonthRecv" class="form-input"></select>
@@ -1985,7 +1992,15 @@ async function _migrateTxns() {
       changed = true;
     }
   }
-  if (changed) await DATA.save('data/transactions.csv', 'Migrate to AccountFrom/AccountTo/Amount');
+  // Drop legacy AccountName and Credit columns
+  for (const col of ['AccountName', 'Credit']) {
+    if (txns.headers.includes(col)) {
+      txns.headers = txns.headers.filter(h => h !== col);
+      txns.rows.forEach(r => delete r[col]);
+      changed = true;
+    }
+  }
+  if (changed) await DATA.save('data/transactions.csv', 'Drop AccountName/Credit legacy columns');
 }
 
 // ── LocalAPI router ────────────────────────────────────────────────────────
@@ -2355,7 +2370,10 @@ const LocalAPI = {
       await DATA.save('data/items.csv', `Update account ${name}`);
       if (newName !== name) {
         const txns = TXNS();
-        txns.rows.forEach(r => { if (r.AccountName === name) r.AccountName = newName; });
+        txns.rows.forEach(r => {
+          if (r.AccountFrom === name) r.AccountFrom = newName;
+          if (r.AccountTo   === name) r.AccountTo   = newName;
+        });
         await DATA.save('data/transactions.csv', `Rename account ${name}`);
       }
       return { ok: true };
@@ -2368,7 +2386,7 @@ const LocalAPI = {
       itms.rows = itms.rows.filter(r => !(r.ItemName === name && r.Section === 'Accounts'));
       await DATA.save('data/items.csv', `Delete account ${name}`);
       const txns = TXNS();
-      txns.rows = txns.rows.filter(r => r.AccountName !== name);
+      txns.rows = txns.rows.filter(r => r.AccountFrom !== name && r.AccountTo !== name);
       await DATA.save('data/transactions.csv', `Delete account txns ${name}`);
       return { ok: true };
     }
@@ -2413,11 +2431,7 @@ const LocalAPI = {
     // PUT /accounts/transaction
     if (method === 'PUT' && rawPath === '/accounts/transaction') {
       const txns = TXNS(); const tid = body.transactionId || '';
-      const row = txns.rows.find(r => tid && r.TransactionID === tid) ||
-                  txns.rows.find(r => r.AccountName === (body.oldAccountName || body.accountName) &&
-                                      r.Item         === (body.oldItem        || body.item) &&
-                                      r.MonthFor     === (body.oldMonthFor    || body.monthFor) &&
-                                      r.YearFor      === String(body.oldYearFor || body.yearFor));
+      const row = txns.rows.find(r => tid && r.TransactionID === tid);
       if (!row) throw new Error('transaction not found');
       row.AccountFrom   = body.accountFrom   || row.AccountFrom || '';
       row.AccountTo     = body.accountTo     || row.AccountTo   || '';
@@ -2442,7 +2456,7 @@ const LocalAPI = {
       const a = decodeURIComponent(m[1]), it = decodeURIComponent(m[2]),
             mf = decodeURIComponent(m[3]), yf = decodeURIComponent(m[4]);
       const txns = TXNS();
-      txns.rows = txns.rows.filter(r => !(r.AccountName === a && r.Item === it && r.MonthFor === mf && r.YearFor === yf));
+      txns.rows = txns.rows.filter(r => !((r.AccountFrom === a || r.AccountTo === a) && r.Item === it && r.MonthFor === mf && r.YearFor === yf));
       await DATA.save('data/transactions.csv', `Delete txn ${a} ${it}`);
       return { ok: true };
     }
@@ -4225,6 +4239,7 @@ const AC = {
   incomePeriod: 'Monthly',
   display: true,
   tab: 'wallets',    // 'wallets' | 'all'
+  txnType: 'expense', // 'income' | 'expense' | 'transfer'
 };
 
 const ACCOUNT_TYPE_ICONS = {
@@ -4244,10 +4259,10 @@ async function renderAccountsPage() {
 }
 
 function _acctBalance(name) {
-  return AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name || r.AccountName === name)
+  return AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name)
     .reduce((s, r) => {
-      const amt = parseFloat(r.Amount || r.Credit) || 0;
-      if (r.AccountTo === name || (!r.AccountFrom && r.AccountName === name)) return s + amt;
+      const amt = parseFloat(r.Amount) || 0;
+      if (r.AccountTo   === name) return s + amt;
       if (r.AccountFrom === name) return s - amt;
       return s;
     }, 0);
@@ -4340,9 +4355,7 @@ function _renderWalletsAccountsList(container) {
     const type  = def.Type || 'Bank';
     const icon  = ACCOUNT_TYPE_ICONS[type] || '💳';
     const safeN = escHtml(name);
-    const txns  = AC.rows.filter(r =>
-      r.AccountTo === name || r.AccountFrom === name || r.AccountName === name
-    );
+    const txns  = AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name);
     const bal = _acctBalance(name);
 
     const card = document.createElement('div');
@@ -4353,8 +4366,8 @@ function _renderWalletsAccountsList(container) {
     txnContainer.className = 'txn-list';
 
     txns.forEach(r => {
-      const amt      = parseFloat(r.Amount || r.Credit) || 0;
-      const isCredit = r.AccountTo === name || (!r.AccountFrom && r.AccountName === name);
+      const amt      = parseFloat(r.Amount) || 0;
+      const isCredit = r.AccountTo === name;
       const sign     = isCredit ? '+' : '−';
       const color    = isCredit ? 'var(--green)' : 'var(--red)';
       const txnId    = escHtml(r.TransactionID || '');
@@ -4365,7 +4378,7 @@ function _renderWalletsAccountsList(container) {
       const yearFor   = r.YearFor  || '';
       const monthRecv = r.MonthReceived || '';
       const yearRecv  = r.YearReceived  || '';
-      const otherAcct = isCredit ? (r.AccountFrom || '—') : (r.AccountTo || r.AccountName || '—');
+      const otherAcct = isCredit ? (r.AccountFrom || '—') : (r.AccountTo || '—');
 
       const forPart  = monthFor  ? `For ${escHtml(monthFor)} ${escHtml(yearFor)}` : '';
       const recvPart = monthRecv ? `Recv ${escHtml(monthRecv)} ${escHtml(yearRecv)}` : '';
@@ -4438,14 +4451,48 @@ function acctPopulateFromToSelects(defaultTo) {
   if (toEl)   { toEl.innerHTML   = opts; toEl.value = defaultTo || ''; }
 }
 
-async function acctPopulateItemSelect(selected) {
+async function acctPopulateItemSelect(selected, section) {
   const sel = $('acctTxnItem');
   if (!sel) return;
   let items = [];
   try { items = await apiFetch('/items'); } catch {}
+  if (section) items = items.filter(it => it.Section === section);
   sel.innerHTML = `<option value="">— Select Item —</option>` +
-    items.map(it => `<option value="${escHtml(it.ItemName)}"${it.ItemName === selected ? ' selected' : ''}>[${escHtml(it.Section)}] ${escHtml(it.ItemName)}</option>`).join('');
+    items.map(it => `<option value="${escHtml(it.ItemName)}"${it.ItemName === selected ? ' selected' : ''}>${escHtml(it.ItemName)}</option>`).join('');
   onAcctItemChange(selected || '');
+}
+
+function setTxnType(type) {
+  AC.txnType = type;
+  document.querySelectorAll('#txnTypeToggle .toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === type);
+  });
+  const fromField = $('acctFromField');
+  const toField   = $('acctToField');
+  const grid      = $('acctFromToGrid');
+  if (type === 'transfer') {
+    grid.style.gridTemplateColumns = '1fr 1fr';
+    fromField.style.display = '';
+    toField.style.display   = '';
+    $('acctFromLabel').textContent = 'From';
+    $('acctToLabel').textContent   = 'To';
+  } else if (type === 'income') {
+    grid.style.gridTemplateColumns = '1fr';
+    fromField.style.display = 'none';
+    toField.style.display   = '';
+    $('acctToLabel').textContent = 'Into Account';
+  } else {
+    grid.style.gridTemplateColumns = '1fr';
+    fromField.style.display = '';
+    toField.style.display   = 'none';
+    $('acctFromLabel').textContent = 'From Account';
+  }
+  $('acctItemField').style.display      = type === 'transfer' ? 'none' : '';
+  $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
+  const recvRow = $('acctMonthRecvRow');
+  if (recvRow) recvRow.style.display = type === 'transfer' ? 'none' : 'grid';
+  const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
+  acctPopulateItemSelect(($('acctTxnItem')?.value) || '', section);
 }
 
 function setAccountType(type) {
@@ -4538,17 +4585,17 @@ async function saveAccountDef() {
 
 async function openAddTxnModal(accountName) {
   acctPopulateMonthSelects();
-  acctPopulateFromToSelects(accountName || '');
-  await acctPopulateItemSelect('');
+  acctPopulateFromToSelects('');
   AC.editingTxn = null;
-  $('accountModalTitle').textContent   = 'Record Transaction';
-  $('acctTxnMonthFor').value           = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Month : '';
-  $('acctTxnYearFor').value            = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Year  : '';
-  $('acctTxnMonthRecv').value          = '';
-  $('acctTxnYearRecv').value           = '';
-  $('acctTxnCredit').value             = '';
+  $('accountModalTitle').textContent = 'Record Transaction';
+  $('acctTxnMonthFor').value  = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Month : '';
+  $('acctTxnYearFor').value   = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Year  : '';
+  $('acctTxnMonthRecv').value = '';
+  $('acctTxnYearRecv').value  = '';
+  $('acctTxnCredit').value    = '';
   setAcctIncomePeriod('Monthly');
-  if ($('acctIncomePeriodField')) $('acctIncomePeriodField').style.display = 'none';
+  setTxnType('expense');
+  if (accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
   $('accountModalOverlay').classList.add('open');
 }
 
@@ -4556,18 +4603,27 @@ async function openEditTxnModal(txnId) {
   const row = AC.rows.find(r => r.TransactionID === txnId);
   if (!row) return;
   acctPopulateMonthSelects();
-  acctPopulateFromToSelects(row.AccountTo || row.AccountName || '');
-  await acctPopulateItemSelect(row.Item || '');
-  if ($('acctTxnFrom')) $('acctTxnFrom').value = row.AccountFrom || '';
-  if ($('acctTxnTo'))   $('acctTxnTo').value   = row.AccountTo   || row.AccountName || '';
+  acctPopulateFromToSelects('');
+  // Detect transaction type
+  const acctSet = new Set(AC.defs.map(d => d.AccountName));
+  const hasFrom = !!(row.AccountFrom);
+  const hasTo   = !!row.AccountTo;
+  let type = 'expense';
+  if (!hasFrom && hasTo) type = 'income';
+  else if (hasFrom && hasTo && acctSet.has(row.AccountFrom) && acctSet.has(row.AccountTo)) type = 'transfer';
   AC.editingTxn = { transactionId: txnId };
   $('accountModalTitle').textContent = 'Edit Transaction';
-  $('acctTxnMonthFor').value         = row.MonthFor       || '';
-  $('acctTxnYearFor').value          = row.YearFor        || '';
-  $('acctTxnMonthRecv').value        = row.MonthReceived  || '';
-  $('acctTxnYearRecv').value         = row.YearReceived   || '';
-  $('acctTxnCredit').value           = row.Amount || row.Credit || '';
+  $('acctTxnMonthFor').value  = row.MonthFor      || '';
+  $('acctTxnYearFor').value   = row.YearFor       || '';
+  $('acctTxnMonthRecv').value = row.MonthReceived || '';
+  $('acctTxnYearRecv').value  = row.YearReceived  || '';
+  $('acctTxnCredit').value    = row.Amount || row.Credit || '';
   setAcctIncomePeriod(row.IncomePeriod || 'Monthly');
+  setTxnType(type);
+  // Set account values after setTxnType populates items
+  if ($('acctTxnFrom')) $('acctTxnFrom').value = row.AccountFrom || '';
+  if ($('acctTxnTo'))   $('acctTxnTo').value   = row.AccountTo || '';
+  await acctPopulateItemSelect(row.Item || '', type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null);
   $('accountModalOverlay').classList.add('open');
 }
 
@@ -4578,10 +4634,20 @@ function closeAccountModal(event) {
 }
 
 async function saveAccountTxn() {
-  const accountFrom = $('acctTxnFrom')?.value || '';
-  const accountTo   = $('acctTxnTo')?.value   || '';
-  if (!accountFrom && !accountTo) { alert('Select at least one account'); return; }
-  const item     = $('acctTxnItem').value;
+  const type = AC.txnType || 'expense';
+  let accountFrom = '', accountTo = '';
+  if (type === 'income') {
+    accountTo   = $('acctTxnTo')?.value   || '';
+    if (!accountTo) { alert('Select an account'); return; }
+  } else if (type === 'expense') {
+    accountFrom = $('acctTxnFrom')?.value || '';
+    if (!accountFrom) { alert('Select an account'); return; }
+  } else {
+    accountFrom = $('acctTxnFrom')?.value || '';
+    accountTo   = $('acctTxnTo')?.value   || '';
+    if (!accountFrom || !accountTo) { alert('Select both accounts'); return; }
+  }
+  const item = type === 'transfer' ? 'Transfer' : ($('acctTxnItem')?.value || '');
   const monthFor = $('acctTxnMonthFor').value;
   const yearFor  = $('acctTxnYearFor').value;
   const amount   = parseFloat($('acctTxnCredit').value) || 0;
