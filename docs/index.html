@@ -4657,7 +4657,7 @@ function setTxnType(type) {
   }
   $('acctItemField').style.display         = type === 'transfer' ? 'none' : '';
   $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
-  $('acctChargesField').style.display      = type === 'transfer' ? ''     : 'none';
+  $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const recvRow = $('acctMonthRecvRow');
   if (recvRow) recvRow.style.display = type === 'transfer' ? 'none' : 'grid';
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;

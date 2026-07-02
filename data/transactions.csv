@@ -17,36 +17,42 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 3006202602,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,Income
 0101202601,Ecobank,,1000,,Rent,Monthly,,,January,2026,Expense
 0101202601,,National Rental Assistance,,1000,Rent,Monthly,,,January,2026,Expense
+0101202601,Ecobank,,20,,Charges,Monthly,,,January,2026,Expense
 0101202602,Ecobank,,120,,Rent Charges,Monthly,,,January,2026,Expense
 0101202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,January,2026,Expense
 0101202603,Ecobank,,140,,Rental Utilities,Monthly,,,January,2026,Expense
 0101202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,January,2026,Expense
 0102202601,Ecobank,,1000,,Rent,Monthly,,,February,2026,Expense
 0102202601,,National Rental Assistance,,1000,Rent,Monthly,,,February,2026,Expense
+0102202601,Ecobank,,30,,Charges,Monthly,,,February,2026,Expense
 0102202602,Ecobank,,120,,Rent Charges,Monthly,,,February,2026,Expense
 0102202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,February,2026,Expense
 0102202603,Ecobank,,140,,Rental Utilities,Monthly,,,February,2026,Expense
 0102202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,February,2026,Expense
 0103202601,Ecobank,,1000,,Rent,Monthly,,,March,2026,Expense
 0103202601,,National Rental Assistance,,1000,Rent,Monthly,,,March,2026,Expense
+0103202601,Ecobank,,30,,Charges,Monthly,,,March,2026,Expense
 0103202602,Ecobank,,120,,Rent Charges,Monthly,,,March,2026,Expense
 0103202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,March,2026,Expense
 0103202603,Ecobank,,140,,Rental Utilities,Monthly,,,March,2026,Expense
 0103202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,March,2026,Expense
 0104202601,Ecobank,,1000,,Rent,Monthly,,,April,2026,Expense
 0104202601,,National Rental Assistance,,1000,Rent,Monthly,,,April,2026,Expense
+0104202601,Ecobank,,40,,Charges,Monthly,,,April,2026,Expense
 0104202602,Ecobank,,120,,Rent Charges,Monthly,,,April,2026,Expense
 0104202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,April,2026,Expense
 0104202603,Ecobank,,140,,Rental Utilities,Monthly,,,April,2026,Expense
 0104202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,April,2026,Expense
 0105202601,Ecobank,,1000,,Rent,Monthly,,,May,2026,Expense
 0105202601,,National Rental Assistance,,1000,Rent,Monthly,,,May,2026,Expense
+0105202601,Ecobank,,40,,Charges,Monthly,,,May,2026,Expense
 0105202602,Ecobank,,120,,Rent Charges,Monthly,,,May,2026,Expense
 0105202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,May,2026,Expense
 0105202603,Ecobank,,140,,Rental Utilities,Monthly,,,May,2026,Expense
 0105202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,May,2026,Expense
 0106202601,Ecobank,,1000,,Rent,Monthly,,,June,2026,Expense
 0106202601,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense
+0106202601,Ecobank,,40,,Charges,Monthly,,,June,2026,Expense
 0106202602,Ecobank,,120,,Rent Charges,Monthly,,,June,2026,Expense
 0106202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,June,2026,Expense
 0106202603,Ecobank,,140,,Rental Utilities,Monthly,,,June,2026,Expense
