@@ -3509,47 +3509,43 @@ function renderIncomeSections() {
     .map(r => r.ItemName);
 
   if (nonSalarySources.length) {
-    const variableTxns = AC.rows.filter(r => nonSalarySources.includes(r.Item) && (parseFloat(r.Credit) || 0) > 0);
-    if (variableTxns.length) {
-      const groups = {};
-      variableTxns.forEach(r => {
-        const src = r.Item || '';
-        if (!groups[src]) groups[src] = { source: src, received: 0 };
-        groups[src].received += parseFloat(r.Credit) || 0;
-      });
-      const budgetIncRows = INC().rows.filter(r => r.Type === 'Budget');
+    const budgetIncRows = INC().rows.filter(r => r.Type === 'Budget');
 
-      Object.values(groups).forEach(g => {
-        const col = g.source.replace(/\s+/g, '') + 'Portion';
-        const allocated = budgetIncRows.reduce((s, r) => s + (parseFloat(r[col]) || 0), 0);
-        const remaining = g.received - allocated;
+    nonSalarySources.forEach(src => {
+      const col = src.replace(/\s+/g, '') + 'Portion';
+      const received = AC.rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
+        .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+      const allocated = budgetIncRows.reduce((s, r) => s + (parseFloat(r[col]) || 0), 0);
 
-        const vsec = document.createElement('div');
-        vsec.className = 'budget-section';
-        vsec.innerHTML = `<div class="budget-section-header">
-          <span class="budget-section-title">${escHtml(g.source)}</span>
-          <div class="budget-section-line"></div>
-        </div>`;
+      if (received === 0 && allocated === 0) return;
 
-        const card = document.createElement('div');
-        card.className = 'salary-card';
-        card.style.cssText = 'cursor:pointer;';
-        card.onclick = () => openVariableIncomeDetail(g.source);
-        card.innerHTML = `
-          <div class="salary-card-top">
-            <span class="salary-card-label">${escHtml(g.source.toUpperCase())}</span>
-            <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
-              onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
-          </div>
-          <div class="salary-card-amount">${fmtGHS(g.received)}</div>`;
+      const remaining = received - allocated;
 
-        const vlist = document.createElement('div');
-        vlist.className = 'budget-items';
-        vlist.appendChild(card);
-        vsec.appendChild(vlist);
-        container.appendChild(vsec);
-      });
-    }
+      const vsec = document.createElement('div');
+      vsec.className = 'budget-section';
+      vsec.innerHTML = `<div class="budget-section-header">
+        <span class="budget-section-title">${escHtml(src)}</span>
+        <div class="budget-section-line"></div>
+      </div>`;
+
+      const card = document.createElement('div');
+      card.className = 'salary-card';
+      card.style.cssText = 'cursor:pointer;';
+      card.onclick = () => openVariableIncomeDetail(src);
+      card.innerHTML = `
+        <div class="salary-card-top">
+          <span class="salary-card-label">${escHtml(src.toUpperCase())}</span>
+          <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
+            onclick="event.stopPropagation();openAllocateModal('${escHtml(src)}')">Allocate</button>
+        </div>
+        <div class="salary-card-amount">${fmtGHS(received)}</div>`;
+
+      const vlist = document.createElement('div');
+      vlist.className = 'budget-items';
+      vlist.appendChild(card);
+      vsec.appendChild(vlist);
+      container.appendChild(vsec);
+    });
   }
 }
 
