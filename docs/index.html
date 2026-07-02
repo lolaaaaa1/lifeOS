@@ -2094,7 +2094,7 @@ const LocalAPI = {
       const [, mo, yr] = m; const inc = INC();
       for (const [name, amount] of Object.entries(body)) {
         const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-        if (found) { found.SalaryPortion = String(amount); found.Amount = ''; }
+        if (found) { found.SalaryPortion = String(amount); found.ActualAmount = String(amount); found.CalculatedAmount = String(amount); found.Amount = ''; }
         else {
           const row = {}; inc.headers.forEach(h => row[h] = '');
           Object.assign(row, { Month: mo, Year: yr, Type: 'Budget', Items: name, SalaryPortion: String(amount) });
@@ -2221,7 +2221,7 @@ const LocalAPI = {
       const yr = m[1]; const totals = {};
       INC().rows.forEach(r => {
         if (r.Year === yr && r.Type === 'Budget' && r.Items && r.CalculatedType !== 'Calculated')
-          totals[r.Items] = (totals[r.Items] || 0) + (parseFloat(r.SalaryPortion) || 0);
+          totals[r.Items] = (totals[r.Items] || 0) + (parseFloat(r.ActualAmount || r.SalaryPortion) || 0);
       });
       return totals;
     }
@@ -2307,13 +2307,26 @@ const LocalAPI = {
         }
       }
       await DATA.save('data/days.csv', `Daily amounts ${name} ${mo} ${yr}`);
-      // 3. period total
-      const period = `${mo} ${yr}`; const newPrefixes = _incPrefixes();
-      const newCols = _daysItemCols(daysData.headers); let total = 0;
-      daysData.rows.filter(r => r.MonthYearToUse === period).forEach(r => {
-        newCols.forEach(c => { if (_colToItem(c, newPrefixes) === name) total += parseFloat(r[c]) || 0; });
+      // 3. period totals: ActualAmount (calendar month) and CalculatedAmount (budget period)
+      const newPrefixes = _incPrefixes();
+      const newCols = _daysItemCols(daysData.headers);
+      const _ABBR = {January:'Jan',February:'Feb',March:'Mar',April:'Apr',May:'May',June:'Jun',July:'Jul',August:'Aug',September:'Sep',October:'Oct',November:'Nov',December:'Dec'};
+      const period = `${_ABBR[mo]}-${String(yr).slice(2)}`;
+      let actualTotal = 0, calcTotal = 0;
+      daysData.rows.forEach(r => {
+        newCols.forEach(c => {
+          if (_colToItem(c, newPrefixes) === name) {
+            if (r.Month === mo && r.Year === yr) actualTotal += parseFloat(r[c]) || 0;
+            if (r.MonthYearToUse === period) calcTotal += parseFloat(r[c]) || 0;
+          }
+        });
       });
-      return { ok: true, total };
+      const incData = INC();
+      _ensureCol(incData, 'ActualAmount'); _ensureCol(incData, 'CalculatedAmount');
+      const incRow = incData.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
+      if (incRow) { incRow.ActualAmount = String(actualTotal); incRow.CalculatedAmount = String(calcTotal); }
+      await DATA.save('data/income.csv', `Calculated amount ${name} ${mo} ${yr}`);
+      return { ok: true, total: calcTotal };
     }
 
     // PUT/DELETE /income/{month}/{year}/{name}
@@ -2381,7 +2394,7 @@ const LocalAPI = {
         const pMonth = periodName.slice(0, lastSpace), pYear = periodName.slice(lastSpace + 1);
         INC().rows.forEach(r => {
           if (r.Month === pMonth && r.Year === pYear && r.Type === 'Budget' && r.CalculatedType !== 'Calculated')
-            periodBudget[r.Items] = parseFloat(r.SalaryPortion) || 0;
+            periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
         });
       }
       const iso = `${ty}-${String(today.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
@@ -2876,7 +2889,7 @@ async function renderDashboardCalc() {
     const [dayTotals, incRows] = monthDataArr[i];
     const periodBudget = { ...dayTotals };
     (incRows || []).filter(r => r.Type === 'Budget' && (r.CalculatedType || '') !== 'Calculated')
-      .forEach(r => { periodBudget[r.Items] = r.SalaryPortion ? parseFloat(r.SalaryPortion) : 0; });
+      .forEach(r => { periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0; });
     return makeSlide(`${m.Month} ${m.Year}`, periodBudget);
   });
 
@@ -3449,7 +3462,7 @@ async function openSalaryHistory() {
     SB.salary = getTotalIncome();
     SB.items  = allRows
       .filter(r => r.Type === 'Budget')
-      .map(r => ({ name: r.Items, amount: parseFloat(r.SalaryPortion || '0') || 0 }));
+      .map(r => ({ name: r.Items, amount: parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0 }));
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
@@ -3810,10 +3823,11 @@ async function loadBpData() {
 
       let v;
       if ((r.CalculatedType || '') === 'Calculated') {
-        v = daysTotals[r.Items] || 0;
+        const raw = r.CalculatedAmount;
+        v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
         if (v > 0) hasAmt.add(r.Items);
       } else {
-        const raw = r.SalaryPortion;
+        const raw = r.ActualAmount || r.SalaryPortion;
         v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
         if (raw !== '' && raw !== null && raw !== undefined) hasAmt.add(r.Items);
       }
@@ -4627,12 +4641,12 @@ async function acctPopulateItemSelect(selected, section) {
       } catch {}
     }
     AC.budgetAmounts = {};
-    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.SalaryPortion) || 0; });
-    const _budgeted = budgetRows.filter(r => (parseFloat(r.SalaryPortion) || 0) > 0);
-    const _unbudgeted = budgetRows.filter(r => !((parseFloat(r.SalaryPortion) || 0) > 0));
+    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0; });
+    const _budgeted = budgetRows.filter(r => (parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0);
+    const _unbudgeted = budgetRows.filter(r => !((parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0));
     sel.innerHTML = `<option value="">— Select Item —</option>` +
       [..._budgeted, ..._unbudgeted].map(r => {
-        const hasAmt = (parseFloat(r.SalaryPortion) || 0) > 0;
+        const hasAmt = (parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0;
         const isSel = r.Items === selected;
         return `<option value="${escHtml(r.Items)}"${isSel ? ' selected' : ''}${!hasAmt && !isSel ? ' disabled' : ''}>${escHtml(r.Items)}</option>`;
       }).join('');
