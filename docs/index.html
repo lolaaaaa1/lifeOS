@@ -3538,9 +3538,6 @@ function renderIncomeSections() {
           <div class="salary-card-top">
             <span class="salary-card-label">${escHtml(g.source.toUpperCase())}</span>
             <div style="display:flex;gap:6px;align-items:center;">
-              ${fullyAllocated
-                ? `<span style="font-size:10px;background:#3a6b4a;color:#faf7f2;padding:2px 8px;border-radius:4px;letter-spacing:.06em;font-family:'DM Mono',monospace;">ALLOCATED</span>`
-                : `<span style="font-size:10px;background:#d4a017;color:#1a1714;padding:2px 8px;border-radius:4px;letter-spacing:.06em;font-family:'DM Mono',monospace;">UNALLOCATED</span>`}
               <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
                 onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
             </div>
