@@ -2464,7 +2464,29 @@ const LocalAPI = {
         });
       }
       const iso = `${ty}-${String(today.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
-      return { date: iso, period: periodName, daily, periodBudget, yearlyTotals };
+      const todayRow = daysData.rows.find(r => String(r.Day) === String(td) && r.Month === tm && r.Year === ty);
+      const dailyExpenses = {
+        Food:      parseFloat((todayRow || {}).ExpenseFood)      || 0,
+        Transport: parseFloat((todayRow || {}).ExpenseTransport) || 0,
+      };
+      return { date: iso, period: periodName, daily, periodBudget, yearlyTotals, dailyExpenses };
+    }
+
+    // PATCH /days/today/expense
+    if (method === 'PATCH' && rawPath === '/days/today/expense') {
+      const { item, amount } = body;
+      if (!item || !amount) throw new Error('item and amount required');
+      const colMap = { Food: 'ExpenseFood', Transport: 'ExpenseTransport' };
+      const col = colMap[item];
+      if (!col) throw new Error('unsupported expense item');
+      const today2 = new Date();
+      const td2 = today2.getDate(), tm2 = MONTH_NAMES[today2.getMonth()], ty2 = String(today2.getFullYear());
+      const daysData2 = DAYS_D();
+      _ensureCol(daysData2, col);
+      const row = daysData2.rows.find(r => String(r.Day) === String(td2) && r.Month === tm2 && r.Year === ty2);
+      if (row) { row[col] = String((parseFloat(row[col]) || 0) + parseFloat(amount)); }
+      await DATA.save('data/days.csv', `Record ${item} expense ${amount}`);
+      return { ok: true };
     }
 
     // GET /days/{month}/{year}/totals
@@ -2963,9 +2985,10 @@ async function renderDashboardCalc() {
     }};
   }
 
-  function makeSlide(periodLabel, amtsMap) {
+  function makeSlide(periodLabel, amtsMap, expenses) {
     const keys = Object.keys(amtsMap).filter(k => amtsMap[k] > 0);
     const total = keys.reduce((s, k) => s + (amtsMap[k] || 0), 0);
+    const hasExp = expenses && Object.values(expenses).some(v => v > 0);
 
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
@@ -2975,15 +2998,34 @@ async function renderDashboardCalc() {
     period.textContent = periodLabel;
     slide.appendChild(period);
 
+    if (hasExp) {
+      const hdr = document.createElement('div');
+      hdr.className = 'dash-table-header';
+      hdr.innerHTML = `<span>Item</span><span>Budget</span><span>Left</span>`;
+      slide.appendChild(hdr);
+    }
+
     const list = document.createElement('div');
     list.className = 'dash-items';
     keys.forEach(item => {
       const row = document.createElement('div');
-      row.className = 'dash-item-row';
+      const exp = (expenses || {})[item] || 0;
+      const rem = (amtsMap[item] || 0) - exp;
+      const over = rem < 0;
+      const remColor = over ? '#a8533f' : '#3a6b4a';
+      if (hasExp) {
+        row.className = 'dash-item-row dash-item-row--3col';
+        row.innerHTML = `
+          <span class="dash-item-name">${escHtml(item)}</span>
+          <span class="dash-item-amount">${fmtGHS(amtsMap[item] || 0)}</span>
+          <span style="font-size:11px;color:${exp > 0 ? remColor : 'inherit'};text-align:right;">${exp > 0 ? `${over ? '−' : ''}${fmtGHS(Math.abs(rem))}` : ''}</span>`;
+      } else {
+        row.className = 'dash-item-row';
+        row.innerHTML = `<span class="dash-item-name">${escHtml(item)}</span><span class="dash-item-amount">${fmtGHS(amtsMap[item] || 0)}</span>`;
+      }
       row.style.cursor = 'pointer';
       row.title = `Record ${item} expense`;
-      row.innerHTML = `<span class="dash-item-name">${escHtml(item)}</span><span class="dash-item-amount">${fmtGHS(amtsMap[item] || 0)}</span>`;
-      row.onclick = () => openAddTxnModal('', item);
+      row.onclick = () => openAddTxnModal('', item, true);
       list.appendChild(row);
     });
     slide.appendChild(list);
@@ -3004,9 +3046,10 @@ async function renderDashboardCalc() {
   // ── Daily section (always open, swipeable) ───────────────────────────────
   const { sec: dailySec, body: dailyBody } = makeDashSection('Daily', true);
 
+  const todayExpenses = todaySummary.dailyExpenses || {};
   const daySlides = dayDates.map((dateStr, i) => {
     const amounts = dayDataArr[i]?.amounts || {};
-    return makeSlide(fmtDayLabel(dateStr), amounts);
+    return makeSlide(fmtDayLabel(dateStr), amounts, i === 1 ? todayExpenses : null);
   });
 
   const { wrap: dailyWrap, dots: dailyDots, scrollTo: dailyScrollTo } = makeSwiper(daySlides, 1);
@@ -5317,10 +5360,11 @@ async function saveAccountDef() {
 
 // ── Record / Edit Transaction ────────────────────────────────────────────────
 
-async function openAddTxnModal(accountName, itemName) {
+async function openAddTxnModal(accountName, itemName, lockExpense) {
   acctPopulateMonthSelects();
   acctPopulateFromToSelects('');
   AC.editingTxn = null;
+  AC.lockExpense = lockExpense || false;
   $('accountModalTitle').textContent = 'Record Transaction';
   $('acctTxnMonthFor').value  = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Month : '';
   $('acctTxnYearFor').value   = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Year  : '';
@@ -5330,6 +5374,8 @@ async function openAddTxnModal(accountName, itemName) {
   if ($('acctTxnCharges')) $('acctTxnCharges').value = '';
   setAcctIncomePeriod('Monthly');
   setTxnType('expense');
+  const typeToggle = $('txnTypeToggle');
+  if (typeToggle) typeToggle.style.display = lockExpense ? 'none' : '';
   if (accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
   if (itemName && $('acctTxnItem')) $('acctTxnItem').value = itemName;
   $('accountModalOverlay').classList.add('open');
@@ -5419,6 +5465,14 @@ async function saveAccountTxn() {
       try {
         await apiFetch(`/income/${payload.monthFor}/${payload.yearFor}/budget/${encodeURIComponent(payload.item)}/paid`, {
           method: 'PUT', body: JSON.stringify({ amount: paidAmt }),
+        });
+      } catch {}
+    }
+    // If opened from home daily section, update today's expense column in days.csv
+    if (AC.lockExpense && type === 'expense' && (payload.item === 'Food' || payload.item === 'Transport')) {
+      try {
+        await apiFetch('/days/today/expense', {
+          method: 'PATCH', body: JSON.stringify({ item: payload.item, amount: payload.amount }),
         });
       } catch {}
     }
