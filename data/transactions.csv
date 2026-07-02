@@ -147,3 +147,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0106202608,,Others,,868,Food,Monthly,,,June,2026,Expense
 0106202609,Ecobank,,840,,Transport,Monthly,,,June,2026,Expense
 0106202609,,Others,,840,Transport,Monthly,,,June,2026,Expense
+0207202601,,,180,,Salary,Monthly,November,2025,December,2025,Income
+0207202601,,Nationwide Medical Insurance,,180,Salary,Monthly,November,2025,December,2025,Income
