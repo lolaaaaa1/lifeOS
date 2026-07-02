@@ -3066,9 +3066,18 @@ async function renderDashboardCalc() {
   const monthSlideEls = monthSlides.map((m, i) => {
     const [dayTotals, incRows] = monthDataArr[i];
     const periodBudget = { ...dayTotals };
-    (incRows || []).filter(r => r.Type === 'Budget' && (r.CalculatedType || '') !== 'Calculated')
-      .forEach(r => { periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0; });
-    return makeSlide(`${m.Month} ${m.Year}`, periodBudget);
+    const monthPaid = {};
+    (incRows || []).filter(r => r.Type === 'Budget').forEach(r => {
+      if ((r.CalculatedType || '') !== 'Calculated')
+        periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+      if (r.Paid) {
+        const p = parseFloat(r.Paid);
+        const amt = parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+        const pAmt = !isNaN(p) ? p : (r.Paid === 'Paid' || r.Paid === 'Transferred') ? amt : 0;
+        if (pAmt > 0) monthPaid[r.Items] = (monthPaid[r.Items] || 0) + pAmt;
+      }
+    });
+    return makeSlide(`${m.Month} ${m.Year}`, periodBudget, monthPaid);
   });
 
   const { wrap: monthlyWrap, dots: monthlyDots, scrollTo: monthlyScrollTo } = makeSwiper(monthSlideEls, 1);
