@@ -63,6 +63,12 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0107202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,July,2026,Expense
 0107202603,Ecobank,,140,,Rental Utilities,Monthly,,,July,2026,Expense
 0107202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,July,2026,Expense
+0101202608,Ecobank,,1000,,SOA Exams,Monthly,,,January,2026,Expense
+0101202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,January,2026,Expense
+0102202608,Ecobank,,1000,,SOA Exams,Monthly,,,February,2026,Expense
+0102202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,February,2026,Expense
+0103202608,Ecobank,,1000,,SOA Exams,Monthly,,,March,2026,Expense
+0103202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,March,2026,Expense
 0101202604,Ecobank,,200,,Electricity,Monthly,,,January,2026,Expense
 0101202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,January,2026,Expense
 0102202604,Ecobank,,200,,Electricity,Monthly,,,February,2026,Expense
