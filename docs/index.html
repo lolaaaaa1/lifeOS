@@ -2009,10 +2009,10 @@ function getConstraintAmount(salaryAmount, numberOfWeeks) {
   return row ? parseFloat(row.Amount) : null;}
 
 function getBudgetForCurrentMonth() {
-  const wk     = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
-  const salary = getCurrentSalary();
-  if (!salary) return null;
-  return getConstraintAmount(salary, wk) ?? salary;
+  if (!S.currentMonth) return null;
+  const row = FIN().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+  const v = parseFloat(row && row.SalaryConstraints);
+  return v > 0 ? v : null;
 }
 
 // ── Calculation helpers ────────────────────────────────────────────────────
@@ -4051,7 +4051,12 @@ function computeMonthContributions() {
 }
 
 function renderBpByIncome(container) {
-  const required = Object.values(BP.monthAmounts).reduce((s, v) => s + v, 0);
+  const allocated  = Object.values(BP.monthAmounts).reduce((s, v) => s + v, 0);
+  const budget     = getBudgetForCurrentMonth();
+  const required   = budget ?? allocated;
+  const remaining  = required - allocated;
+  const over       = remaining < 0;
+  const pct        = required > 0 ? Math.min(100, (allocated / required) * 100) : 0;
   const periodLabel = isAllMonths()
     ? `All ${S.currentMonth.Year}`
     : (S.currentMonth ? S.currentMonth.Month.toUpperCase() + ' ' + S.currentMonth.Year : '');
@@ -4079,11 +4084,27 @@ function renderBpByIncome(container) {
           <span class="salary-split-value">${contrib.next > 0 ? fmtGHS(contrib.next) : '—'}</span>
         </div>
       </div>` : '';
+    const allocSplitHtml = `
+      <div class="salary-split" style="margin-top:12px;">
+        <div class="salary-split-item">
+          <span class="salary-split-label">Allocated</span>
+          <span class="salary-split-value">${allocated > 0 ? fmtGHS(allocated) : '—'}</span>
+        </div>
+        <div class="salary-split-item">
+          <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
+          <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
+        </div>
+      </div>
+      <div class="salary-progress-wrap" style="margin-top:8px;">
+        <div class="salary-progress-fill" style="width:${pct}%;${over ? 'background:#a8533f;' : ''}"></div>
+      </div>
+      <div class="salary-progress-text" style="${over ? 'color:#a8533f;' : ''}">${over ? 'Over budget' : pct.toFixed(0) + '% budgeted'}</div>`;
     card.innerHTML = `
       <div class="salary-card-top">
         <span class="salary-card-label">${escHtml(name.toUpperCase())} — REQUIRED · ${periodLabel}</span>
       </div>
       <div class="salary-card-amount${required > 0 ? '' : ' empty'}">${required > 0 ? fmtGHS(required) : '—'}</div>
+      ${allocSplitHtml}
       ${splitHtml}`;
     container.appendChild(card);
   });
