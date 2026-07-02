@@ -1738,7 +1738,11 @@
       <div class="modal-title" id="varIncomeDetailTitle">Income Detail</div>
       <button class="btn btn-ghost btn-sm" onclick="closeVariableIncomeDetail()">Close</button>
     </div>
-    <div id="varIncomeDetailStats" style="margin-bottom:16px;"></div>
+    <div id="varIncomeDetailStats" style="margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button id="vidTabAllocated" onclick="setVidTab('allocated')" style="flex:1;padding:8px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Allocated</button>
+      <button id="vidTabNotYet"    onclick="setVidTab('notyet')"    style="flex:1;padding:8px;font-size:13px;font-weight:600;background:transparent;color:inherit;border:none;border-radius:8px;cursor:pointer;opacity:.45;">Not Yet</button>
+    </div>
     <div id="varIncomeDetailList"></div>
     <button class="btn btn-primary" style="width:100%;margin-top:12px;" id="varIncomeAllocateBtn" onclick="">Allocate →</button>
   </div>
@@ -3852,7 +3856,7 @@ async function saveAllocation() {
   renderBudgetPage();
 }
 
-const VID = { source: '' };
+const VID = { source: '', tab: 'allocated' };
 
 function openVariableIncomeDetail(source) {
   VID.source = source;
@@ -3861,74 +3865,114 @@ function openVariableIncomeDetail(source) {
     closeVariableIncomeDetail();
     openAllocateModal(source);
   };
+  _vidRefreshStats();
+  setVidTab(VID.tab || 'allocated');
+  $('varIncomeDetailOverlay').classList.add('open');
+}
 
+function _vidRefreshStats() {
+  const source = VID.source;
   const totalReceived = AC.rows
     .filter(r => r.Item === source && (parseFloat(r.Credit) || 0) > 0)
     .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
-
   const allocRows = ALLOC().rows.filter(r => r.Source === source);
   const totalAllocated = allocRows.reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
-  const remaining = totalReceived - totalAllocated;
-  const fullyAllocated = remaining <= 0.01;
-
+  const remaining = Math.max(0, totalReceived - totalAllocated);
+  const over = totalReceived > 0 && remaining <= 0.01;
   $('varIncomeDetailStats').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
       <div style="background:var(--bg);border-radius:10px;padding:10px 4px;">
         <div style="font-size:10px;opacity:.5;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Received</div>
-        <div style="font-size:16px;font-weight:600;">${fmtGHS(totalReceived)}</div>
+        <div style="font-size:15px;font-weight:600;">${fmtGHS(totalReceived)}</div>
       </div>
       <div style="background:var(--bg);border-radius:10px;padding:10px 4px;">
         <div style="font-size:10px;opacity:.5;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Allocated</div>
-        <div style="font-size:16px;font-weight:600;">${fmtGHS(totalAllocated)}</div>
+        <div style="font-size:15px;font-weight:600;">${fmtGHS(totalAllocated)}</div>
       </div>
       <div style="background:var(--bg);border-radius:10px;padding:10px 4px;">
-        <div style="font-size:10px;opacity:.5;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">${fullyAllocated ? 'Done' : 'Left'}</div>
-        <div style="font-size:16px;font-weight:600;color:${fullyAllocated ? '#3a6b4a' : '#d4a017'};">${fmtGHS(Math.max(0, remaining))}</div>
+        <div style="font-size:10px;opacity:.5;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">${over ? 'Done ✓' : 'Remaining'}</div>
+        <div style="font-size:15px;font-weight:600;color:${over ? '#3a6b4a' : 'inherit'};">${fmtGHS(remaining)}</div>
       </div>
     </div>`;
+}
 
+function setVidTab(tab) {
+  VID.tab = tab;
+  const activeStyle   = 'flex:1;padding:8px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;';
+  const inactiveStyle = 'flex:1;padding:8px;font-size:13px;font-weight:600;background:transparent;color:inherit;border:none;border-radius:8px;cursor:pointer;opacity:.45;';
+  $('vidTabAllocated').style.cssText = tab === 'allocated' ? activeStyle : inactiveStyle;
+  $('vidTabNotYet').style.cssText    = tab === 'notyet'    ? activeStyle : inactiveStyle;
+  tab === 'allocated' ? _vidRenderAllocated() : _vidRenderNotYet();
+}
+
+function _vidRenderAllocated() {
   const list = $('varIncomeDetailList');
   list.innerHTML = '';
+  const allocRows = ALLOC().rows.map((r, i) => ({ ...r, _idx: i })).filter(r => r.Source === VID.source);
 
   if (!allocRows.length) {
-    list.innerHTML = '<div style="padding:20px 0;opacity:.5;text-align:center;font-size:14px;">No allocations yet. Tap Allocate to assign this income.</div>';
-  } else {
-    // group by Month + Year
-    const byPeriod = {};
-    allocRows.forEach((r, idx) => {
-      const key = `${r.Month} ${r.Year}`;
-      if (!byPeriod[key]) byPeriod[key] = [];
-      byPeriod[key].push({ ...r, _idx: ALLOC().rows.indexOf(r) });
-    });
-
-    Object.entries(byPeriod).forEach(([period, rows]) => {
-      const periodTotal = rows.reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
-      const hdr = document.createElement('div');
-      hdr.style = 'font-size:11px;letter-spacing:.06em;opacity:.5;text-transform:uppercase;padding:12px 0 6px;border-top:1px solid var(--border);margin-top:4px;';
-      hdr.textContent = period;
-      list.appendChild(hdr);
-
-      rows.forEach(r => {
-        const row = document.createElement('div');
-        row.style = 'display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05);';
-        row.innerHTML = `
-          <span style="font-size:14px;">${escHtml(r.BudgetItem)}</span>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <span style="font-size:14px;font-weight:500;">${fmtGHS(parseFloat(r.Amount) || 0)}</span>
-            <button style="background:none;border:none;cursor:pointer;opacity:.4;font-size:16px;padding:0 4px;"
-              title="Remove" onclick="removeAllocation(${r._idx})">×</button>
-          </div>`;
-        list.appendChild(row);
-      });
-
-      const periodRow = document.createElement('div');
-      periodRow.style = 'display:flex;justify-content:space-between;padding:6px 0 2px;font-size:13px;font-weight:600;opacity:.7;';
-      periodRow.innerHTML = `<span>Period total</span><span>${fmtGHS(periodTotal)}</span>`;
-      list.appendChild(periodRow);
-    });
+    list.innerHTML = '<div style="padding:20px 0;opacity:.5;text-align:center;font-size:14px;">No allocations yet. Tap Allocate below.</div>';
+    return;
   }
 
-  $('varIncomeDetailOverlay').classList.add('open');
+  // group by Month + Year
+  const byPeriod = {};
+  allocRows.forEach(r => {
+    const key = `${r.Month} ${r.Year}`;
+    if (!byPeriod[key]) byPeriod[key] = [];
+    byPeriod[key].push(r);
+  });
+
+  Object.entries(byPeriod).forEach(([period, rows]) => {
+    const periodTotal = rows.reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
+    const hdr = document.createElement('div');
+    hdr.style = 'font-size:11px;letter-spacing:.06em;opacity:.5;text-transform:uppercase;padding:12px 0 5px;border-top:1px solid var(--border);margin-top:2px;';
+    hdr.textContent = period;
+    list.appendChild(hdr);
+
+    rows.forEach(r => {
+      const row = document.createElement('div');
+      row.style = 'display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);';
+      row.innerHTML = `
+        <span style="font-size:14px;">${escHtml(r.BudgetItem)}</span>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span style="font-size:14px;font-weight:500;">${fmtGHS(parseFloat(r.Amount) || 0)}</span>
+          <button style="background:none;border:none;cursor:pointer;opacity:.35;font-size:18px;line-height:1;padding:0 2px;"
+            onclick="removeAllocation(${r._idx})">×</button>
+        </div>`;
+      list.appendChild(row);
+    });
+
+    const foot = document.createElement('div');
+    foot.style = 'display:flex;justify-content:space-between;padding:5px 0 2px;font-size:12px;font-weight:600;opacity:.6;';
+    foot.innerHTML = `<span>Period total</span><span>${fmtGHS(periodTotal)}</span>`;
+    list.appendChild(foot);
+  });
+}
+
+function _vidRenderNotYet() {
+  const list = $('varIncomeDetailList');
+  list.innerHTML = '';
+  const allocatedItems = new Set(ALLOC().rows.filter(r => r.Source === VID.source).map(r => r.BudgetItem));
+  const budgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
+  const notYet = budgetItems.filter(n => !allocatedItems.has(n));
+
+  if (!notYet.length) {
+    list.innerHTML = '<div style="padding:20px 0;opacity:.5;text-align:center;font-size:14px;">All budget items have been allocated from this source.</div>';
+    return;
+  }
+
+  notYet.forEach(name => {
+    const row = document.createElement('div');
+    row.style = 'display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);cursor:pointer;opacity:.6;';
+    row.innerHTML = `<span style="font-size:14px;">${escHtml(name)}</span><span style="font-size:12px;opacity:.5;">tap to allocate →</span>`;
+    row.onclick = () => {
+      closeVariableIncomeDetail();
+      openAllocateModal(VID.source);
+      setTimeout(() => { if ($('allocateBudgetItem')) $('allocateBudgetItem').value = name; }, 100);
+    };
+    list.appendChild(row);
+  });
 }
 
 function closeVariableIncomeDetail(event) {
