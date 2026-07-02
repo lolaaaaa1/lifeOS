@@ -3893,9 +3893,7 @@ async function openSalaryHistory() {
           : parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0,
         paid: r.Paid || ''
       }));
-    // load allocations for this month (for "by item" cross-reference)
-    const curM = S.currentMonth.Month, curY = String(S.currentMonth.Year);
-    SB.allocations = ALLOC().rows.filter(r => r.Month === curM && String(r.Year) === curY);
+    SB.allocations = ALLOC().rows;
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
