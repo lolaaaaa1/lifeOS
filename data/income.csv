@@ -15,8 +15,8 @@ January,2026,Budget,Trust Fund,,,,Actual,,,
 January,2026,Budget,Department Dues,,100,100,Actual,100,,100
 January,2026,Budget,Gifting,,,,Actual,,,
 January,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
-January,2026,Budget,Transport,,900,960,Calculated,960,,
-January,2026,Budget,Food,,930,960,Calculated,930,,
+January,2026,Budget,Transport,,900,960,Calculated,960,,Paid
+January,2026,Budget,Food,,930,960,Calculated,930,,Paid
 January,2026,Budget,Utilities,,,,Actual,,,
 January,2026,Budget,Travel,,,,Actual,,,
 January,2026,Budget,Outing,,,,Actual,,,
@@ -37,8 +37,8 @@ February,2026,Budget,Trust Fund,,,,Actual,,,
 February,2026,Budget,Department Dues,,100,100,Actual,100,,100
 February,2026,Budget,Gifting,,,,Actual,,,
 February,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
-February,2026,Budget,Transport,,840,840,Calculated,840,,
-February,2026,Budget,Food,,840,840,Calculated,840,,
+February,2026,Budget,Transport,,840,840,Calculated,840,,Paid
+February,2026,Budget,Food,,840,840,Calculated,840,,Paid
 February,2026,Budget,Utilities,,,,Actual,,,
 February,2026,Budget,Travel,,,,Actual,,,
 February,2026,Budget,Outing,,,,Actual,,,
@@ -59,8 +59,8 @@ March,2026,Budget,Trust Fund,,,,Actual,,,
 March,2026,Budget,Department Dues,,100,100,Actual,100,,100
 March,2026,Budget,Gifting,,,,Actual,,,
 March,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
-March,2026,Budget,Transport,,960,840,Calculated,840,,
-March,2026,Budget,Food,,932,840,Calculated,840,,
+March,2026,Budget,Transport,,960,840,Calculated,840,,Paid
+March,2026,Budget,Food,,932,840,Calculated,840,,Paid
 March,2026,Budget,Utilities,,,,Actual,,,
 March,2026,Budget,Travel,,,,Actual,,,
 March,2026,Budget,Outing,,,,Actual,,,
@@ -81,8 +81,8 @@ April,2026,Budget,Trust Fund,,100,100,Actual,100,,
 April,2026,Budget,Department Dues,,100,100,Actual,100,,100
 April,2026,Budget,Gifting,,100,100,Actual,100,,
 April,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
-April,2026,Budget,Transport,,900,1050,Calculated,,,
-April,2026,Budget,Food,,930,1085,Calculated,,,
+April,2026,Budget,Transport,,900,1050,Calculated,,,Paid
+April,2026,Budget,Food,,930,1085,Calculated,,,Paid
 April,2026,Budget,Utilities,,100,100,Actual,100,,
 April,2026,Budget,Travel,,100,100,Actual,100,,
 April,2026,Budget,Outing,,100,100,Actual,100,,
@@ -103,8 +103,8 @@ May,2026,Budget,Trust Fund,,100,100,Actual,100,,
 May,2026,Budget,Department Dues,,100,100,Actual,100,,100
 May,2026,Budget,Gifting,,100,100,Actual,100,,
 May,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
-May,2026,Budget,Transport,,930,840,Calculated,,,
-May,2026,Budget,Food,,961,868,Calculated,,,
+May,2026,Budget,Transport,,930,840,Calculated,,,Paid
+May,2026,Budget,Food,,961,868,Calculated,,,Paid
 May,2026,Budget,Utilities,,100,100,Actual,100,,
 May,2026,Budget,Travel,,100,100,Actual,100,,
 May,2026,Budget,Outing,,100,100,Actual,100,,
@@ -125,8 +125,8 @@ June,2026,Budget,Trust Fund,,100,100,Actual,100,,
 June,2026,Budget,Department Dues,,100,100,Actual,100,,100
 June,2026,Budget,Gifting,,100,100,Actual,100,,
 June,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
-June,2026,Budget,Transport,,900,840,Calculated,,,
-June,2026,Budget,Food,,930,868,Calculated,,,
+June,2026,Budget,Transport,,900,840,Calculated,,,Paid
+June,2026,Budget,Food,,930,868,Calculated,,,Paid
 June,2026,Budget,Utilities,,100,100,Actual,100,,
 June,2026,Budget,Travel,,100,100,Actual,100,,
 June,2026,Budget,Outing,,100,100,Actual,100,,

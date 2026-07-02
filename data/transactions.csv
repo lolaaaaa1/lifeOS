@@ -123,3 +123,27 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0105202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,May,2026,Expense
 0106202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,June,2026,Expense
 0106202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,June,2026,Expense
+0101202609,Ecobank,,960,,Food,Monthly,,,January,2026,Expense
+0101202609,,Others,,960,Food,Monthly,,,January,2026,Expense
+0101202610,Ecobank,,960,,Transport,Monthly,,,January,2026,Expense
+0101202610,,Others,,960,Transport,Monthly,,,January,2026,Expense
+0102202609,Ecobank,,840,,Food,Monthly,,,February,2026,Expense
+0102202609,,Others,,840,Food,Monthly,,,February,2026,Expense
+0102202610,Ecobank,,840,,Transport,Monthly,,,February,2026,Expense
+0102202610,,Others,,840,Transport,Monthly,,,February,2026,Expense
+0103202609,Ecobank,,840,,Food,Monthly,,,March,2026,Expense
+0103202609,,Others,,840,Food,Monthly,,,March,2026,Expense
+0103202610,Ecobank,,840,,Transport,Monthly,,,March,2026,Expense
+0103202610,,Others,,840,Transport,Monthly,,,March,2026,Expense
+0104202608,Ecobank,,1085,,Food,Monthly,,,April,2026,Expense
+0104202608,,Others,,1085,Food,Monthly,,,April,2026,Expense
+0104202609,Ecobank,,1050,,Transport,Monthly,,,April,2026,Expense
+0104202609,,Others,,1050,Transport,Monthly,,,April,2026,Expense
+0105202608,Ecobank,,868,,Food,Monthly,,,May,2026,Expense
+0105202608,,Others,,868,Food,Monthly,,,May,2026,Expense
+0105202609,Ecobank,,840,,Transport,Monthly,,,May,2026,Expense
+0105202609,,Others,,840,Transport,Monthly,,,May,2026,Expense
+0106202608,Ecobank,,868,,Food,Monthly,,,June,2026,Expense
+0106202608,,Others,,868,Food,Monthly,,,June,2026,Expense
+0106202609,Ecobank,,840,,Transport,Monthly,,,June,2026,Expense
+0106202609,,Others,,840,Transport,Monthly,,,June,2026,Expense
