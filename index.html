@@ -4354,7 +4354,7 @@ async function loadBpData() {
         v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
         if (v > 0) hasAmt.add(r.Items);
       } else {
-        const raw = r.ActualAmount || r.SalaryPortion;
+        const raw = r.PortionsTotal || r.ActualAmount || r.SalaryPortion;
         v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
         if (raw !== '' && raw !== null && raw !== undefined) hasAmt.add(r.Items);
       }
