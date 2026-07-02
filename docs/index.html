@@ -544,9 +544,36 @@
     .budget-item-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
+      border-radius: 0;
+      border-top: none;
+      padding: 12px 16px;
     }
+    .budget-item-card:first-of-type { border-radius: 0; }
+    .budget-item-card:last-child { border-radius: 0 0 12px 12px; }
+
+    .bp-table-header {
+      display: grid;
+      grid-template-columns: 1fr 100px 100px 60px;
+      padding: 8px 16px;
+      background: var(--accent-dk);
+      border-radius: 12px 12px 0 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(250,247,242,0.5);
+    }
+    .bp-table-header span:nth-child(2),
+    .bp-table-header span:nth-child(3) { text-align: right; }
+
+    .bp-table-row {
+      display: grid;
+      grid-template-columns: 1fr 100px 100px 60px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .budget-item-name-cell { min-width: 0; }
 
     .budget-item-main {
       display: flex;
@@ -573,6 +600,21 @@
       text-transform: uppercase;
       letter-spacing: 0.6px;
     }
+
+    .bp-col-amount {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .bp-col-paid {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .bp-col-paid.paid-full { color: var(--green); font-weight: 600; }
 
     .budget-item-right { text-align: right; flex-shrink: 0; }
 
@@ -1523,11 +1565,11 @@
     <div id="acctMonthForRow" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-field">
         <label class="form-label">Month For</label>
-        <select id="acctTxnMonthFor" class="form-input"></select>
+        <select id="acctTxnMonthFor" class="form-input" onchange="onAcctMonthForChange()"></select>
       </div>
       <div class="form-field">
         <label class="form-label">Year For</label>
-        <input id="acctTxnYearFor" class="form-input" type="number" placeholder="2026">
+        <input id="acctTxnYearFor" class="form-input" type="number" placeholder="2026" oninput="onAcctMonthForChange()">
       </div>
     </div>
     <div id="acctMonthRecvRow" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -3697,6 +3739,7 @@ function deleteItem(id) {
 const BP = {
   items:          [],   // [{Id, Name, Type}] from /api/budget/items
   monthAmounts:   {},   // {itemId: amount} — period total from days.csv (Calculated) or SalaryPortion (Actual)
+  paidAmounts:    {},   // {itemId: amount} — sum of expense transactions for current scope
   calculatedTypes:{},   // {itemId: 'Actual'|'Calculated'}
   dailyApplies:   {},   // {itemId: {monday:bool, ...}} — which days apply (from income.csv)
   view:           'income',
@@ -3772,6 +3815,18 @@ async function loadBpData() {
       });
   }
   IC.sources = Object.values(icTotals);
+
+  // BP.paidAmounts: sum expense debit rows per budget item for current scope
+  const paid = {};
+  for (const m of scope) {
+    AC.rows
+      .filter(r => (r.TransactionType || '').toLowerCase() === 'expense' && r.AccountFrom && !r.AccountTo && r.Debit
+                   && r.MonthFor === m.Month && String(r.YearFor || '') === String(m.Year))
+      .forEach(r => {
+        paid[r.Item] = (paid[r.Item] || 0) + (parseFloat(r.Debit) || 0);
+      });
+  }
+  BP.paidAmounts = paid;
 }
 
 function getSalaryAmount() {
@@ -3780,7 +3835,10 @@ function getSalaryAmount() {
 
 function renderBpPage() {
   if (S.currentPage !== 'budget-plan') return;
-  loadBpData().then(() => renderBpGroups());
+  Promise.all([
+    apiFetch('/accounts').then(r => { AC.rows = r || []; }).catch(() => {}),
+    loadBpData(),
+  ]).then(() => renderBpGroups());
 }
 
 function renderBpSalaryBar() {
@@ -3820,6 +3878,11 @@ function renderBpGroups() {
 function renderBpByItem(container, items) {
   const list = document.createElement('div');
   list.className = 'budget-items';
+  // Table header
+  const hdr = document.createElement('div');
+  hdr.className = 'bp-table-header';
+  hdr.innerHTML = `<span>Item</span><span>Allocated</span><span>Paid</span>`;
+  list.appendChild(hdr);
   const sorted = [...items].sort((a, b) => isCalc(a.Id) ? -1 : isCalc(b.Id) ? 1 : 0);
   sorted.forEach(item => list.appendChild(buildBpCard(item)));
   container.appendChild(list);
@@ -3864,22 +3927,26 @@ function buildBpCard(item) {
   const raw    = BP.monthAmounts[item.Id];
   const amount = raw ?? 0;
   const isSet  = raw !== null && raw !== undefined;
-  const salary = getSalaryAmount();
-  const pct = salary > 0 ? (amount / salary) * 100 : 0;
-  const unset = isCalcUnset(item.Id);
+  const paid   = BP.paidAmounts[item.Id] || 0;
+  const unset  = isCalcUnset(item.Id);
+  const isCalcType = (BP.calculatedTypes[item.Id] || '') === 'Calculated';
+  const paidFull = isSet && paid >= amount && amount > 0;
 
   const card = document.createElement('div');
   card.className = 'budget-item-card';
   if (unset) card.style.borderLeft = '3px solid #d4a017';
+  if (paidFull) card.style.borderLeft = '3px solid #3a6b4a';
   card.innerHTML = `
-    <div class="budget-item-main">
-      <div class="budget-item-left">
+    <div class="bp-table-row">
+      <div class="budget-item-name-cell">
         <div class="budget-item-name">${escHtml(item.Name)}</div>
-        <div class="budget-item-sublabel" style="${unset ? 'color:#d4a017;' : ''}">${(BP.calculatedTypes[item.Id] || '') === 'Calculated' ? (unset ? 'Calculated — tap to set daily' : 'Calculated') : ''}</div>
+        ${isCalcType ? `<div class="budget-item-sublabel" style="${unset ? 'color:#d4a017;' : ''}">${unset ? 'Calculated — tap to set daily' : 'Calculated'}</div>` : ''}
       </div>
-      <div class="budget-item-right" style="cursor:pointer;" onclick="openBpAmountModal('${escHtml(item.Id)}','${escHtml(item.Name)}')">
-        <div class="budget-item-amount">${isSet ? fmtGHS(amount) : '—'}</div>
-        <div class="budget-item-pct">${salary > 0 && isSet ? fmtPct(pct) + ' of salary' : isSet ? '' : 'tap to set'}</div>
+      <div class="bp-col-amount" style="cursor:pointer;" onclick="openBpAmountModal('${escHtml(item.Id)}','${escHtml(item.Name)}')">
+        ${isSet ? fmtGHS(amount) : '<span style="opacity:0.4">tap to set</span>'}
+      </div>
+      <div class="bp-col-paid${paidFull ? ' paid-full' : ''}">
+        ${paid > 0 ? fmtGHS(paid) + (paidFull ? ' ✓' : '') : '<span style="opacity:0.35">—</span>'}
       </div>
       <div class="budget-item-actions">
         <button class="btn btn-icon" onclick="openBudgetItemModal('${escHtml(item.Id)}')" title="Edit">✎</button>
@@ -4281,6 +4348,7 @@ const AC = {
   display: true,
   tab: 'wallets',    // 'wallets' | 'all'
   txnType: 'expense', // 'income' | 'expense' | 'transfer'
+  budgetAmounts: {}, // {itemName: SalaryPortion} for current expense month
 };
 
 const ACCOUNT_TYPE_ICONS = {
@@ -4526,11 +4594,28 @@ function acctPopulateFromToSelects(defaultTo) {
 async function acctPopulateItemSelect(selected, section) {
   const sel = $('acctTxnItem');
   if (!sel) return;
-  let items = [];
-  try { items = await apiFetch('/items'); } catch {}
-  if (section) items = items.filter(it => it.Section === section);
-  sel.innerHTML = `<option value="">— Select Item —</option>` +
-    items.map(it => `<option value="${escHtml(it.ItemName)}"${it.ItemName === selected ? ' selected' : ''}>${escHtml(it.ItemName)}</option>`).join('');
+
+  if (section === 'Budget') {
+    const month = $('acctTxnMonthFor')?.value || '';
+    const year  = String($('acctTxnYearFor')?.value || '');
+    let budgetRows = [];
+    if (month && year) {
+      try {
+        const incRows = await apiFetch(`/income/${month}/${year}`);
+        budgetRows = (incRows || []).filter(r => r.Type === 'Budget' && r.CalculatedType === 'Actual');
+      } catch {}
+    }
+    AC.budgetAmounts = {};
+    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.SalaryPortion) || 0; });
+    sel.innerHTML = `<option value="">— Select Item —</option>` +
+      budgetRows.map(r => `<option value="${escHtml(r.Items)}"${r.Items === selected ? ' selected' : ''}>${escHtml(r.Items)}</option>`).join('');
+  } else {
+    let items = [];
+    try { items = await apiFetch('/items'); } catch {}
+    if (section) items = items.filter(it => it.Section === section);
+    sel.innerHTML = `<option value="">— Select Item —</option>` +
+      items.map(it => `<option value="${escHtml(it.ItemName)}"${it.ItemName === selected ? ' selected' : ''}>${escHtml(it.ItemName)}</option>`).join('');
+  }
   onAcctItemChange(selected || '');
 }
 
@@ -4601,8 +4686,15 @@ function setAcctIncomePeriod(period) {
 }
 
 function onAcctItemChange(val) {
-  const field = $('acctIncomePeriodField');
-  if (field) field.style.display = val ? '' : 'none';
+  if (AC.txnType === 'expense' && val && AC.budgetAmounts[val] > 0) {
+    $('acctTxnCredit').value = AC.budgetAmounts[val];
+  }
+}
+
+function onAcctMonthForChange() {
+  if (AC.txnType === 'expense') {
+    acctPopulateItemSelect($('acctTxnItem')?.value || '', 'Budget');
+  }
 }
 
 // ── Add / Edit Account Definition ───────────────────────────────────────────
