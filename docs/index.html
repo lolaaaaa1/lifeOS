@@ -5376,6 +5376,10 @@ async function openAddTxnModal(accountName, itemName, lockExpense) {
   setTxnType('expense');
   const typeToggle = $('txnTypeToggle');
   if (typeToggle) typeToggle.style.display = lockExpense ? 'none' : '';
+  const monthForRow  = $('acctMonthForRow');
+  const monthRecvRow = $('acctMonthRecvRow');
+  if (monthForRow)  monthForRow.style.display  = lockExpense ? 'none' : '';
+  if (monthRecvRow) monthRecvRow.style.display = lockExpense ? 'none' : '';
   if (accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
   if (itemName && $('acctTxnItem')) $('acctTxnItem').value = itemName;
   $('accountModalOverlay').classList.add('open');
