@@ -2273,6 +2273,17 @@ const LocalAPI = {
       return { ok: true };
     }
 
+    // PUT /income/{month}/{year}/budget/{name}/paid
+    if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/budget\/(.+)\/paid$/)) && method === 'PUT') {
+      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
+      const inc = INC(); _ensureCol(inc, 'Paid');
+      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
+      if (!found) throw new Error('budget item not found');
+      found.Paid = body.amount !== undefined ? String(body.amount) : '';
+      await DATA.save('data/income.csv', `Mark paid ${name} ${mo} ${yr}`);
+      return { ok: true };
+    }
+
     // PUT /income/{month}/{year}/budget/{name}/daily  ← before generic /{name}
     if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/budget\/(.+)\/daily$/)) && method === 'PUT') {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
@@ -3816,15 +3827,14 @@ async function loadBpData() {
   }
   IC.sources = Object.values(icTotals);
 
-  // BP.paidAmounts: sum expense debit rows per budget item for current scope
+  // BP.paidAmounts: read Paid column from income.csv budget rows
   const paid = {};
   for (const m of scope) {
-    AC.rows
-      .filter(r => (r.TransactionType || '').toLowerCase() === 'expense' && r.AccountFrom && !r.AccountTo && r.Debit
-                   && r.MonthFor === m.Month && String(r.YearFor || '') === String(m.Year))
-      .forEach(r => {
-        paid[r.Item] = (paid[r.Item] || 0) + (parseFloat(r.Debit) || 0);
-      });
+    let rows = [];
+    try { rows = await apiFetch(`/income/${m.Month}/${m.Year}`); } catch {}
+    rows.filter(r => r.Type === 'Budget' && r.Paid).forEach(r => {
+      paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.Paid) || 0);
+    });
   }
   BP.paidAmounts = paid;
 }
@@ -4843,6 +4853,15 @@ async function saveAccountTxn() {
       await apiFetch('/accounts/transaction', { method: 'POST', body: JSON.stringify(payload) });
     }
     [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
+    // If expense with a budget item, write Paid to income.csv
+    if (type === 'expense' && payload.item && payload.monthFor && payload.yearFor) {
+      const paidAmt = payload.amount + (payload.charges || 0);
+      try {
+        await apiFetch(`/income/${payload.monthFor}/${payload.yearFor}/budget/${encodeURIComponent(payload.item)}/paid`, {
+          method: 'PUT', body: JSON.stringify({ amount: paidAmt }),
+        });
+      } catch {}
+    }
     $('accountModalOverlay').classList.remove('open');
     AC.editingTxn = null;
     renderAccountsList();
