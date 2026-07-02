@@ -1714,6 +1714,16 @@
       <label class="form-label">Budget Item</label>
       <select id="allocateBudgetItem" class="form-input"></select>
     </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-field">
+        <label class="form-label">Month</label>
+        <select id="allocateMonth" class="form-input"></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Year</label>
+        <input id="allocateYear" class="form-input" type="number" placeholder="2026">
+      </div>
+    </div>
     <div class="form-field">
       <label class="form-label">Amount (GHS)</label>
       <input id="allocateAmount" class="form-input" type="number" step="0.01" placeholder="0.00">
@@ -2033,7 +2043,6 @@ const DATA = {
       this.load('data/items.csv'),
       this.load('data/transactions.csv'),
       this.load('data/constraints.csv'),
-      this.load('data/allocations.csv'),
     ]);
   },
 };
@@ -2045,7 +2054,6 @@ function DAYS_D() { return DATA.get('data/days.csv')            || { headers: []
 function ITMS()   { return DATA.get('data/items.csv')           || { headers: [], rows: [] }; }
 function TXNS()   { return DATA.get('data/transactions.csv')    || { headers: [], rows: [] }; }
 function CONS()   { return DATA.get('data/constraints.csv')     || { headers: [], rows: [] }; }
-function ALLOC()  { return DATA.get('data/allocations.csv')     || { headers: [], rows: [] }; }
 
 function getCurrentSalary() {
   if (!S.currentMonth) return null;
@@ -2701,25 +2709,34 @@ const LocalAPI = {
       return { ok: true };
     }
 
-    // POST /allocations — record a variable income allocation
-    if (method === 'POST' && rawPath === '/allocations') {
-      const { source, item, amount } = body;
-      if (!source || !item || !amount) throw new Error('Missing allocation fields');
-      const allocData = ALLOC();
-      _ensureCol(allocData, 'Source');
-      _ensureCol(allocData, 'BudgetItem');
-      _ensureCol(allocData, 'Amount');
-      allocData.rows.push({ Source: source, BudgetItem: item, Amount: String(amount) });
-      await DATA.save('data/allocations.csv', `Allocate ${amount} from ${source} to ${item}`);
+    // POST /bonus-allocation — store in income.csv as {Source}Portion column (e.g. CompanyBonusPortion)
+    if (method === 'POST' && rawPath === '/bonus-allocation') {
+      const { source, item, month, year, amount } = body;
+      if (!source || !item || !month || !year || !amount) throw new Error('Missing allocation fields');
+      const col = source.replace(/\s+/g, '') + 'Portion'; // e.g. "CompanyBonusPortion"
+      const incData = INC();
+      _ensureCol(incData, col);
+      const yr = String(year);
+      let row = incData.rows.find(r => r.Type === 'Budget' && r.Items === item
+        && r.Month === month && String(r.Year) === yr);
+      if (!row) {
+        row = { Month: month, Year: yr, Items: item, Type: 'Budget' };
+        incData.rows.push(row);
+      }
+      row[col] = String(amount);
+      await DATA.save('data/income.csv', `Allocate ${amount} from ${source} to ${item} ${month} ${yr}`);
       return { ok: true };
     }
 
-    // DELETE /allocations/:idx — remove an allocation by row index
-    if ((m = rawPath.match(/^\/allocations\/(\d+)$/)) && method === 'DELETE') {
-      const idx = parseInt(m[1], 10);
-      const allocData = ALLOC();
-      allocData.rows.splice(idx, 1);
-      await DATA.save('data/allocations.csv', `Remove allocation ${idx}`);
+    // DELETE /bonus-allocation/:source/:item/:month/:year — clear that column value
+    if ((m = rawPath.match(/^\/bonus-allocation\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/)) && method === 'DELETE') {
+      const [, src, itm, mon, yr] = m.map(decodeURIComponent);
+      const col = src.replace(/\s+/g, '') + 'Portion';
+      const incData = INC();
+      const row = incData.rows.find(r => r.Type === 'Budget' && r.Items === itm
+        && r.Month === mon && String(r.Year) === yr);
+      if (row) { row[col] = ''; }
+      await DATA.save('data/income.csv', `Remove bonus allocation ${src} ${itm} ${mon} ${yr}`);
       return { ok: true };
     }
 
@@ -3500,13 +3517,13 @@ function renderIncomeSections() {
         if (!groups[src]) groups[src] = { source: src, received: 0 };
         groups[src].received += parseFloat(r.Credit) || 0;
       });
-      const allocRows = ALLOC().rows;
+      const budgetIncRows = INC().rows.filter(r => r.Type === 'Budget');
       const totalReceived = Object.values(groups).reduce((s, g) => s + g.received, 0);
 
       const vsec = document.createElement('div');
       vsec.className = 'budget-section';
       vsec.innerHTML = `<div class="budget-section-header">
-        <span class="budget-section-title">Bonus &amp; Extra</span>
+        <span class="budget-section-title">Variable</span>
         <div class="budget-section-line"></div>
         <span class="budget-section-total">${fmtGHS(totalReceived)}</span>
       </div>`;
@@ -3787,6 +3804,16 @@ function openAllocateModal(source) {
   const budgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
   $('allocateBudgetItem').innerHTML = budgetItems.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
 
+  $('allocateMonth').innerHTML = MONTH_NAMES.map(m => `<option value="${m}">${m}</option>`).join('');
+  if (S.currentMonth && !isAllMonths()) {
+    $('allocateMonth').value = S.currentMonth.Month;
+    $('allocateYear').value  = S.currentMonth.Year;
+  } else {
+    const now = new Date();
+    $('allocateMonth').value = MONTH_NAMES[now.getMonth()];
+    $('allocateYear').value  = now.getFullYear();
+  }
+
   $('allocateAmount').value = '';
   $('allocateModalOverlay').classList.add('open');
   setTimeout(() => $('allocateAmount').focus(), 80);
@@ -3799,12 +3826,14 @@ function closeAllocateModal(event) {
 
 async function saveAllocation() {
   const item   = $('allocateBudgetItem').value;
+  const month  = $('allocateMonth').value;
+  const year   = parseInt($('allocateYear').value, 10);
   const amount = parseFloat($('allocateAmount').value) || 0;
-  if (!item || !amount) { alert('Please fill all fields.'); return; }
+  if (!item || !month || !year || !amount) { alert('Please fill all fields.'); return; }
   try {
-    await apiFetch('/allocations', {
+    await apiFetch('/bonus-allocation', {
       method: 'POST',
-      body: JSON.stringify({ source: ALLOC_M.source, item, amount }),
+      body: JSON.stringify({ source: ALLOC_M.source, item, month, year, amount }),
     });
   } catch (e) { alert('Error: ' + e.message); return; }
   $('allocateModalOverlay').classList.remove('open');
@@ -3831,9 +3860,13 @@ function setVidTab(tab) {
   const list = $('varIncomeDetailList');
   list.innerHTML = '';
   const allBudgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
-  const allocRows = ALLOC().rows.map((r, i) => ({ ...r, _idx: i })).filter(r => r.Source === VID.source);
+  const source = VID.source;
+  const col = source.replace(/\s+/g, '') + 'Portion'; // e.g. CompanyBonusPortion
   const amtByItem = {};
-  allocRows.forEach(r => { amtByItem[r.BudgetItem] = (amtByItem[r.BudgetItem] || 0) + (parseFloat(r.Amount) || 0); });
+  INC().rows.filter(r => r.Type === 'Budget').forEach(r => {
+    const v = parseFloat(r[col]) || 0;
+    if (v > 0) amtByItem[r.Items] = (amtByItem[r.Items] || 0) + v;
+  });
 
   const items = tab === 'used'
     ? allBudgetItems.filter(n => (amtByItem[n] || 0) > 0)
@@ -3861,10 +3894,10 @@ function closeVariableIncomeDetail(event) {
   $('varIncomeDetailOverlay').classList.remove('open');
 }
 
-async function removeAllocation(idx) {
+async function removeAllocation(source, item, month, year) {
   if (!confirm('Remove this allocation?')) return;
   try {
-    await apiFetch(`/allocations/${idx}`, { method: 'DELETE' });
+    await apiFetch(`/bonus-allocation/${encodeURIComponent(source)}/${encodeURIComponent(item)}/${encodeURIComponent(month)}/${encodeURIComponent(year)}`, { method: 'DELETE' });
   } catch (e) { alert('Error: ' + e.message); return; }
   $('varIncomeDetailOverlay').classList.remove('open');
   renderBudgetPage();
@@ -3873,7 +3906,7 @@ async function removeAllocation(idx) {
 /* ════════════════════════════════════════════════════════════════════════════
    SALARY HISTORY
    ════════════════════════════════════════════════════════════════════════════ */
-const SB = { tab: 'used', items: [], salary: 0, allocations: [] };
+const SB = { tab: 'used', items: [], salary: 0, bonusByItem: {} };
 
 async function openSalaryHistory() {
   if (!requireSpecificMonth('Select a specific month to view this breakdown.')) return;
@@ -3893,7 +3926,19 @@ async function openSalaryHistory() {
           : parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0,
         paid: r.Paid || ''
       }));
-    SB.allocations = ALLOC().rows;
+    // bonus portions per item from income.csv *Portion columns
+    const nonSalarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.ItemName !== 'Salary').map(r => r.ItemName);
+    SB.bonusByItem = {};
+    allRows.filter(r => r.Type === 'Budget').forEach(r => {
+      nonSalarySrcs.forEach(src => {
+        const col = src.replace(/\s+/g, '') + 'Portion';
+        const v = parseFloat(r[col]) || 0;
+        if (v > 0) {
+          if (!SB.bonusByItem[r.Items]) SB.bonusByItem[r.Items] = {};
+          SB.bonusByItem[r.Items][src] = (SB.bonusByItem[r.Items][src] || 0) + v;
+        }
+      });
+    });
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
@@ -3916,11 +3961,7 @@ function sbItemRow(it) {
     ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
     : '';
 
-  // bonus allocations for this item this month
-  const bonusRows = (SB.allocations || []).filter(r => r.BudgetItem === it.name);
-  const bonusTotal = bonusRows.reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
-  const bonusBySource = {};
-  bonusRows.forEach(r => { bonusBySource[r.Source] = (bonusBySource[r.Source] || 0) + (parseFloat(r.Amount) || 0); });
+  const bonusBySource = SB.bonusByItem?.[it.name] || {};
   const bonusLines = Object.entries(bonusBySource)
     .map(([src, amt]) => `<div style="font-size:11px;opacity:.55;display:flex;justify-content:space-between;padding:1px 0;"><span>+ ${escHtml(src)}</span><span>${fmtGHS(amt)}</span></div>`)
     .join('');
