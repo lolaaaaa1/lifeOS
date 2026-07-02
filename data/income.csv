@@ -16,7 +16,7 @@ January,2026,Budget,Department Dues,,,Actual,100,,,,,,,,,100
 January,2026,Budget,Gifting,,,Actual,,,,,,,,,,
 January,2026,Budget,Apple Music Subscription,,,Actual,30,,,,,,,,,30
 January,2026,Budget,Transport,,,Calculated,960,,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,TRUE,
-January,2026,Budget,Food,,,Calculated,930,,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,
+January,2026,Budget,Food,,,Calculated,930,,true,true,true,true,true,true,true,
 January,2026,Budget,Utilities,,,Actual,,,,,,,,,,
 January,2026,Budget,Travel,,,Actual,,,,,,,,,,
 January,2026,Budget,Outing,,,Actual,,,,,,,,,,
