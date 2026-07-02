@@ -3538,11 +3538,17 @@ function renderIncomeSections() {
         card.onclick = () => openVariableIncomeDetail(g.source);
         card.innerHTML = `
           <div class="salary-card-top">
-            <span class="salary-card-label" style="opacity:.5;font-size:12px;">REMAINING</span>
+            <span class="salary-card-label">${escHtml(g.source.toUpperCase())}</span>
             <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
               onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
           </div>
-          <div class="salary-card-amount">${fmtGHS(remaining)}</div>`;
+          <div class="salary-card-amount">${fmtGHS(g.received)}</div>
+          <div class="salary-split">
+            <div class="salary-split-item">
+              <span class="salary-split-label">Remaining</span>
+              <span class="salary-split-value">${fmtGHS(remaining)}</span>
+            </div>
+          </div>`;
 
         const vlist = document.createElement('div');
         vlist.className = 'budget-items';
