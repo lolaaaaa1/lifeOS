@@ -2980,7 +2980,10 @@ async function renderDashboardCalc() {
     keys.forEach(item => {
       const row = document.createElement('div');
       row.className = 'dash-item-row';
+      row.style.cursor = 'pointer';
+      row.title = `Record ${item} expense`;
       row.innerHTML = `<span class="dash-item-name">${escHtml(item)}</span><span class="dash-item-amount">${fmtGHS(amtsMap[item] || 0)}</span>`;
+      row.onclick = () => openAddTxnModal('', item);
       list.appendChild(row);
     });
     slide.appendChild(list);
@@ -5314,7 +5317,7 @@ async function saveAccountDef() {
 
 // ── Record / Edit Transaction ────────────────────────────────────────────────
 
-async function openAddTxnModal(accountName) {
+async function openAddTxnModal(accountName, itemName) {
   acctPopulateMonthSelects();
   acctPopulateFromToSelects('');
   AC.editingTxn = null;
@@ -5328,6 +5331,7 @@ async function openAddTxnModal(accountName) {
   setAcctIncomePeriod('Monthly');
   setTxnType('expense');
   if (accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
+  if (itemName && $('acctTxnItem')) $('acctTxnItem').value = itemName;
   $('accountModalOverlay').classList.add('open');
 }
 
