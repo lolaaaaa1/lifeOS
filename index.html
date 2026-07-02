@@ -1698,6 +1698,53 @@
 </div>
 
 <!-- ── Add income source modal ───────────────────────────────────────────────── -->
+<!-- ── Allocate variable income modal ─────────────────────────────────────── -->
+<div class="modal-overlay" id="allocateModalOverlay" onclick="closeAllocateModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="allocateModalTitle">Allocate</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeAllocateModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAllocation()">Save</button>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Source</label>
+      <div id="allocateSourceDisplay" class="form-input" style="background:var(--bg);pointer-events:none;opacity:0.8;"></div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Budget Item</label>
+      <select id="allocateBudgetItem" class="form-input"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-field">
+        <label class="form-label">Month</label>
+        <select id="allocateMonth" class="form-input"></select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Year</label>
+        <input id="allocateYear" class="form-input" type="number" placeholder="2026">
+      </div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Amount (GHS)</label>
+      <input id="allocateAmount" class="form-input" type="number" step="0.01" placeholder="0.00">
+    </div>
+  </div>
+</div>
+
+<!-- ── Variable income detail modal ──────────────────────────────────────── -->
+<div class="modal-overlay" id="varIncomeDetailOverlay" onclick="closeVariableIncomeDetail(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="varIncomeDetailTitle">Income Detail</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeVariableIncomeDetail()">Close</button>
+    </div>
+    <div id="varIncomeDetailStats" style="margin-bottom:16px;"></div>
+    <div id="varIncomeDetailList"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px;" id="varIncomeAllocateBtn" onclick="">Allocate →</button>
+  </div>
+</div>
+
+<!-- ── Add income source modal ───────────────────────────────────────────────── -->
 <div class="modal-overlay" id="addIncomeModalOverlay" onclick="closeAddIncomeModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -1993,6 +2040,7 @@ const DATA = {
       this.load('data/items.csv'),
       this.load('data/transactions.csv'),
       this.load('data/constraints.csv'),
+      this.load('data/allocations.csv'),
     ]);
   },
 };
@@ -2004,6 +2052,7 @@ function DAYS_D() { return DATA.get('data/days.csv')            || { headers: []
 function ITMS()   { return DATA.get('data/items.csv')           || { headers: [], rows: [] }; }
 function TXNS()   { return DATA.get('data/transactions.csv')    || { headers: [], rows: [] }; }
 function CONS()   { return DATA.get('data/constraints.csv')     || { headers: [], rows: [] }; }
+function ALLOC()  { return DATA.get('data/allocations.csv')     || { headers: [], rows: [] }; }
 
 function getCurrentSalary() {
   if (!S.currentMonth) return null;
@@ -2656,6 +2705,30 @@ const LocalAPI = {
       const txns = TXNS();
       txns.rows = txns.rows.filter(r => !((r.AccountFrom === a || r.AccountTo === a) && r.Item === it && r.MonthFor === mf && r.YearFor === yf));
       await DATA.save('data/transactions.csv', `Delete txn ${a} ${it}`);
+      return { ok: true };
+    }
+
+    // POST /allocations — record a variable income allocation
+    if (method === 'POST' && rawPath === '/allocations') {
+      const { source, item, month, year, amount } = body;
+      if (!source || !item || !month || !year || !amount) throw new Error('Missing allocation fields');
+      const allocData = ALLOC();
+      _ensureCol(allocData, 'Source');
+      _ensureCol(allocData, 'BudgetItem');
+      _ensureCol(allocData, 'Month');
+      _ensureCol(allocData, 'Year');
+      _ensureCol(allocData, 'Amount');
+      allocData.rows.push({ Source: source, BudgetItem: item, Month: month, Year: String(year), Amount: String(amount) });
+      await DATA.save('data/allocations.csv', `Allocate ${amount} from ${source} to ${item} ${month} ${year}`);
+      return { ok: true };
+    }
+
+    // DELETE /allocations/:idx — remove an allocation by row index
+    if ((m = rawPath.match(/^\/allocations\/(\d+)$/)) && method === 'DELETE') {
+      const idx = parseInt(m[1], 10);
+      const allocData = ALLOC();
+      allocData.rows.splice(idx, 1);
+      await DATA.save('data/allocations.csv', `Remove allocation ${idx}`);
       return { ok: true };
     }
 
@@ -3419,10 +3492,80 @@ function renderIncomeSections() {
     list.className = 'budget-items';
     srcs.forEach(src => list.appendChild(buildIncomeCard(src)));
     section.appendChild(list);
-
-
     container.appendChild(section);
   });
+
+  // Variable income section — non-salary income received (all-time)
+  const nonSalarySources = ITMS().rows
+    .filter(r => r.Section === 'Income' && r.ItemName !== 'Salary')
+    .map(r => r.ItemName);
+
+  if (nonSalarySources.length) {
+    const variableTxns = AC.rows.filter(r => nonSalarySources.includes(r.Item) && (parseFloat(r.Credit) || 0) > 0);
+    if (variableTxns.length) {
+      const groups = {};
+      variableTxns.forEach(r => {
+        const src = r.Item || '';
+        if (!groups[src]) groups[src] = { source: src, received: 0 };
+        groups[src].received += parseFloat(r.Credit) || 0;
+      });
+      const allocRows = ALLOC().rows;
+      const totalReceived = Object.values(groups).reduce((s, g) => s + g.received, 0);
+
+      const vsec = document.createElement('div');
+      vsec.className = 'budget-section';
+      vsec.innerHTML = `<div class="budget-section-header">
+        <span class="budget-section-title">Bonus &amp; Extra</span>
+        <div class="budget-section-line"></div>
+        <span class="budget-section-total">${fmtGHS(totalReceived)}</span>
+      </div>`;
+
+      const vlist = document.createElement('div');
+      vlist.className = 'budget-items';
+
+      Object.values(groups).forEach(g => {
+        const allocated = allocRows
+          .filter(r => r.Source === g.source)
+          .reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
+        const remaining = g.received - allocated;
+        const fullyAllocated = remaining <= 0.01;
+
+        const card = document.createElement('div');
+        card.className = 'salary-card';
+        card.style.cssText = 'margin-bottom:12px;cursor:pointer;';
+        card.onclick = () => openVariableIncomeDetail(g.source);
+        card.innerHTML = `
+          <div class="salary-card-top">
+            <span class="salary-card-label">${escHtml(g.source.toUpperCase())}</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              ${fullyAllocated
+                ? `<span style="font-size:10px;background:#3a6b4a;color:#faf7f2;padding:2px 8px;border-radius:4px;letter-spacing:.06em;font-family:'DM Mono',monospace;">ALLOCATED</span>`
+                : `<span style="font-size:10px;background:#d4a017;color:#1a1714;padding:2px 8px;border-radius:4px;letter-spacing:.06em;font-family:'DM Mono',monospace;">UNALLOCATED</span>`}
+              <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
+                onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
+            </div>
+          </div>
+          <div class="salary-card-amount">${fmtGHS(g.received)}</div>
+          ${allocated > 0 ? `
+          <div class="salary-split">
+            <div class="salary-split-item">
+              <span class="salary-split-label">Allocated</span>
+              <span class="salary-split-value">${fmtGHS(allocated)}</span>
+            </div>
+            <div class="salary-split-item">
+              <span class="salary-split-label" style="${!fullyAllocated ? 'color:#d4a017;' : ''}">Remaining</span>
+              <span class="salary-split-value" style="${!fullyAllocated ? 'color:#d4a017;' : ''}">${fmtGHS(Math.max(0, remaining))}</span>
+            </div>
+          </div>
+          ${budgetProgressHtml(allocated, g.received)}` : ''}`;
+
+        vlist.appendChild(card);
+      });
+
+      vsec.appendChild(vlist);
+      container.appendChild(vsec);
+    }
+  }
 }
 
 function renderIncomeByReceived(container) {
@@ -3664,9 +3807,151 @@ async function deleteIncomeSource(name) {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   VARIABLE INCOME ALLOCATION
+   ════════════════════════════════════════════════════════════════════════════ */
+const ALLOC_M = { source: '' };
+
+function openAllocateModal(source) {
+  ALLOC_M.source = source;
+  $('allocateModalTitle').textContent = `Allocate — ${source}`;
+  $('allocateSourceDisplay').textContent = source;
+
+  const budgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
+  $('allocateBudgetItem').innerHTML = budgetItems.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+
+  $('allocateMonth').innerHTML = MONTH_NAMES.map(m => `<option value="${m}">${m}</option>`).join('');
+  if (S.currentMonth && !isAllMonths()) {
+    $('allocateMonth').value = S.currentMonth.Month;
+    $('allocateYear').value  = S.currentMonth.Year;
+  } else {
+    const now = new Date();
+    $('allocateMonth').value = MONTH_NAMES[now.getMonth()];
+    $('allocateYear').value  = now.getFullYear();
+  }
+
+  $('allocateAmount').value = '';
+  $('allocateModalOverlay').classList.add('open');
+  setTimeout(() => $('allocateAmount').focus(), 80);
+}
+
+function closeAllocateModal(event) {
+  if (event && event.target !== $('allocateModalOverlay')) return;
+  $('allocateModalOverlay').classList.remove('open');
+}
+
+async function saveAllocation() {
+  const item   = $('allocateBudgetItem').value;
+  const month  = $('allocateMonth').value;
+  const year   = parseInt($('allocateYear').value, 10);
+  const amount = parseFloat($('allocateAmount').value) || 0;
+  if (!item || !month || !year || !amount) { alert('Please fill all fields.'); return; }
+  try {
+    await apiFetch('/allocations', {
+      method: 'POST',
+      body: JSON.stringify({ source: ALLOC_M.source, item, month, year, amount }),
+    });
+  } catch (e) { alert('Error: ' + e.message); return; }
+  $('allocateModalOverlay').classList.remove('open');
+  renderBudgetPage();
+}
+
+const VID = { source: '' };
+
+function openVariableIncomeDetail(source) {
+  VID.source = source;
+  $('varIncomeDetailTitle').textContent = source;
+  $('varIncomeAllocateBtn').onclick = () => {
+    closeVariableIncomeDetail();
+    openAllocateModal(source);
+  };
+
+  const totalReceived = AC.rows
+    .filter(r => r.Item === source && (parseFloat(r.Credit) || 0) > 0)
+    .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+
+  const allocRows = ALLOC().rows.filter(r => r.Source === source);
+  const totalAllocated = allocRows.reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
+  const remaining = totalReceived - totalAllocated;
+  const fullyAllocated = remaining <= 0.01;
+
+  $('varIncomeDetailStats').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+      <div style="background:var(--bg);border-radius:10px;padding:10px 4px;">
+        <div style="font-size:10px;opacity:.5;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Received</div>
+        <div style="font-size:16px;font-weight:600;">${fmtGHS(totalReceived)}</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:10px 4px;">
+        <div style="font-size:10px;opacity:.5;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Allocated</div>
+        <div style="font-size:16px;font-weight:600;">${fmtGHS(totalAllocated)}</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:10px 4px;">
+        <div style="font-size:10px;opacity:.5;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">${fullyAllocated ? 'Done' : 'Left'}</div>
+        <div style="font-size:16px;font-weight:600;color:${fullyAllocated ? '#3a6b4a' : '#d4a017'};">${fmtGHS(Math.max(0, remaining))}</div>
+      </div>
+    </div>`;
+
+  const list = $('varIncomeDetailList');
+  list.innerHTML = '';
+
+  if (!allocRows.length) {
+    list.innerHTML = '<div style="padding:20px 0;opacity:.5;text-align:center;font-size:14px;">No allocations yet. Tap Allocate to assign this income.</div>';
+  } else {
+    // group by Month + Year
+    const byPeriod = {};
+    allocRows.forEach((r, idx) => {
+      const key = `${r.Month} ${r.Year}`;
+      if (!byPeriod[key]) byPeriod[key] = [];
+      byPeriod[key].push({ ...r, _idx: ALLOC().rows.indexOf(r) });
+    });
+
+    Object.entries(byPeriod).forEach(([period, rows]) => {
+      const periodTotal = rows.reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
+      const hdr = document.createElement('div');
+      hdr.style = 'font-size:11px;letter-spacing:.06em;opacity:.5;text-transform:uppercase;padding:12px 0 6px;border-top:1px solid var(--border);margin-top:4px;';
+      hdr.textContent = period;
+      list.appendChild(hdr);
+
+      rows.forEach(r => {
+        const row = document.createElement('div');
+        row.style = 'display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05);';
+        row.innerHTML = `
+          <span style="font-size:14px;">${escHtml(r.BudgetItem)}</span>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <span style="font-size:14px;font-weight:500;">${fmtGHS(parseFloat(r.Amount) || 0)}</span>
+            <button style="background:none;border:none;cursor:pointer;opacity:.4;font-size:16px;padding:0 4px;"
+              title="Remove" onclick="removeAllocation(${r._idx})">×</button>
+          </div>`;
+        list.appendChild(row);
+      });
+
+      const periodRow = document.createElement('div');
+      periodRow.style = 'display:flex;justify-content:space-between;padding:6px 0 2px;font-size:13px;font-weight:600;opacity:.7;';
+      periodRow.innerHTML = `<span>Period total</span><span>${fmtGHS(periodTotal)}</span>`;
+      list.appendChild(periodRow);
+    });
+  }
+
+  $('varIncomeDetailOverlay').classList.add('open');
+}
+
+function closeVariableIncomeDetail(event) {
+  if (event && event.target !== $('varIncomeDetailOverlay')) return;
+  $('varIncomeDetailOverlay').classList.remove('open');
+}
+
+async function removeAllocation(idx) {
+  if (!confirm('Remove this allocation?')) return;
+  try {
+    await apiFetch(`/allocations/${idx}`, { method: 'DELETE' });
+  } catch (e) { alert('Error: ' + e.message); return; }
+  $('varIncomeDetailOverlay').classList.remove('open');
+  renderBudgetPage();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    SALARY HISTORY
    ════════════════════════════════════════════════════════════════════════════ */
-const SB = { tab: 'used', items: [], salary: 0 };
+const SB = { tab: 'used', items: [], salary: 0, allocations: [] };
 
 async function openSalaryHistory() {
   if (!requireSpecificMonth('Select a specific month to view this breakdown.')) return;
@@ -3686,6 +3971,9 @@ async function openSalaryHistory() {
           : parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0,
         paid: r.Paid || ''
       }));
+    // load allocations for this month (for "by item" cross-reference)
+    const curM = S.currentMonth.Month, curY = String(S.currentMonth.Year);
+    SB.allocations = ALLOC().rows.filter(r => r.Month === curM && String(r.Year) === curY);
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
@@ -3707,11 +3995,24 @@ function sbItemRow(it) {
     : paidAmt > 0
     ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
     : '';
+
+  // bonus allocations for this item this month
+  const bonusRows = (SB.allocations || []).filter(r => r.BudgetItem === it.name);
+  const bonusTotal = bonusRows.reduce((s, r) => s + (parseFloat(r.Amount) || 0), 0);
+  const bonusBySource = {};
+  bonusRows.forEach(r => { bonusBySource[r.Source] = (bonusBySource[r.Source] || 0) + (parseFloat(r.Amount) || 0); });
+  const bonusLines = Object.entries(bonusBySource)
+    .map(([src, amt]) => `<div style="font-size:11px;opacity:.55;display:flex;justify-content:space-between;padding:1px 0;"><span>+ ${escHtml(src)}</span><span>${fmtGHS(amt)}</span></div>`)
+    .join('');
+
   const row = document.createElement('div');
-  row.style = `display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
+  row.style = `padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
   row.innerHTML = `
-    <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
-    <span style="font-size:14px;font-weight:${noAmt ? '400' : '500'};${noAmt ? 'opacity:.35;' : ''}">${noAmt ? 'tap to set' : fmtGHS(it.amount)}</span>`;
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
+      <span style="font-size:14px;font-weight:${noAmt ? '400' : '500'};${noAmt ? 'opacity:.35;' : ''}">${noAmt ? 'tap to set' : fmtGHS(it.amount)}</span>
+    </div>
+    ${bonusTotal > 0 ? `<div style="margin-top:3px;">${bonusLines}</div>` : ''}`;
   row.onclick = () => openSbAmountEdit(it.name);
   return row;
 }
