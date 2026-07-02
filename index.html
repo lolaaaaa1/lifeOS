@@ -1459,7 +1459,7 @@
     <!-- Transactions page -->
     <div class="page" id="page-transactions">
       <div class="page-content">
-        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">
+        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;">
           <div class="toggle-row" id="txnPageTypeToggle" style="flex:1;">
             <button class="toggle-btn active" onclick="setTxnPageFilter('all')">All</button>
             <button class="toggle-btn" onclick="setTxnPageFilter('income')">Income</button>
@@ -1467,6 +1467,11 @@
             <button class="toggle-btn" onclick="setTxnPageFilter('transfer')">Transfer</button>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openAddTxnModal()">+ Record</button>
+        </div>
+        <div style="margin-bottom:12px;">
+          <select id="txnPageItemFilter" onchange="setTxnPageItem(this.value)" style="width:100%;font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--ink);">
+            <option value="">All items</option>
+          </select>
         </div>
         <div id="txnPageList"></div>
       </div>
@@ -4677,13 +4682,18 @@ const AC_MONTHS = ['January','February','March','April','May','June',
 /* ══════════════════════════════════════════════════════════════════════════
    TRANSACTIONS PAGE
    ══════════════════════════════════════════════════════════════════════════ */
-const TXN_PAGE = { filter: 'all' };
+const TXN_PAGE = { filter: 'all', item: '' };
 
 function setTxnPageFilter(f) {
   TXN_PAGE.filter = f;
   document.querySelectorAll('#txnPageTypeToggle .toggle-btn').forEach(b => {
     b.classList.toggle('active', b.textContent.toLowerCase() === f);
   });
+  renderTxnPageList();
+}
+
+function setTxnPageItem(val) {
+  TXN_PAGE.item = val;
   renderTxnPageList();
 }
 
@@ -4703,9 +4713,19 @@ function renderTxnPageList() {
   container.innerHTML = '';
 
   const allTxns = _groupTxns(AC.rows);
-  const filtered = TXN_PAGE.filter === 'all'
+  let filtered = TXN_PAGE.filter === 'all'
     ? allTxns
     : allTxns.filter(t => (t.transactionType || '').toLowerCase() === TXN_PAGE.filter);
+  if (TXN_PAGE.item) filtered = filtered.filter(t => t.item === TXN_PAGE.item);
+
+  // Populate item select with unique items from all transactions
+  const itemSel = document.getElementById('txnPageItemFilter');
+  if (itemSel) {
+    const cur = itemSel.value;
+    const items = [...new Set(allTxns.map(t => t.item).filter(Boolean))].sort();
+    itemSel.innerHTML = `<option value="">All items</option>` + items.map(i => `<option value="${escHtml(i)}">${escHtml(i)}</option>`).join('');
+    itemSel.value = cur;
+  }
 
   if (!filtered.length) {
     container.innerHTML = `<div class="empty-state">
@@ -4919,15 +4939,6 @@ function _renderInvestmentAccountsList(container) {
     invRecBtn.onclick = (e) => { e.stopPropagation(); openAddTxnModal(name); };
     txnContainer.appendChild(invRecBtn);
 
-    const invUniqueItems = [...new Set(txns.map(t => t.item).filter(Boolean))].sort();
-    const invFilterRow = document.createElement('div');
-    invFilterRow.style.cssText = 'padding:6px 0 2px;';
-    const invFilterSel = document.createElement('select');
-    invFilterSel.style.cssText = 'font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--ink);width:100%;';
-    invFilterSel.innerHTML = `<option value="">All items</option>` + invUniqueItems.map(i => `<option value="${escHtml(i)}">${escHtml(i)}</option>`).join('');
-    invFilterRow.appendChild(invFilterSel);
-    txnContainer.appendChild(invFilterRow);
-
     const invTxnListDiv = document.createElement('div');
     txnContainer.appendChild(invTxnListDiv);
 
@@ -4959,28 +4970,17 @@ function _renderInvestmentAccountsList(container) {
       return row;
     }
 
-    function renderInvTxnList(filterItem) {
-      invTxnListDiv.innerHTML = '';
-      const filtered = filterItem ? txns.filter(t => t.item === filterItem) : txns;
-      if (filterItem) {
-        filtered.forEach(t => invTxnListDiv.appendChild(makeInvTxnRow(t)));
-      } else {
-        const recent = filtered.slice(-INV_PREVIEW);
-        const older  = filtered.slice(0, -INV_PREVIEW);
-        if (older.length > 0) {
-          const viewMoreBtn = document.createElement('button');
-          viewMoreBtn.className = 'txn-add-btn';
-          viewMoreBtn.style.cssText = 'opacity:0.6;font-size:12px;';
-          viewMoreBtn.textContent = `View ${older.length} older transaction${older.length !== 1 ? 's' : ''}`;
-          viewMoreBtn.onclick = (e) => { e.stopPropagation(); older.forEach(t => invTxnListDiv.insertBefore(makeInvTxnRow(t), viewMoreBtn)); viewMoreBtn.remove(); };
-          invTxnListDiv.appendChild(viewMoreBtn);
-        }
-        recent.forEach(t => invTxnListDiv.appendChild(makeInvTxnRow(t)));
-      }
+    const invRecent = txns.slice(-INV_PREVIEW);
+    const invOlder  = txns.slice(0, -INV_PREVIEW);
+    if (invOlder.length > 0) {
+      const viewMoreBtn = document.createElement('button');
+      viewMoreBtn.className = 'txn-add-btn';
+      viewMoreBtn.style.cssText = 'opacity:0.6;font-size:12px;';
+      viewMoreBtn.textContent = `View ${invOlder.length} older transaction${invOlder.length !== 1 ? 's' : ''}`;
+      viewMoreBtn.onclick = (e) => { e.stopPropagation(); invOlder.forEach(t => invTxnListDiv.insertBefore(makeInvTxnRow(t), viewMoreBtn)); viewMoreBtn.remove(); };
+      invTxnListDiv.appendChild(viewMoreBtn);
     }
-
-    renderInvTxnList('');
-    invFilterSel.addEventListener('change', (e) => { e.stopPropagation(); renderInvTxnList(e.target.value); });
+    invRecent.forEach(t => invTxnListDiv.appendChild(makeInvTxnRow(t)));
 
     card.innerHTML = `
       <div class="budget-item-main" style="cursor:pointer;" onclick="toggleAccountTxns(this)">
@@ -5047,15 +5047,6 @@ function _renderWalletsAccountsList(container) {
     recBtn.onclick = (e) => { e.stopPropagation(); openAddTxnModal(name); };
     txnContainer.appendChild(recBtn);
 
-    const uniqueItems = [...new Set(txns.map(t => t.item).filter(Boolean))].sort();
-    const filterRow = document.createElement('div');
-    filterRow.style.cssText = 'padding:6px 0 2px;';
-    const filterSel = document.createElement('select');
-    filterSel.style.cssText = 'font-size:12px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--ink);width:100%;';
-    filterSel.innerHTML = `<option value="">All items</option>` + uniqueItems.map(i => `<option value="${escHtml(i)}">${escHtml(i)}</option>`).join('');
-    filterRow.appendChild(filterSel);
-    txnContainer.appendChild(filterRow);
-
     const txnListDiv = document.createElement('div');
     txnContainer.appendChild(txnListDiv);
 
@@ -5089,28 +5080,17 @@ function _renderWalletsAccountsList(container) {
       return row;
     }
 
-    function renderTxnList(filterItem) {
-      txnListDiv.innerHTML = '';
-      const filtered = filterItem ? txns.filter(t => t.item === filterItem) : txns;
-      if (filterItem) {
-        filtered.forEach(t => txnListDiv.appendChild(makeTxnRow(t)));
-      } else {
-        const recent = filtered.slice(-PREVIEW);
-        const older  = filtered.slice(0, -PREVIEW);
-        if (older.length > 0) {
-          const viewMoreBtn = document.createElement('button');
-          viewMoreBtn.className = 'txn-add-btn';
-          viewMoreBtn.style.cssText = 'opacity:0.6;font-size:12px;';
-          viewMoreBtn.textContent = `View ${older.length} older transaction${older.length !== 1 ? 's' : ''}`;
-          viewMoreBtn.onclick = (e) => { e.stopPropagation(); older.forEach(t => txnListDiv.insertBefore(makeTxnRow(t), viewMoreBtn)); viewMoreBtn.remove(); };
-          txnListDiv.appendChild(viewMoreBtn);
-        }
-        recent.forEach(t => txnListDiv.appendChild(makeTxnRow(t)));
-      }
+    const recent = txns.slice(-PREVIEW);
+    const older  = txns.slice(0, -PREVIEW);
+    if (older.length > 0) {
+      const viewMoreBtn = document.createElement('button');
+      viewMoreBtn.className = 'txn-add-btn';
+      viewMoreBtn.style.cssText = 'opacity:0.6;font-size:12px;';
+      viewMoreBtn.textContent = `View ${older.length} older transaction${older.length !== 1 ? 's' : ''}`;
+      viewMoreBtn.onclick = (e) => { e.stopPropagation(); older.forEach(t => txnListDiv.insertBefore(makeTxnRow(t), viewMoreBtn)); viewMoreBtn.remove(); };
+      txnListDiv.appendChild(viewMoreBtn);
     }
-
-    renderTxnList('');
-    filterSel.addEventListener('change', (e) => { e.stopPropagation(); renderTxnList(e.target.value); });
+    recent.forEach(t => txnListDiv.appendChild(makeTxnRow(t)));
 
     // card header — click to expand/collapse transactions
     card.innerHTML = `
