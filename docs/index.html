@@ -4515,6 +4515,29 @@ function renderBpByIncome(container) {
   if (!IC.sources.some(s => (parseFloat(s.Amount || '0') || 0) > 0)) {
     container.innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Add income on the Income page first.</div>';
   }
+
+  // Variable income cards (Company Bonus etc.)
+  const nonSalarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.ItemName !== 'Salary').map(r => r.ItemName);
+  const budgetIncRows = INC().rows.filter(r => r.Type === 'Budget');
+  nonSalarySrcs.forEach(src => {
+    const col = src.replace(/\s+/g, '') + 'Portion';
+    const received = AC.rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
+      .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+    const allocatedAll = budgetIncRows.reduce((s, r) => s + (parseFloat(r[col]) || 0), 0);
+    if (received === 0 && allocatedAll === 0) return;
+    const card = document.createElement('div');
+    card.className = 'salary-card';
+    card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
+    card.onclick = (e) => { if (!e.target.closest('button')) openVariableIncomeDetail(src); };
+    card.innerHTML = `
+      <div class="salary-card-top">
+        <span class="salary-card-label">${escHtml(src.toUpperCase())} · ${periodLabel}</span>
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
+          onclick="event.stopPropagation();openAllocateModal('${escHtml(src)}')">Allocate</button>
+      </div>
+      <div class="salary-card-amount">${fmtGHS(received)}</div>`;
+    container.appendChild(card);
+  });
 }
 
 function isCalc(itemId) {
