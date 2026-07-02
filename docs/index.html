@@ -4617,8 +4617,14 @@ async function acctPopulateItemSelect(selected, section) {
     }
     AC.budgetAmounts = {};
     budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.SalaryPortion) || 0; });
+    const _budgeted = budgetRows.filter(r => (parseFloat(r.SalaryPortion) || 0) > 0);
+    const _unbudgeted = budgetRows.filter(r => !((parseFloat(r.SalaryPortion) || 0) > 0));
     sel.innerHTML = `<option value="">— Select Item —</option>` +
-      budgetRows.map(r => `<option value="${escHtml(r.Items)}"${r.Items === selected ? ' selected' : ''}>${escHtml(r.Items)}</option>`).join('');
+      [..._budgeted, ..._unbudgeted].map(r => {
+        const hasAmt = (parseFloat(r.SalaryPortion) || 0) > 0;
+        const isSel = r.Items === selected;
+        return `<option value="${escHtml(r.Items)}"${isSel ? ' selected' : ''}${!hasAmt && !isSel ? ' disabled' : ''}>${escHtml(r.Items)}</option>`;
+      }).join('');
   } else {
     let items = [];
     try { items = await apiFetch('/items'); } catch {}
