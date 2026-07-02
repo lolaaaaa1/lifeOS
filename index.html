@@ -1452,10 +1452,17 @@
 
     <!-- Transactions page -->
     <div class="page" id="page-transactions">
-      <div class="placeholder-page">
-        <div class="ph-icon">↕</div>
-        <h2>Transactions</h2>
-        <p>Coming soon — transaction tracking will appear here.</p>
+      <div class="page-content">
+        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">
+          <div class="toggle-row" id="txnPageTypeToggle" style="flex:1;">
+            <button class="toggle-btn active" onclick="setTxnPageFilter('all')">All</button>
+            <button class="toggle-btn" onclick="setTxnPageFilter('income')">Income</button>
+            <button class="toggle-btn" onclick="setTxnPageFilter('expense')">Expense</button>
+            <button class="toggle-btn" onclick="setTxnPageFilter('transfer')">Transfer</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddTxnModal()">+ Record</button>
+        </div>
+        <div id="txnPageList"></div>
       </div>
     </div>
 
@@ -1464,7 +1471,8 @@
       <div class="page-content">
         <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;">
           <div class="toggle-row" id="acctTabToggle" style="flex:1;">
-            <button class="toggle-btn active" onclick="setAcctTab('wallets')">Wallets</button>
+            <button class="toggle-btn active" onclick="setAcctTab('current')">Current</button>
+            <button class="toggle-btn" onclick="setAcctTab('investment')">Investment</button>
             <button class="toggle-btn" onclick="setAcctTab('all')">All</button>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()">+ Add</button>
@@ -1547,7 +1555,7 @@
       </div>
       <div class="form-field" id="acctToField" style="display:none;">
         <label class="form-label" id="acctToLabel">Into Account</label>
-        <select id="acctTxnTo" class="form-input"></select>
+        <select id="acctTxnTo" class="form-input" onchange="onAcctTxnToChange()"></select>
       </div>
     </div>
     <div class="form-field" id="acctItemField">
@@ -1807,6 +1815,12 @@
       <button style="flex:1;padding:7px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Calculated</button>
     </div>
     <div id="dailyWeeksHint" style="font-size:13px;opacity:.55;margin-bottom:14px;"></div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;opacity:.5;margin-bottom:5px;">Monthly target</div>
+      <input id="dailyMonthlyTarget" type="number" min="0" placeholder="0"
+        style="width:100%;padding:9px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;"
+        oninput="onMonthlyTargetInput()">
+    </div>
     <div id="dailyDaysRows"></div>
     <div id="dailyTotalHint" style="font-size:13px;opacity:.6;padding-top:8px;border-top:1px solid rgba(0,0,0,0.08);margin-top:8px;"></div>
   </div>
@@ -1814,7 +1828,8 @@
 
 <!-- ── Offline banner ───────────────────────────────────────────────────────── -->
 <div id="offline-banner">
-  GitHub connection failed — reload to reconnect
+  <span id="offline-msg">GitHub connection failed</span>
+  <button onclick="retryConnection()" style="margin-left:12px;background:rgba(255,255,255,0.15);border:none;color:inherit;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;">Retry</button>
 </div>
 
 <!-- ── GitHub setup screen ──────────────────────────────────────────────────── -->
@@ -1966,20 +1981,43 @@ const DATA = {
       this.load('data/days.csv'),
       this.load('data/items.csv'),
       this.load('data/transactions.csv'),
+      this.load('data/constraints.csv'),
     ]);
   },
 };
 
 // Shorthand accessors to cached data
-function FIN()    { return DATA.get('data/financeOS.csv')   || { headers: [], rows: [] }; }
-function INC()    { return DATA.get('data/income.csv')       || { headers: [], rows: [] }; }
-function DAYS_D() { return DATA.get('data/days.csv')         || { headers: [], rows: [] }; }
-function ITMS()   { return DATA.get('data/items.csv')        || { headers: [], rows: [] }; }
-function TXNS()   { return DATA.get('data/transactions.csv') || { headers: [], rows: [] }; }
+function FIN()    { return DATA.get('data/financeOS.csv')      || { headers: [], rows: [] }; }
+function INC()    { return DATA.get('data/income.csv')          || { headers: [], rows: [] }; }
+function DAYS_D() { return DATA.get('data/days.csv')            || { headers: [], rows: [] }; }
+function ITMS()   { return DATA.get('data/items.csv')           || { headers: [], rows: [] }; }
+function TXNS()   { return DATA.get('data/transactions.csv')    || { headers: [], rows: [] }; }
+function CONS()   { return DATA.get('data/constraints.csv')     || { headers: [], rows: [] }; }
+
+function getCurrentSalary() {
+  if (!S.currentMonth) return null;
+  const row = FIN().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+  const v = parseFloat(row && row.Salary);
+  return v > 0 ? v : null;
+}
+
+function getConstraintAmount(salaryAmount, numberOfWeeks) {
+  const row = CONS().rows.find(r =>
+    parseFloat(r.SalaryAmount) === parseFloat(salaryAmount) &&
+    parseInt(r.NumberOfWeeks)  === parseInt(numberOfWeeks)
+  );
+  return row ? parseFloat(row.Amount) : null;}
+
+function getBudgetForCurrentMonth() {
+  if (!S.currentMonth) return null;
+  const row = FIN().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+  const v = parseFloat(row && row.SalaryConstraints);
+  return v > 0 ? v : null;
+}
 
 // ── Calculation helpers ────────────────────────────────────────────────────
 
-const _DAYS_META = new Set(['Day','Month','Year','DayName','MonthYearToUse']);
+const _DAYS_META = new Set(['Day','Month','Year','DayName','FoodDayApply','TransportDayApply','MonthYearToUse']);
 const _WEEKDAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 function _portionCol(name)   { return name.replace(/ /g, '') + 'Portion'; }
@@ -2094,7 +2132,7 @@ const LocalAPI = {
       const [, mo, yr] = m; const inc = INC();
       for (const [name, amount] of Object.entries(body)) {
         const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-        if (found) { found.SalaryPortion = String(amount); found.Amount = ''; }
+        if (found) { found.SalaryPortion = String(amount); found.ActualAmount = String(amount); found.CalculatedAmount = String(amount); found.Amount = ''; }
         else {
           const row = {}; inc.headers.forEach(h => row[h] = '');
           Object.assign(row, { Month: mo, Year: yr, Type: 'Budget', Items: name, SalaryPortion: String(amount) });
@@ -2216,14 +2254,31 @@ const LocalAPI = {
     if (method === 'GET' && rawPath === '/income/sources')
       return ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName);
 
-    // GET /income/year/{year}/totals  ← before /income/{month}/{year}
-    if ((m = rawPath.match(/^\/income\/year\/(\d+)\/totals$/)) && method === 'GET') {
-      const yr = m[1]; const totals = {};
+    // GET /income/year/{year}/totals[/{upToMonth}]  ← before /income/{month}/{year}
+    if ((m = rawPath.match(/^\/income\/year\/(\d+)\/totals(?:\/([^/]+))?$/)) && method === 'GET') {
+      const yr = m[1]; const upTo = m[2] || null;
+      const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const upToIdx = upTo ? MONTHS.indexOf(upTo) : 11;
+      const totals = {}; const paidMap = {}; let paidTotal = 0;
       INC().rows.forEach(r => {
-        if (r.Year === yr && r.Type === 'Budget' && r.Items && r.CalculatedType !== 'Calculated')
-          totals[r.Items] = (totals[r.Items] || 0) + (parseFloat(r.SalaryPortion) || 0);
+        if (r.Year === yr && r.Type === 'Budget' && r.Items) {
+          if (MONTHS.indexOf(r.Month) <= upToIdx) {
+            const isCalc = (r.CalculatedType || '') === 'Calculated';
+            const amt = isCalc
+              ? parseFloat(r.CalculatedAmount) || 0
+              : parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
+            totals[r.Items] = (totals[r.Items] || 0) + amt;
+            const p = parseFloat(r.Paid);
+            const pAmt = !isNaN(p) ? p : (r.Paid === 'Paid' || r.Paid === 'Transferred') ? amt : 0;
+            paidMap[r.Items] = (paidMap[r.Items] || 0) + pAmt;
+            paidTotal += pAmt;
+          }
+        }
       });
-      return totals;
+      const ytdSalary = FIN().rows
+        .filter(r => r.Year === yr && MONTHS.indexOf(r.Month) <= upToIdx)
+        .reduce((s, r) => s + (parseFloat(r.SalaryConstraints) || 0), 0);
+      return { items: totals, paidMap, paidTotal, ytdSalary };
     }
 
     // GET/POST /income/{month}/{year}
@@ -2287,13 +2342,7 @@ const LocalAPI = {
     // PUT /income/{month}/{year}/budget/{name}/daily  ← before generic /{name}
     if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/budget\/(.+)\/daily$/)) && method === 'PUT') {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      // 1. applies in income.csv
-      const inc = INC();
-      _WEEKDAYS.forEach(d => _ensureCol(inc, `${d}Applies`));
-      const incRow = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-      if (incRow) _WEEKDAYS.forEach(d => { incRow[`${d}Applies`] = body[`${d.toLowerCase()}_applies`] === false ? 'false' : 'true'; });
-      await DATA.save('data/income.csv', `Daily applies ${name} ${mo} ${yr}`);
-      // 2. per-day amounts in days.csv
+      // 1. per-day amounts + applies in days.csv
       const daysData = DAYS_D(); const prefixes = _incPrefixes();
       let colName = _daysItemCols(daysData.headers).find(c => _colToItem(c, prefixes) === name);
       if (!colName) {
@@ -2301,22 +2350,38 @@ const LocalAPI = {
         colName = primary.replace(/ /g, '') + name || name;
       }
       _ensureCol(daysData, colName);
+      const applyCol = name === 'Food' ? 'FoodDayApply' : name === 'Transport' ? 'TransportDayApply' : null;
+      if (applyCol) _ensureCol(daysData, applyCol);
       for (const row of daysData.rows) {
-        if (row.Month === mo && row.Year === yr) {
+        if (row.MonthYearToUse === period) {
           const dn = row.DayName;
           const applies = body[`${dn.toLowerCase()}_applies`] !== false;
           const amt = applies ? body[dn.toLowerCase()] : '';
           row[colName] = (amt !== undefined && amt !== '') ? String(amt) : '';
+          if (applyCol) row[applyCol] = applies ? 'TRUE' : 'FALSE';
         }
       }
       await DATA.save('data/days.csv', `Daily amounts ${name} ${mo} ${yr}`);
-      // 3. period total
-      const period = `${mo} ${yr}`; const newPrefixes = _incPrefixes();
-      const newCols = _daysItemCols(daysData.headers); let total = 0;
-      daysData.rows.filter(r => r.MonthYearToUse === period).forEach(r => {
-        newCols.forEach(c => { if (_colToItem(c, newPrefixes) === name) total += parseFloat(r[c]) || 0; });
+      // 3. period totals: ActualAmount (calendar month) and CalculatedAmount (budget period)
+      const newPrefixes = _incPrefixes();
+      const newCols = _daysItemCols(daysData.headers);
+      const _ABBR = {January:'Jan',February:'Feb',March:'Mar',April:'Apr',May:'May',June:'Jun',July:'Jul',August:'Aug',September:'Sep',October:'Oct',November:'Nov',December:'Dec'};
+      const period = `${_ABBR[mo]}-${String(yr).slice(2)}`;
+      let actualTotal = 0, calcTotal = 0;
+      daysData.rows.forEach(r => {
+        newCols.forEach(c => {
+          if (_colToItem(c, newPrefixes) === name) {
+            if (r.Month === mo && r.Year === yr) actualTotal += parseFloat(r[c]) || 0;
+            if (r.MonthYearToUse === period) calcTotal += parseFloat(r[c]) || 0;
+          }
+        });
       });
-      return { ok: true, total };
+      const incData = INC();
+      _ensureCol(incData, 'ActualAmount'); _ensureCol(incData, 'CalculatedAmount');
+      const incRow = incData.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
+      if (incRow) { incRow.ActualAmount = String(actualTotal); incRow.CalculatedAmount = String(calcTotal); }
+      await DATA.save('data/income.csv', `Calculated amount ${name} ${mo} ${yr}`);
+      return { ok: true, total: calcTotal };
     }
 
     // PUT/DELETE /income/{month}/{year}/{name}
@@ -2384,7 +2449,7 @@ const LocalAPI = {
         const pMonth = periodName.slice(0, lastSpace), pYear = periodName.slice(lastSpace + 1);
         INC().rows.forEach(r => {
           if (r.Month === pMonth && r.Year === pYear && r.Type === 'Budget' && r.CalculatedType !== 'Calculated')
-            periodBudget[r.Items] = parseFloat(r.SalaryPortion) || 0;
+            periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
         });
       }
       const iso = `${ty}-${String(today.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
@@ -2415,8 +2480,14 @@ const LocalAPI = {
       }
       const applies = {};
       _WEEKDAYS.forEach(d => applies[d] = true);
-      const incRow = INC().rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-      if (incRow) _WEEKDAYS.forEach(d => { if (String(incRow[`${d}Applies`]).toLowerCase() === 'false') applies[d] = false; });
+      const applyColG = name === 'Food' ? 'FoodDayApply' : name === 'Transport' ? 'TransportDayApply' : null;
+      if (applyColG) {
+        const mDays = DAYS_D().rows.filter(r => r.Month === mo && r.Year === yr);
+        _WEEKDAYS.forEach(d => {
+          const dayRows = mDays.filter(r => r.DayName === d);
+          if (dayRows.length && dayRows.some(r => String(r[applyColG]).toUpperCase() === 'FALSE')) applies[d] = false;
+        });
+      }
       const result = {};
       _WEEKDAYS.forEach(d => result[d] = { amount: amounts[d] || 0, applies: applies[d] });
       return result;
@@ -2595,6 +2666,21 @@ function calcIncomeRequired() {
   return Object.values(BP.monthAmounts).reduce((s, v) => s + (v || 0), 0);
 }
 
+function budgetProgressHtml(allocated, budget, extraStyle) {
+  const pct      = budget > 0 ? Math.min(100, (allocated / budget) * 100) : 0;
+  const balanced = budget && Math.abs(allocated - budget) <= 0.05;
+  const over     = budget && allocated > budget + 0.05;
+  const color    = balanced ? '#3a6b4a' : over ? '#a8533f' : '';
+  const barColor = balanced ? '#3a6b4a' : over ? '#a8533f' : '';
+  const label    = balanced ? 'Balanced ✓' : over ? 'Over budget' : pct.toFixed(0) + '% budgeted';
+  const s        = extraStyle || '';
+  return `
+    <div class="salary-progress-wrap" style="margin-top:8px;${s}">
+      <div class="salary-progress-fill" style="width:${pct}%;${barColor ? 'background:' + barColor + ';' : ''}"></div>
+    </div>
+    <div class="salary-progress-text" style="${color ? 'color:' + color + ';' : ''}">${label}</div>`;
+}
+
 function nextMonthName(monthName) {
   const idx = MONTH_NAMES.indexOf(monthName);
   return idx >= 0 ? MONTH_NAMES[(idx + 1) % 12] : 'Next';
@@ -2613,8 +2699,54 @@ async function apiFetch(path, opts = {}) {
   return LocalAPI.route(path, opts);
 }
 
+let _retryTimer = null;
+let _retryCount = 0;
+
 function showOfflineBanner(show) {
   $('offline-banner').classList.toggle('show', show);
+  if (show) {
+    _scheduleRetry();
+  } else {
+    _retryCount = 0;
+    if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+  }
+}
+
+function _scheduleRetry() {
+  if (_retryTimer) clearTimeout(_retryTimer);
+  const delay = Math.min(5 + _retryCount * 5, 30);
+  let remaining = delay;
+  const msgEl = $('offline-msg');
+  const tick = () => {
+    if (!$('offline-banner').classList.contains('show')) return;
+    msgEl.textContent = `GitHub connection failed — retrying in ${remaining}s`;
+    if (remaining <= 0) { retryConnection(); return; }
+    remaining--;
+    _retryTimer = setTimeout(tick, 1000);
+  };
+  tick();
+}
+
+async function retryConnection() {
+  if (_retryTimer) { clearTimeout(_retryTimer); _retryTimer = null; }
+  const msgEl = $('offline-msg');
+  msgEl.textContent = 'Reconnecting…';
+  _retryCount++;
+  try {
+    await DATA.loadAll();
+    _ensureCol(ITMS(), 'Display');
+    showOfflineBanner(false);
+    const hashPage  = window.location.hash.replace('#', '');
+    const startPage = VALID_PAGES.includes(hashPage) ? hashPage : 'dashboard';
+    navigate(startPage);
+    loadBudgetItems();
+    try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
+    await fetchMonths();
+    if (S.currentPage === 'budget')      renderBudgetPage();
+    if (S.currentPage === 'budget-plan') renderBpPage();
+  } catch {
+    _scheduleRetry();
+  }
 }
 
 function showSetupScreen(errMsg) {
@@ -2703,10 +2835,11 @@ function navigate(page) {
     el.style.display = showMonth ? '' : 'none';
   });
 
-  if (page === 'dashboard') renderDashboardCalc();
-  if (page === 'budget') renderBudgetPage();
-  if (page === 'budget-plan') renderBpPage();
-  if (page === 'accounts') renderAccountsPage();
+  if (page === 'dashboard')    renderDashboardCalc();
+  if (page === 'budget')       renderBudgetPage();
+  if (page === 'budget-plan')  renderBpPage();
+  if (page === 'accounts')     renderAccountsPage();
+  if (page === 'transactions') renderTransactionsPage();
 }
 
 async function renderDashboardCalc() {
@@ -2742,16 +2875,20 @@ async function renderDashboardCalc() {
   const [dayDataArr, todaySummary, yearActTotals, monthDataArr] = await Promise.all([
     Promise.all(dayDates.map(d => apiFetch(`/days/on/${d}`).catch(() => null))),
     apiFetch('/days/today/summary').catch(() => ({})),
-    apiFetch(`/income/year/${curYear}/totals`).catch(() => ({})),
+    apiFetch(`/income/year/${curYear}/totals/${encodeURIComponent(curMonthStr)}`).catch(() => ({})),
     Promise.all(monthSlides.map(m => Promise.all([
       apiFetch(`/days/${m.Month}/${m.Year}/totals`).catch(() => ({})),
       apiFetch(`/income/${m.Month}/${m.Year}`).catch(() => []),
     ]))),
   ]);
 
-  // Yearly map: Calculated from days.csv + summed Actual from income.csv
-  const yearlyMap = { ...(todaySummary.yearlyTotals || {}) };
-  Object.entries(yearActTotals).forEach(([k, v]) => { yearlyMap[k] = (yearlyMap[k] || 0) + v; });
+  // Yearly map: all items from income.csv (CalculatedAmount for Food/Transport, ActualAmount for others)
+  const yearlyMap = {};
+  const yearlyItems = yearActTotals.items || yearActTotals;
+  Object.entries(yearlyItems).forEach(([k, v]) => { yearlyMap[k] = v; });
+  const ytdPaidMap = yearActTotals.paidMap    || {};
+  const ytdPaid    = yearActTotals.paidTotal  || 0;
+  const ytdSalary  = yearActTotals.ytdSalary  || 0;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -2873,7 +3010,7 @@ async function renderDashboardCalc() {
     const [dayTotals, incRows] = monthDataArr[i];
     const periodBudget = { ...dayTotals };
     (incRows || []).filter(r => r.Type === 'Budget' && (r.CalculatedType || '') !== 'Calculated')
-      .forEach(r => { periodBudget[r.Items] = r.SalaryPortion ? parseFloat(r.SalaryPortion) : 0; });
+      .forEach(r => { periodBudget[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0; });
     return makeSlide(`${m.Month} ${m.Year}`, periodBudget);
   });
 
@@ -2892,9 +3029,47 @@ async function renderDashboardCalc() {
 
   const yearlyKeys = Object.keys(yearlyMap).filter(k => yearlyMap[k] > 0);
   if (yearlyKeys.length) {
-    const yearSlide = makeSlide(String(curYear), yearlyMap);
-    yearSlide.classList.remove('dash-slide'); // not swipeable, just the content
-    yearlyBody.appendChild(yearSlide);
+    const slide = document.createElement('div');
+    slide.className = 'dash-slide';
+    const period = document.createElement('div');
+    period.className = 'dash-slide-period';
+    period.textContent = String(curYear);
+    slide.appendChild(period);
+    const list = document.createElement('div');
+    list.className = 'dash-items';
+    yearlyKeys.forEach(item => {
+      const allocated = yearlyMap[item] || 0;
+      const paid      = ytdPaidMap[item] || 0;
+      const rem       = allocated - paid;
+      const over      = rem < 0;
+      const remColor  = over ? '#a8533f' : paid > 0 ? '#3a6b4a' : 'inherit';
+      const row = document.createElement('div');
+      row.className = 'dash-item-row';
+      row.innerHTML = `
+        <span class="dash-item-name">${escHtml(item)}</span>
+        <span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;">
+          <span class="dash-item-amount">${fmtGHS(allocated)}</span>
+          ${paid > 0 ? `<span style="font-size:11px;color:${remColor};">${over ? '−' : ''}${fmtGHS(Math.abs(rem))} rem</span>` : ''}
+        </span>`;
+      list.appendChild(row);
+    });
+    slide.appendChild(list);
+    const totRow = document.createElement('div');
+    totRow.className = 'dash-total-row';
+    const totAmt = yearlyKeys.reduce((s, k) => s + (yearlyMap[k] || 0), 0);
+    totRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(totAmt)}</span>`;
+    slide.appendChild(totRow);
+    if (ytdSalary > 0) {
+      const ytdRem = ytdSalary - ytdPaid;
+      const over   = ytdRem < 0;
+      const remRow = document.createElement('div');
+      remRow.className = 'dash-total-row';
+      remRow.style.cssText = `margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08);color:${over ? '#a8533f' : '#3a6b4a'};`;
+      remRow.innerHTML = `<span class="dash-total-label">${over ? 'Over budget' : 'Remaining'}</span><span class="dash-total-amount">${over ? '−' : ''}${fmtGHS(Math.abs(ytdRem))}</span>`;
+      slide.appendChild(remRow);
+    }
+    slide.classList.remove('dash-slide');
+    yearlyBody.appendChild(slide);
   }
   container.appendChild(yearlySec);
 }
@@ -3084,8 +3259,9 @@ async function renderBudgetPage() {
 function buildIncomeSummaryCard() {
   const total     = getTotalIncome();
   const allocated = calcIncomeRequired();
-  const remaining = total - allocated;
-  const pct       = total > 0 ? Math.min(100, (allocated / total) * 100) : 0;
+  const budget    = getBudgetForCurrentMonth() ?? total;
+  const remaining = budget - allocated;
+  const over      = remaining < 0;
   const label     = S.currentMonth ? `TOTAL INCOME · ${S.currentMonth.Month.toUpperCase()} ${S.currentMonth.Year}` : 'TOTAL INCOME';
   const amtText   = total > 0 ? fmtGHS(total) : 'Add income →';
 
@@ -3100,17 +3276,11 @@ function buildIncomeSummaryCard() {
     <div class="salary-card-amount${total > 0 ? '' : ' empty'}">${amtText}</div>
     <div class="salary-split">
       <div class="salary-split-item">
-        <span class="salary-split-label">Allocated</span>
-        <span class="salary-split-value">${fmtGHS(allocated)}</span>
-      </div>
-      <div class="salary-split-item">
-        <span class="salary-split-label">Remaining</span>
-        <span class="salary-split-value">${fmtGHS(Math.max(0, remaining))}</span>
+        <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
+        <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
       </div>
     </div>
-    <div class="salary-progress-wrap">
-      <div class="salary-progress-fill" style="width:${pct}%"></div>
-    </div>
+    ${budgetProgressHtml(allocated, budget)}
     <div class="salary-progress-text">${pct.toFixed(0)}% allocated</div>`;
   return card;
 }
@@ -3231,12 +3401,13 @@ function renderIncomeByReceived(container) {
 }
 
 function buildIncomeCard(src) {
-  const amount    = parseFloat(src.Amount || '0') || 0;
-  const name      = src.Items;
-  const allocated = calcIncomeRequired();
-  const remaining = amount - allocated;
-  const over      = remaining < 0;
-  const pct       = amount > 0 ? Math.min(100, (allocated / amount) * 100) : 0;
+  const amount     = parseFloat(src.Amount || '0') || 0;
+  const name       = src.Items;
+  const budget     = getBudgetForCurrentMonth() ?? amount;
+  const allocated  = calcIncomeRequired();
+  const remaining  = budget - allocated;
+  const over       = remaining < 0;
+  const pct        = budget > 0 ? Math.min(100, (allocated / budget) * 100) : 0;
 
   // check if this income source is managed via an accounts transaction
   const curM = S.currentMonth ? S.currentMonth.Month : '';
@@ -3263,20 +3434,14 @@ function buildIncomeCard(src) {
     </div>
     <div class="salary-card-amount${amount > 0 ? '' : ' empty'}">${amount > 0 ? fmtGHS(amount) : '—'}</div>
     ${amount > 0 ? `
+    ${budget !== amount ? `<div style="font-size:12px;opacity:.45;margin-bottom:8px;">Budget: ${fmtGHS(budget)}</div>` : ''}
     <div class="salary-split">
       <div class="salary-split-item">
-        <span class="salary-split-label">Required</span>
-        <span class="salary-split-value">${allocated > 0 ? fmtGHS(allocated) : '—'}</span>
-      </div>
-      <div class="salary-split-item">
-        <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">${S.currentMonth ? nextMonthName(S.currentMonth.Month) : 'Next'}</span>
+        <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
         <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
       </div>
     </div>
-    <div class="salary-progress-wrap">
-      <div class="salary-progress-fill" style="width:${pct}%;${over ? 'background:#a8533f;' : ''}"></div>
-    </div>
-    <div class="salary-progress-text" style="${over ? 'color:#a8533f;' : ''}">${over ? 'Over budget' : pct.toFixed(0) + '% budgeted'}</div>` : ''}`;
+    ${budgetProgressHtml(allocated, budget)}` : ''}`;
   return card;
 }
 
@@ -3446,7 +3611,13 @@ async function openSalaryHistory() {
     SB.salary = getTotalIncome();
     SB.items  = allRows
       .filter(r => r.Type === 'Budget')
-      .map(r => ({ name: r.Items, amount: parseFloat(r.SalaryPortion || '0') || 0 }));
+      .map(r => ({
+        name:   r.Items,
+        amount: (r.CalculatedType || '') === 'Calculated'
+          ? parseFloat(r.CalculatedAmount || '0') || 0
+          : parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0,
+        paid: r.Paid || ''
+      }));
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
@@ -3461,25 +3632,34 @@ function sbItemRow(it) {
   const pct = salary > 0 && it.amount > 0 ? ` · ${((it.amount / salary) * 100).toFixed(1)}%` : '';
   const noAmt = it.amount === 0;
   const unset = isCalcUnset(it.name);
+  const paidAmt = parseFloat(it.paid) || 0;
+  const isTransferredItem = it.paid === 'Transferred';
+  const paidBadge = isTransferredItem
+    ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#4a6b8a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">TRANSFERRED</span>`
+    : paidAmt > 0
+    ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
+    : '';
   const row = document.createElement('div');
   row.style = `display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
   row.innerHTML = `
-    <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
+    <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
     <span style="font-size:14px;font-weight:${noAmt ? '400' : '500'};${noAmt ? 'opacity:.35;' : ''}">${noAmt ? 'tap to set' : fmtGHS(it.amount)}</span>`;
   row.onclick = () => openSbAmountEdit(it.name);
   return row;
 }
 
 function sbTotalsRow(items) {
-  const { salary } = SB;
   const allocated = items.reduce((s, it) => s + it.amount, 0);
-  const remaining = salary - allocated;
-  const over = remaining < 0;
+  const budget    = getBudgetForCurrentMonth() ?? SB.salary;
+  const remaining = budget - allocated;
+  const over      = remaining < 0;
+  const balanced  = budget && Math.abs(allocated - budget) <= 0.05;
+  const color     = balanced ? '#3a6b4a' : over ? '#a8533f' : 'inherit';
+  const label     = balanced ? 'Balanced ✓' : over ? 'Over budget' : 'Remaining';
   const foot = document.createElement('div');
   foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;flex-direction:column;gap:6px;';
   foot.innerHTML = `
-    <div style="display:flex;justify-content:space-between;font-size:13px;opacity:.6;"><span>Allocated</span><span>${fmtGHS(allocated)}</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;color:${over ? '#a8533f' : 'inherit'};"><span>${over ? 'Over by' : 'Remaining'}</span><span>${fmtGHS(Math.abs(remaining))}</span></div>`;
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;color:${color};"><span>${label}</span><span>${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span></div>`;
   return foot;
 }
 
@@ -3502,7 +3682,6 @@ function setSbTab(tab) {
 function renderSbUsed() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  list.appendChild(sbSalaryHdr());
   const items = [...SB.items.filter(it => it.amount > 0)].sort((a, b) => isCalc(a.name) ? -1 : isCalc(b.name) ? 1 : 0);
   if (!items.length) {
     const e = document.createElement('div');
@@ -3518,7 +3697,6 @@ function renderSbUsed() {
 function renderSbUnused() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  list.appendChild(sbSalaryHdr());
   const items = SB.items.filter(it => it.amount === 0);
   if (!items.length) {
     const e = document.createElement('div');
@@ -3751,6 +3929,7 @@ const BP = {
   items:          [],   // [{Id, Name, Type}] from /api/budget/items
   monthAmounts:   {},   // {itemId: amount} — period total from days.csv (Calculated) or SalaryPortion (Actual)
   paidAmounts:    {},   // {itemId: amount} — sum of expense transactions for current scope
+  transferredItems: new Set(), // itemIds where Paid === 'Transferred'
   calculatedTypes:{},   // {itemId: 'Actual'|'Calculated'}
   dailyApplies:   {},   // {itemId: {monday:bool, ...}} — which days apply (from income.csv)
   view:           'income',
@@ -3787,22 +3966,31 @@ async function loadBpData() {
     allRows.filter(r => r.Type === 'Budget').forEach(r => {
       calcTypes[r.Items] = r.CalculatedType || calcTypes[r.Items] || '';
 
-      // applies booleans for the daily amounts modal
+      // applies booleans from days.csv
       const app = {};
-      DAYS_LC.forEach(d => {
-        const appVal = r[(d.charAt(0).toUpperCase()+d.slice(1))+'Applies'];
-        app[d] = !appVal || appVal.toLowerCase() !== 'false';
-      });
+      DAYS_LC.forEach(d => { app[d] = true; });
+      if ((r.CalculatedType || '') === 'Calculated') {
+        const applyColBP = r.Items === 'Food' ? 'FoodDayApply' : r.Items === 'Transport' ? 'TransportDayApply' : null;
+        if (applyColBP) {
+          const mDays = DAYS_D().rows.filter(dr => dr.Month === m.Month && dr.Year === m.Year);
+          DAYS_LC.forEach(d => {
+            const cap = d.charAt(0).toUpperCase() + d.slice(1);
+            const dayRows = mDays.filter(dr => dr.DayName === cap);
+            if (dayRows.length && dayRows.some(dr => String(dr[applyColBP]).toUpperCase() === 'FALSE')) app[d] = false;
+          });
+        }
+      }
       if (scope.length === 1 || isCurrentMonth(m)) {
         dailyApp[r.Items] = app;
       }
 
       let v;
       if ((r.CalculatedType || '') === 'Calculated') {
-        v = daysTotals[r.Items] || 0;
+        const raw = r.CalculatedAmount;
+        v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
         if (v > 0) hasAmt.add(r.Items);
       } else {
-        const raw = r.SalaryPortion;
+        const raw = r.ActualAmount || r.SalaryPortion;
         v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
         if (raw !== '' && raw !== null && raw !== undefined) hasAmt.add(r.Items);
       }
@@ -3829,14 +4017,21 @@ async function loadBpData() {
 
   // BP.paidAmounts: read Paid column from income.csv budget rows
   const paid = {};
+  const transferred = new Set();
   for (const m of scope) {
     let rows = [];
     try { rows = await apiFetch(`/income/${m.Month}/${m.Year}`); } catch {}
     rows.filter(r => r.Type === 'Budget' && r.Paid).forEach(r => {
-      paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.Paid) || 0);
+      if (r.Paid === 'Transferred') {
+        transferred.add(r.Items);
+        paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.ActualAmount || r.SalaryPortion) || 0);
+      } else {
+        paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.Paid) || 0);
+      }
     });
   }
   BP.paidAmounts = paid;
+  BP.transferredItems = transferred;
 }
 
 function getSalaryAmount() {
@@ -3851,19 +4046,7 @@ function renderBpPage() {
   ]).then(() => renderBpGroups());
 }
 
-function renderBpSalaryBar() {
-  const salary = getSalaryAmount();
-  const allocated = BP.items.reduce((s, it) => s + (BP.monthAmounts[it.Id] ?? 0), 0);
-  const remaining = salary - allocated;
-  const pct = salary > 0 ? Math.min(100, (allocated / salary) * 100) : 0;
-
-  $('bpSalaryAmt').textContent  = salary > 0 ? fmtGHS(salary) : 'Set salary on Income page →';
-  $('bpAllocated').textContent  = fmtGHS(allocated);
-  $('bpRemaining').textContent  = salary > 0 ? fmtGHS(remaining) : '—';
-  $('bpProgressFill').style.width = pct + '%';
-  $('bpProgressFill').style.background = pct > 100 ? '#a8533f' : 'rgba(250,247,242,0.6)';
-  $('bpProgressText').textContent = salary > 0 ? `${fmtPct(pct)} allocated` : 'Set salary first';
-}
+function renderBpSalaryBar() {}
 
 function renderBpGroups() {
   const container = $('bpGroups');
@@ -3898,11 +4081,55 @@ function renderBpByItem(container, items) {
   container.appendChild(list);
 }
 
+function computeMonthContributions() {
+  if (!S.currentMonth || isAllMonths()) return null;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const ABBR   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const curMo  = S.currentMonth.Month;
+  const curYr  = String(S.currentMonth.Year);
+  const curIdx = MONTHS.indexOf(curMo);
+  const period = `${ABBR[curIdx]}-${curYr.slice(2)}`;
+  const prevIdx = (curIdx + 11) % 12;
+  const nextIdx = (curIdx + 1) % 12;
+  const prevMo = MONTHS[prevIdx];
+  const nextMo = MONTHS[nextIdx];
+  const prevYr = curIdx === 0 ? String(parseInt(curYr) - 1) : curYr;
+  const nextYr = curIdx === 11 ? String(parseInt(curYr) + 1) : curYr;
+  let prev = 0, curr = 0, next = 0;
+  const daysRows = DAYS_D().rows;
+  BP.items.forEach(item => {
+    const total = BP.monthAmounts[item.Id] || 0;
+    if ((BP.calculatedTypes[item.Id] || '') === 'Calculated') {
+      const col = 'Salary' + item.Id.replace(/\s+/g, '');
+      daysRows.filter(r => r.MonthYearToUse === period).forEach(r => {
+        const v = parseFloat(r[col]) || 0;
+        if (r.Month === prevMo && String(r.Year) === prevYr) prev += v;
+        else if (r.Month === curMo && String(r.Year) === curYr) curr += v;
+        else if (r.Month === nextMo && String(r.Year) === nextYr) next += v;
+      });
+    } else {
+      curr += total;
+    }
+  });
+  return {
+    prev, curr, next,
+    prevLabel: `${ABBR[prevIdx]} ${prevYr.slice(2)}`,
+    currLabel: `${ABBR[curIdx]} ${curYr.slice(2)}`,
+    nextLabel: `${ABBR[nextIdx]} ${nextYr.slice(2)}`
+  };
+}
+
 function renderBpByIncome(container) {
-  const required = Object.values(BP.monthAmounts).reduce((s, v) => s + v, 0);
+  const allocated  = Object.values(BP.monthAmounts).reduce((s, v) => s + v, 0);
+  const budget     = getBudgetForCurrentMonth();
+  const required   = budget ?? allocated;
+  const remaining  = required - allocated;
+  const over       = remaining < 0;
+  const pct        = required > 0 ? Math.min(100, (allocated / required) * 100) : 0;
   const periodLabel = isAllMonths()
     ? `All ${S.currentMonth.Year}`
     : (S.currentMonth ? S.currentMonth.Month.toUpperCase() + ' ' + S.currentMonth.Year : '');
+  const contrib = computeMonthContributions();
 
   // One card per income source with a non-zero amount
   IC.sources.filter(src => (parseFloat(src.Amount || '0') || 0) > 0).forEach(src => {
@@ -3911,11 +4138,36 @@ function renderBpByIncome(container) {
     card.className = 'salary-card';
     card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
     card.onclick = (e) => { if (!e.target.closest('button')) openSalaryHistory(); };
+    const splitHtml = contrib ? `
+      <div class="salary-split" style="margin-top:14px;margin-bottom:0;">
+        <div class="salary-split-item">
+          <span class="salary-split-label">${escHtml(contrib.prevLabel)}</span>
+          <span class="salary-split-value">${contrib.prev > 0 ? fmtGHS(contrib.prev) : '—'}</span>
+        </div>
+        <div class="salary-split-item">
+          <span class="salary-split-label">${escHtml(contrib.currLabel)}</span>
+          <span class="salary-split-value">${contrib.curr > 0 ? fmtGHS(contrib.curr) : '—'}</span>
+        </div>
+        <div class="salary-split-item">
+          <span class="salary-split-label">${escHtml(contrib.nextLabel)}</span>
+          <span class="salary-split-value">${contrib.next > 0 ? fmtGHS(contrib.next) : '—'}</span>
+        </div>
+      </div>` : '';
+    const allocSplitHtml = `
+      <div class="salary-split" style="margin-top:12px;">
+        <div class="salary-split-item">
+          <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
+          <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
+        </div>
+      </div>
+      ${budgetProgressHtml(allocated, required)}`;
     card.innerHTML = `
       <div class="salary-card-top">
         <span class="salary-card-label">${escHtml(name.toUpperCase())} — REQUIRED · ${periodLabel}</span>
       </div>
-      <div class="salary-card-amount${required > 0 ? '' : ' empty'}">${required > 0 ? fmtGHS(required) : '—'}</div>`;
+      <div class="salary-card-amount${required > 0 ? '' : ' empty'}">${required > 0 ? fmtGHS(required) : '—'}</div>
+      ${allocSplitHtml}
+      ${splitHtml}`;
     container.appendChild(card);
   });
 
@@ -3940,12 +4192,13 @@ function buildBpCard(item) {
   const paid   = BP.paidAmounts[item.Id] || 0;
   const unset  = isCalcUnset(item.Id);
   const isCalcType = (BP.calculatedTypes[item.Id] || '') === 'Calculated';
+  const isTransferred = BP.transferredItems.has(item.Id);
   const paidFull = isSet && paid >= amount && amount > 0;
 
   const card = document.createElement('div');
   card.className = 'budget-item-card';
   if (unset) card.style.borderLeft = '3px solid #d4a017';
-  if (paidFull) card.style.borderLeft = '3px solid #3a6b4a';
+  if (paidFull) card.style.borderLeft = `3px solid ${isTransferred ? '#4a6b8a' : '#3a6b4a'}`;
   card.innerHTML = `
     <div class="bp-table-row">
       <div class="budget-item-name-cell">
@@ -3955,8 +4208,8 @@ function buildBpCard(item) {
       <div class="bp-col-amount" style="cursor:pointer;" onclick="openBpAmountModal('${escHtml(item.Id)}','${escHtml(item.Name)}')">
         ${isSet ? fmtGHS(amount) : '<span style="opacity:0.4">tap to set</span>'}
       </div>
-      <div class="bp-col-paid${paidFull ? ' paid-full' : ''}">
-        ${paid > 0 ? fmtGHS(paid) + (paidFull ? ' ✓' : '') : '<span style="opacity:0.35">—</span>'}
+      <div class="bp-col-paid${paidFull ? ' paid-full' : ''}" style="${isTransferred && paidFull ? 'color:#4a6b8a;' : ''}">
+        ${isTransferred && paidFull ? 'Transferred ↗' : paid > 0 ? fmtGHS(paid) + (paidFull ? ' ✓' : '') : '<span style="opacity:0.35">—</span>'}
       </div>
       <div class="budget-item-actions">
         <button class="btn btn-icon" onclick="openBudgetItemModal('${escHtml(item.Id)}')" title="Edit">✎</button>
@@ -4220,9 +4473,14 @@ async function openDailyAmountModal(itemName) {
     container.appendChild(row);
   });
 
+  const targetEl = $('dailyMonthlyTarget');
+  if (targetEl) {
+    const existing = BP.monthAmounts[itemName] || 0;
+    targetEl.value = existing > 0 ? existing : '';
+  }
   onDailyInput();
   $('dailyAmountOverlay').classList.add('open');
-  setTimeout(() => { const f = container.querySelector('input:not([disabled])'); if(f) f.focus(); }, 80);
+  setTimeout(() => { const f = $('dailyMonthlyTarget'); if (f) f.focus(); }, 80);
 }
 
 function toggleDayApply(dayKey) {
@@ -4255,10 +4513,24 @@ function switchDailyToActual() {
   openBpAmountModal(name, name);
 }
 
+function onMonthlyTargetInput() {
+  const wk = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
+  const target = parseFloat($('dailyMonthlyTarget').value) || 0;
+  if (target <= 0) return;
+  const KEYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const applicableCount = KEYS.filter(k => _dailyApplies[k] !== false).length;
+  const totalDays = applicableCount * wk;
+  const rate = totalDays > 0 ? Math.round(target / totalDays * 100) / 100 : 0;
+  KEYS.forEach(k => {
+    if (_dailyApplies[k] === false) return;
+    const input = $(`daily_${k}`);
+    if (input && !input.disabled) input.value = rate;
+  });
+  onDailyInput();
+}
+
 function onDailyInput() {
-  const _year     = parseInt(S.currentMonth ? S.currentMonth.Year : new Date().getFullYear());
-  const _monthIdx = S.currentMonth ? (MONTH_NAMES.indexOf(S.currentMonth.Month) + 1) : (new Date().getMonth() + 1);
-  const _dc       = weekdayCounts(_year, _monthIdx);
+  const wk  = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
   const KEYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
   let itemTotal = 0;
   KEYS.forEach(k => {
@@ -4268,7 +4540,7 @@ function onDailyInput() {
       return;
     }
     const amt = parseFloat($(`daily_${k}`) ? $(`daily_${k}`).value : '0') || 0;
-    const cnt = _dc[k] || 0;
+    const cnt = wk;
     itemTotal += amt * cnt;
     if (resultEl) resultEl.textContent = amt > 0 ? `${amt} × ${cnt} = ${fmtGHS(amt * cnt)}` : '';
   });
@@ -4288,6 +4560,21 @@ async function saveDailyAmounts() {
     body[k]             = parseFloat($(`daily_${k}`) ? $(`daily_${k}`).value : '0') || 0;
     body[`${k}_applies`] = _dailyApplies[k] !== false;
   });
+
+  const budget = getBudgetForCurrentMonth();
+  if (budget) {
+    const wk = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
+    let newItemTotal = 0;
+    KEYS.forEach(k => { if (body[`${k}_applies`]) newItemTotal += (body[k] || 0) * wk; });
+    const currentTotal   = calcIncomeRequired();
+    const currentItemVal = BP.monthAmounts[_dailyItemName] || 0;
+    const newTotal       = currentTotal - currentItemVal + newItemTotal;
+    if (newTotal > budget + 0.05) {
+      alert(`Cannot exceed budget of ${fmtGHS(budget)}.\nThis would bring the total to ${fmtGHS(newTotal)}.`);
+      return;
+    }
+  }
+
   try {
     const res = await apiFetch(
       `/income/${S.currentMonth.Month}/${S.currentMonth.Year}/budget/${encodeURIComponent(_dailyItemName)}/daily`,
@@ -4322,6 +4609,18 @@ async function saveBpAmount() {
   const calcType = BP._calcType || 'Actual';
   if (!BP.amountItemId || !S.currentMonth) return;
   const savedId = BP.amountItemId;
+
+  const budget = getBudgetForCurrentMonth();
+  if (budget) {
+    const currentTotal   = calcIncomeRequired();
+    const currentItemVal = BP.monthAmounts[savedId] || 0;
+    const newTotal       = currentTotal - currentItemVal + val;
+    if (newTotal > budget + 0.05) {
+      alert(`Cannot exceed budget of ${fmtGHS(budget)}.\nThis would bring the total to ${fmtGHS(newTotal)}.`);
+      return;
+    }
+  }
+
   BP.monthAmounts[savedId]    = val;
   BP.calculatedTypes[savedId] = calcType;
   try {
@@ -4356,7 +4655,7 @@ const AC = {
   type: 'Bank',
   incomePeriod: 'Monthly',
   display: true,
-  tab: 'wallets',    // 'wallets' | 'all'
+  tab: 'current',    // 'current' | 'investment' | 'all'
   txnType: 'expense', // 'income' | 'expense' | 'transfer'
   budgetAmounts: {}, // {itemName: SalaryPortion} for current expense month
 };
@@ -4366,6 +4665,87 @@ const ACCOUNT_TYPE_ICONS = {
 };
 const AC_MONTHS = ['January','February','March','April','May','June',
                    'July','August','September','October','November','December'];
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TRANSACTIONS PAGE
+   ══════════════════════════════════════════════════════════════════════════ */
+const TXN_PAGE = { filter: 'all' };
+
+function setTxnPageFilter(f) {
+  TXN_PAGE.filter = f;
+  document.querySelectorAll('#txnPageTypeToggle .toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === f);
+  });
+  renderTxnPageList();
+}
+
+async function renderTransactionsPage() {
+  try {
+    [AC.defs, AC.rows] = await Promise.all([
+      apiFetch('/account-defs'),
+      apiFetch('/accounts'),
+    ]);
+  } catch { AC.defs = AC.defs || []; AC.rows = AC.rows || []; }
+  renderTxnPageList();
+}
+
+function renderTxnPageList() {
+  const container = $('txnPageList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const allTxns = _groupTxns(AC.rows);
+  const filtered = TXN_PAGE.filter === 'all'
+    ? allTxns
+    : allTxns.filter(t => (t.transactionType || '').toLowerCase() === TXN_PAGE.filter);
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">↕</div>
+      <div class="empty-state-title">No transactions</div>
+      <div class="empty-state-sub">Tap "+ Record" to add one.</div>
+    </div>`;
+    return;
+  }
+
+  const acctNames = new Set(AC.defs.map(d => d.AccountName));
+  const list = document.createElement('div');
+  list.className = 'budget-items';
+
+  filtered.forEach(t => {
+    const isIncome   = (t.transactionType || '').toLowerCase() === 'income';
+    const isTransfer = (t.transactionType || '').toLowerCase() === 'transfer' ||
+      (t.accountFrom && t.accountTo && acctNames.has(t.accountFrom) && acctNames.has(t.accountTo));
+    const color = isIncome ? 'var(--green)' : isTransfer ? 'var(--accent)' : 'var(--red)';
+    const sign  = isIncome ? '+' : isTransfer ? '⇄' : '−';
+    const fromTo = [t.accountFrom, t.accountTo].filter(Boolean).join(' → ');
+    const forPart    = t.monthFor  ? `${t.monthFor} ${t.yearFor}` : '';
+    const recvPart   = t.monthRecv ? `Recv ${t.monthRecv} ${t.yearRecv}` : '';
+    const chargesPart = t.charges  ? `+${fmtGHS(t.charges)} charges` : '';
+    const meta = [fromTo, forPart, recvPart, chargesPart].filter(Boolean).join(' · ');
+    const txnId = escHtml(t.id || '');
+
+    const card = document.createElement('div');
+    card.className = 'budget-item-card';
+    card.innerHTML = `
+      <div class="budget-item-main">
+        <div class="budget-item-left">
+          <div class="budget-item-name">${escHtml(t.item || t.transactionType || '—')}</div>
+          <div class="budget-item-sublabel" style="font-size:11px;">${escHtml(meta)}</div>
+        </div>
+        <div class="budget-item-right">
+          <div class="budget-item-amount" style="color:${color};">${sign} ${fmtGHS(t.amount)}</div>
+        </div>
+        <div class="budget-item-actions">
+          <button class="btn btn-icon" onclick="openEditTxnModal('${txnId}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','','','','')" title="Delete">✕</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  container.appendChild(list);
+}
 
 async function renderAccountsPage() {
   try {
@@ -4442,6 +4822,8 @@ function renderAccountsList() {
 
   if (AC.tab === 'all') {
     _renderAllAccountsList(container);
+  } else if (AC.tab === 'investment') {
+    _renderInvestmentAccountsList(container);
   } else {
     _renderWalletsAccountsList(container);
   }
@@ -4478,6 +4860,101 @@ function _renderAllAccountsList(container) {
     list.appendChild(card);
   });
 
+  container.appendChild(list);
+}
+
+function _renderInvestmentAccountsList(container) {
+  const investDefs = AC.defs.filter(def => (def.Type || '').toLowerCase() === 'investment');
+
+  if (!investDefs.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">📈</div>
+      <div class="empty-state-title">No investment accounts</div>
+      <div class="empty-state-sub">Add an account with type "Investment" to see it here.</div>
+    </div>`;
+    return;
+  }
+
+  const totalBal = investDefs.reduce((sum, def) => sum + _acctBalance(def.AccountName), 0);
+
+  const summary = document.createElement('div');
+  summary.className = 'salary-card';
+  summary.style.marginBottom = '16px';
+  summary.innerHTML = `
+    <div class="salary-card-top"><span class="salary-card-label">TOTAL INVESTMENTS</span></div>
+    <div class="salary-card-amount">${fmtGHS(totalBal)}</div>`;
+  container.appendChild(summary);
+
+  const list = document.createElement('div');
+  list.className = 'budget-items';
+  const acctNames = new Set(AC.defs.map(d => d.AccountName));
+
+  investDefs.forEach(def => {
+    const name  = def.AccountName;
+    const safeN = escHtml(name);
+    const bal   = _acctBalance(name);
+
+    const relatedIds = new Set(
+      AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name).map(r => r.TransactionID)
+    );
+    const txns = _groupTxns(AC.rows.filter(r => relatedIds.has(r.TransactionID)));
+
+    const card = document.createElement('div');
+    card.className = 'budget-item-card';
+
+    const txnContainer = document.createElement('div');
+    txnContainer.className = 'txn-list';
+
+    txns.forEach(t => {
+      const isCredit   = t.accountTo === name;
+      const sign       = isCredit ? '+' : '−';
+      const color      = isCredit ? 'var(--green)' : 'var(--red)';
+      const txnId      = escHtml(t.id || '');
+      const isTransfer = t.accountFrom && t.accountTo && acctNames.has(t.accountFrom) && acctNames.has(t.accountTo);
+      const itemLabel  = t.item || (isTransfer ? 'Transfer' : '—');
+      const otherAcct  = isCredit ? (t.accountFrom || '—') : (t.accountTo || '—');
+      const forPart    = t.monthFor  ? `For ${escHtml(t.monthFor)} ${escHtml(t.yearFor)}` : '';
+      const recvPart   = t.monthRecv ? `Recv ${escHtml(t.monthRecv)} ${escHtml(t.yearRecv)}` : '';
+      const metaTxt    = [forPart, recvPart].filter(Boolean).join(' · ');
+      const row = document.createElement('div');
+      row.className = 'txn-row';
+      row.innerHTML = `
+        <div class="txn-row-left">
+          <div class="txn-row-item">${escHtml(itemLabel)} <span style="font-size:11px;opacity:.5;">${isCredit ? '← ' : '→ '}${escHtml(otherAcct)}</span></div>
+          ${metaTxt ? `<div class="txn-row-meta">${metaTxt}</div>` : ''}
+        </div>
+        <div class="txn-row-right">
+          <span class="txn-row-amount" style="color:${color};">${sign} ${fmtGHS(t.amount)}</span>
+          <button class="btn btn-icon" onclick="openEditTxnModal('${txnId}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','','','','')" title="Delete">✕</button>
+        </div>`;
+      txnContainer.appendChild(row);
+    });
+
+    const recBtn = document.createElement('button');
+    recBtn.className = 'txn-add-btn';
+    recBtn.textContent = '+ Record Transaction';
+    recBtn.onclick = (e) => { e.stopPropagation(); openAddTxnModal(name); };
+    txnContainer.appendChild(recBtn);
+
+    card.innerHTML = `
+      <div class="budget-item-main" style="cursor:pointer;" onclick="toggleAccountTxns(this)">
+        <div class="budget-item-left">
+          <div class="budget-item-name">📈 ${safeN}</div>
+          <div class="budget-item-sublabel">Investment · ${txns.length} transaction${txns.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="budget-item-right">
+          <div class="budget-item-amount">${fmtGHS(bal)}</div>
+        </div>
+        <div class="budget-item-actions">
+          <span class="acct-chevron" style="color:var(--muted);font-size:16px;line-height:1;transition:transform 0.2s;">›</span>
+          <button class="btn btn-icon" onclick="event.stopPropagation();openEditAccountModal('${safeN}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="event.stopPropagation();deleteAccount('${safeN}')" title="Delete">✕</button>
+        </div>
+      </div>`;
+    card.appendChild(txnContainer);
+    list.appendChild(card);
+  });
   container.appendChild(list);
 }
 
@@ -4616,9 +5093,15 @@ async function acctPopulateItemSelect(selected, section) {
       } catch {}
     }
     AC.budgetAmounts = {};
-    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.SalaryPortion) || 0; });
+    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.ActualAmount || r.SalaryPortion) || 0; });
+    const _budgeted = budgetRows.filter(r => (parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0);
+    const _unbudgeted = budgetRows.filter(r => !((parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0));
     sel.innerHTML = `<option value="">— Select Item —</option>` +
-      budgetRows.map(r => `<option value="${escHtml(r.Items)}"${r.Items === selected ? ' selected' : ''}>${escHtml(r.Items)}</option>`).join('');
+      [..._budgeted, ..._unbudgeted].map(r => {
+        const hasAmt = (parseFloat(r.ActualAmount || r.SalaryPortion) || 0) > 0;
+        const isSel = r.Items === selected;
+        return `<option value="${escHtml(r.Items)}"${isSel ? ' selected' : ''}${!hasAmt && !isSel ? ' disabled' : ''}>${escHtml(r.Items)}</option>`;
+      }).join('');
   } else {
     let items = [];
     try { items = await apiFetch('/items'); } catch {}
@@ -4655,13 +5138,25 @@ function setTxnType(type) {
     $('acctFromLabel').textContent = 'From Account';
     $('acctToLabel').textContent   = 'To (optional)';
   }
-  $('acctItemField').style.display         = type === 'transfer' ? 'none' : '';
+  $('acctItemField').style.display         = '';
   $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
-  $('acctChargesField').style.display      = type === 'transfer' ? ''     : 'none';
+  $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const recvRow = $('acctMonthRecvRow');
   if (recvRow) recvRow.style.display = type === 'transfer' ? 'none' : 'grid';
+  const forRow = $('acctMonthForRow');
+  if (forRow) forRow.style.display = type === 'transfer' ? 'none' : 'grid';
+  if (type === 'transfer') onAcctTxnToChange();
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
   acctPopulateItemSelect(($('acctTxnItem')?.value) || '', section);
+}
+
+function onAcctTxnToChange() {
+  if (AC.txnType !== 'transfer') return;
+  const toVal = $('acctTxnTo')?.value || '';
+  const def = AC.defs.find(d => d.AccountName === toVal);
+  const isInvestment = (def?.Type || '').toLowerCase() === 'investment';
+  const forRow = $('acctMonthForRow');
+  if (forRow) forRow.style.display = isInvestment ? 'grid' : 'none';
 }
 
 function setAccountType(type) {
@@ -4804,6 +5299,7 @@ async function openEditTxnModal(txnId) {
   setTxnType(type);
   if ($('acctTxnFrom')) $('acctTxnFrom').value = t.accountFrom || '';
   if ($('acctTxnTo'))   $('acctTxnTo').value   = t.accountTo   || '';
+  onAcctTxnToChange();
   await acctPopulateItemSelect(t.item || '', type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null);
   $('accountModalOverlay').classList.add('open');
 }
