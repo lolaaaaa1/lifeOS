@@ -2267,7 +2267,7 @@ const LocalAPI = {
             const amt = isCalc
               ? parseFloat(r.CalculatedAmount) || 0
               : parseFloat(r.ActualAmount || r.SalaryPortion) || 0;
-            if (!isCalc) totals[r.Items] = (totals[r.Items] || 0) + amt; // Calculated handled by days.csv
+            totals[r.Items] = (totals[r.Items] || 0) + amt;
             const p = parseFloat(r.Paid);
             const pAmt = !isNaN(p) ? p : (r.Paid === 'Paid' || r.Paid === 'Transferred') ? amt : 0;
             paidMap[r.Items] = (paidMap[r.Items] || 0) + pAmt;
@@ -2882,10 +2882,10 @@ async function renderDashboardCalc() {
     ]))),
   ]);
 
-  // Yearly map: Calculated from days.csv + summed Actual from income.csv
-  const yearlyMap = { ...(todaySummary.yearlyTotals || {}) };
+  // Yearly map: all items from income.csv (CalculatedAmount for Food/Transport, ActualAmount for others)
+  const yearlyMap = {};
   const yearlyItems = yearActTotals.items || yearActTotals;
-  Object.entries(yearlyItems).forEach(([k, v]) => { yearlyMap[k] = (yearlyMap[k] || 0) + v; });
+  Object.entries(yearlyItems).forEach(([k, v]) => { yearlyMap[k] = v; });
   const ytdPaidMap = yearActTotals.paidMap    || {};
   const ytdPaid    = yearActTotals.paidTotal  || 0;
   const ytdSalary  = yearActTotals.ytdSalary  || 0;
