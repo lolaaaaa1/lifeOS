@@ -5242,10 +5242,11 @@ function setTxnType(type) {
     $('acctFromLabel').textContent = 'From';
     $('acctToLabel').textContent   = 'To';
   } else if (type === 'income') {
-    grid.style.gridTemplateColumns = '1fr';
-    fromField.style.display = 'none';
+    grid.style.gridTemplateColumns = '1fr 1fr';
+    fromField.style.display = '';
     toField.style.display   = '';
-    $('acctToLabel').textContent = 'Into Account';
+    $('acctFromLabel').textContent = 'Source';
+    $('acctToLabel').textContent   = 'Into Account';
   } else {
     grid.style.gridTemplateColumns = '1fr';
     fromField.style.display = '';
