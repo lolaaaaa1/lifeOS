@@ -3552,7 +3552,13 @@ async function openSalaryHistory() {
     SB.salary = getTotalIncome();
     SB.items  = allRows
       .filter(r => r.Type === 'Budget')
-      .map(r => ({ name: r.Items, amount: parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0, paid: r.Paid || '' }));
+      .map(r => ({
+        name:   r.Items,
+        amount: (r.CalculatedType || '') === 'Calculated'
+          ? parseFloat(r.CalculatedAmount || '0') || 0
+          : parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0,
+        paid: r.Paid || ''
+      }));
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
