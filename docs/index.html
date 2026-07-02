@@ -1464,7 +1464,8 @@
       <div class="page-content">
         <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;">
           <div class="toggle-row" id="acctTabToggle" style="flex:1;">
-            <button class="toggle-btn active" onclick="setAcctTab('wallets')">Wallets</button>
+            <button class="toggle-btn active" onclick="setAcctTab('current')">Current</button>
+            <button class="toggle-btn" onclick="setAcctTab('investment')">Investment</button>
             <button class="toggle-btn" onclick="setAcctTab('all')">All</button>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()">+ Add</button>
@@ -4481,7 +4482,7 @@ const AC = {
   type: 'Bank',
   incomePeriod: 'Monthly',
   display: true,
-  tab: 'wallets',    // 'wallets' | 'all'
+  tab: 'current',    // 'current' | 'investment' | 'all'
   txnType: 'expense', // 'income' | 'expense' | 'transfer'
   budgetAmounts: {}, // {itemName: SalaryPortion} for current expense month
 };
@@ -4567,6 +4568,8 @@ function renderAccountsList() {
 
   if (AC.tab === 'all') {
     _renderAllAccountsList(container);
+  } else if (AC.tab === 'investment') {
+    _renderInvestmentAccountsList(container);
   } else {
     _renderWalletsAccountsList(container);
   }
@@ -4603,6 +4606,54 @@ function _renderAllAccountsList(container) {
     list.appendChild(card);
   });
 
+  container.appendChild(list);
+}
+
+function _renderInvestmentAccountsList(container) {
+  const investDefs = AC.defs.filter(def => (def.Type || '').toLowerCase() === 'investment');
+
+  if (!investDefs.length) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">📈</div>
+      <div class="empty-state-title">No investment accounts</div>
+      <div class="empty-state-sub">Add an account with type "Investment" to see it here.</div>
+    </div>`;
+    return;
+  }
+
+  const totalBal = investDefs.reduce((sum, def) => sum + _acctBalance(def.AccountName), 0);
+
+  const summary = document.createElement('div');
+  summary.className = 'salary-card';
+  summary.style.marginBottom = '16px';
+  summary.innerHTML = `
+    <div class="salary-card-top"><span class="salary-card-label">TOTAL INVESTMENTS</span></div>
+    <div class="salary-card-amount">${fmtGHS(totalBal)}</div>`;
+  container.appendChild(summary);
+
+  const list = document.createElement('div');
+  list.className = 'budget-items';
+  investDefs.forEach(def => {
+    const name = def.AccountName;
+    const bal  = _acctBalance(name);
+    const card = document.createElement('div');
+    card.className = 'budget-item-card';
+    card.innerHTML = `
+      <div class="budget-item-main">
+        <div class="budget-item-left">
+          <div class="budget-item-name">📈 ${escHtml(name)}</div>
+          <div class="budget-item-sublabel">Investment</div>
+        </div>
+        <div class="budget-item-right">
+          <div class="budget-item-amount">${fmtGHS(bal)}</div>
+        </div>
+        <div class="budget-item-actions">
+          <button class="btn btn-icon" onclick="openEditAccountModal('${escHtml(name)}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="deleteAccount('${escHtml(name)}')" title="Delete">✕</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
   container.appendChild(list);
 }
 
