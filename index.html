@@ -493,6 +493,7 @@
       border-bottom: 1px solid var(--border);
     }
     .dash-item-row:first-child { border-top: 1px solid var(--border); }
+    .dash-item-row--3col { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: baseline; }
 
     .dash-item-name { font-size: 14px; color: var(--ink-lt); }
 
@@ -3044,13 +3045,11 @@ async function renderDashboardCalc() {
       const over      = rem < 0;
       const remColor  = over ? '#a8533f' : paid > 0 ? '#3a6b4a' : 'inherit';
       const row = document.createElement('div');
-      row.className = 'dash-item-row';
+      row.className = 'dash-item-row dash-item-row--3col';
       row.innerHTML = `
         <span class="dash-item-name">${escHtml(item)}</span>
-        <span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;">
-          <span class="dash-item-amount">${fmtGHS(allocated)}</span>
-          ${paid > 0 ? `<span style="font-size:11px;color:${remColor};">${over ? '−' : ''}${fmtGHS(Math.abs(rem))} rem</span>` : ''}
-        </span>`;
+        <span class="dash-item-amount">${fmtGHS(allocated)}</span>
+        <span style="font-size:11px;color:${remColor};text-align:right;">${paid > 0 ? `${over ? '−' : ''}${fmtGHS(Math.abs(rem))} rem` : ''}</span>`;
       list.appendChild(row);
     });
     slide.appendChild(list);
