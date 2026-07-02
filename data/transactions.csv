@@ -123,10 +123,10 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0105202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,May,2026,Expense
 0106202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,June,2026,Expense
 0106202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,June,2026,Expense
-0101202609,Ecobank,,960,,Food,Monthly,,,January,2026,Expense
-0101202609,,Others,,960,Food,Monthly,,,January,2026,Expense
-0101202610,Ecobank,,960,,Transport,Monthly,,,January,2026,Expense
-0101202610,,Others,,960,Transport,Monthly,,,January,2026,Expense
+0101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense
+0101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense
+0101202610,Ecobank,,1050,,Transport,Monthly,,,January,2026,Expense
+0101202610,,Others,,1050,Transport,Monthly,,,January,2026,Expense
 0102202609,Ecobank,,840,,Food,Monthly,,,February,2026,Expense
 0102202609,,Others,,840,Food,Monthly,,,February,2026,Expense
 0102202610,Ecobank,,840,,Transport,Monthly,,,February,2026,Expense

@@ -1,4 +1,7 @@
 Day,Month,Year,DayName,FoodDayApply,TransportDayApply,MonthYearToUse,SalaryFood,SalaryTransport
+29,December,2025,Monday,TRUE,TRUE,Jan-26,30,30
+30,December,2025,Tuesday,TRUE,TRUE,Jan-26,30,30
+31,December,2025,Wednesday,TRUE,TRUE,Jan-26,30,30
 1,January,2026,Thursday,TRUE,TRUE,Jan-26,30,30
 2,January,2026,Friday,TRUE,TRUE,Jan-26,30,30
 3,January,2026,Saturday,TRUE,FALSE,Jan-26,30,
