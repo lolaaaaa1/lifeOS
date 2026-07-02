@@ -3510,7 +3510,7 @@ async function openSalaryHistory() {
     SB.salary = getTotalIncome();
     SB.items  = allRows
       .filter(r => r.Type === 'Budget')
-      .map(r => ({ name: r.Items, amount: parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0 }));
+      .map(r => ({ name: r.Items, amount: parseFloat(r.ActualAmount || r.SalaryPortion || '0') || 0, paid: r.Paid || '' }));
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
@@ -3525,10 +3525,15 @@ function sbItemRow(it) {
   const pct = salary > 0 && it.amount > 0 ? ` · ${((it.amount / salary) * 100).toFixed(1)}%` : '';
   const noAmt = it.amount === 0;
   const unset = isCalcUnset(it.name);
+  const paidBadge = it.paid === 'Paid'
+    ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
+    : it.paid === 'Saved'
+    ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#2a5a7a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">SAVED</span>`
+    : '';
   const row = document.createElement('div');
   row.style = `display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
   row.innerHTML = `
-    <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
+    <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
     <span style="font-size:14px;font-weight:${noAmt ? '400' : '500'};${noAmt ? 'opacity:.35;' : ''}">${noAmt ? 'tap to set' : fmtGHS(it.amount)}</span>`;
   row.onclick = () => openSbAmountEdit(it.name);
   return row;
@@ -4884,7 +4889,7 @@ function setTxnType(type) {
     $('acctFromLabel').textContent = 'From Account';
     $('acctToLabel').textContent   = 'To (optional)';
   }
-  $('acctItemField').style.display         = type === 'transfer' ? 'none' : '';
+  $('acctItemField').style.display         = '';
   $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
   $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const recvRow = $('acctMonthRecvRow');
