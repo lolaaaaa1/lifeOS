@@ -175,5 +175,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0107202608,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,July,2026,Transfer
 0207202601,Ecobank,,488,,Transfer,Monthly,,,December,2025,Transfer
 0207202601,,Achieve SOA Exams,,488,Transfer,Monthly,,,December,2025,Transfer
-2811202501,,,668,,Salary,Monthly,November,2025,December,2025,Income
+2811202501,,,868,,Salary,Monthly,November,2025,December,2025,Income
 2811202501,,Ecobank,,668,Salary,Monthly,November,2025,December,2025,Income
+2811202503,Ecobank,,200,,Trust Fund,Monthly,,,December,2025,Transfer
+2811202503,,Achieve Trust Fund,,200,Trust Fund,Monthly,,,December,2025,Transfer
