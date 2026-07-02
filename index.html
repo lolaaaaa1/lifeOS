@@ -3018,7 +3018,7 @@ async function renderDashboardCalc() {
         row.innerHTML = `
           <span class="dash-item-name">${escHtml(item)}</span>
           <span class="dash-item-amount">${fmtGHS(amtsMap[item] || 0)}</span>
-          <span style="font-size:11px;color:${exp > 0 ? remColor : 'inherit'};text-align:right;">${exp > 0 ? `${over ? '−' : ''}${fmtGHS(Math.abs(rem))}` : ''}</span>`;
+          <span style="font-size:11px;color:${exp > 0 ? remColor : 'inherit'};text-align:right;">${over ? '−' : ''}${fmtGHS(Math.abs(rem))}</span>`;
       } else {
         row.className = 'dash-item-row';
         row.innerHTML = `<span class="dash-item-name">${escHtml(item)}</span><span class="dash-item-amount">${fmtGHS(amtsMap[item] || 0)}</span>`;
