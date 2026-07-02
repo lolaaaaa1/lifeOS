@@ -1,5 +1,9 @@
-TransactionID,AccountName,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,Credit,AccountFrom,AccountTo,Amount
-3006202601,Ecobank,Salary,Monthly,May,2026,June,2026,7000.0,Nationwide Medical Insurance,Ecobank,7000
-3006202602,Ecobank,Company Bonus,Variable,June,2026,,,2500,Nationwide Medical Insurance,Ecobank,2500
-3006202603,Ecobank,Salary,Monthly,June,,July,2026,7000.0,Nationwide Medical Insurance,Ecobank,7000
-0207202601,,,Monthly,,,,,,Ecobank,Telecel Cash,1
+TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor
+3006202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,May,2026,June,2026
+3006202601,,Ecobank,,7000,Salary,Monthly,May,2026,June,2026
+3006202602,Nationwide Medical Insurance,,2500,,Company Bonus,Variable,June,2026,,
+3006202602,,Ecobank,,2500,Company Bonus,Variable,June,2026,,
+3006202603,Nationwide Medical Insurance,,7000,,Salary,Monthly,June,,July,2026
+3006202603,,Ecobank,,7000,Salary,Monthly,June,,July,2026
+0207202601,Ecobank,,1,,,Monthly,,,,
+0207202601,,Telecel Cash,,1,,Monthly,,,,
