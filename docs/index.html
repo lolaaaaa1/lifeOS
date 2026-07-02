@@ -3200,8 +3200,9 @@ async function renderBudgetPage() {
 function buildIncomeSummaryCard() {
   const total     = getTotalIncome();
   const allocated = calcIncomeRequired();
-  const remaining = total - allocated;
-  const pct       = total > 0 ? Math.min(100, (allocated / total) * 100) : 0;
+  const budget    = getBudgetForCurrentMonth() ?? total;
+  const remaining = budget - allocated;
+  const over      = remaining < 0;
   const label     = S.currentMonth ? `TOTAL INCOME · ${S.currentMonth.Month.toUpperCase()} ${S.currentMonth.Year}` : 'TOTAL INCOME';
   const amtText   = total > 0 ? fmtGHS(total) : 'Add income →';
 
@@ -3216,17 +3217,11 @@ function buildIncomeSummaryCard() {
     <div class="salary-card-amount${total > 0 ? '' : ' empty'}">${amtText}</div>
     <div class="salary-split">
       <div class="salary-split-item">
-        <span class="salary-split-label">Allocated</span>
-        <span class="salary-split-value">${fmtGHS(allocated)}</span>
-      </div>
-      <div class="salary-split-item">
-        <span class="salary-split-label">Remaining</span>
-        <span class="salary-split-value">${fmtGHS(Math.max(0, remaining))}</span>
+        <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
+        <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
       </div>
     </div>
-    <div class="salary-progress-wrap">
-      <div class="salary-progress-fill" style="width:${pct}%"></div>
-    </div>
+    ${budgetProgressHtml(allocated, budget)}
     <div class="salary-progress-text">${pct.toFixed(0)}% allocated</div>`;
   return card;
 }
@@ -3586,15 +3581,17 @@ function sbItemRow(it) {
 }
 
 function sbTotalsRow(items) {
-  const { salary } = SB;
   const allocated = items.reduce((s, it) => s + it.amount, 0);
-  const remaining = salary - allocated;
-  const over = remaining < 0;
+  const budget    = getBudgetForCurrentMonth() ?? SB.salary;
+  const remaining = budget - allocated;
+  const over      = remaining < 0;
+  const balanced  = budget && Math.abs(allocated - budget) <= 0.05;
+  const color     = balanced ? '#3a6b4a' : over ? '#a8533f' : 'inherit';
+  const label     = balanced ? 'Balanced ✓' : over ? 'Over budget' : 'Remaining';
   const foot = document.createElement('div');
   foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;flex-direction:column;gap:6px;';
   foot.innerHTML = `
-    <div style="display:flex;justify-content:space-between;font-size:13px;opacity:.6;"><span>Allocated</span><span>${fmtGHS(allocated)}</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;color:${over ? '#a8533f' : 'inherit'};"><span>${over ? 'Over by' : 'Remaining'}</span><span>${fmtGHS(Math.abs(remaining))}</span></div>`;
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;color:${color};"><span>${label}</span><span>${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span></div>`;
   return foot;
 }
 
@@ -3973,19 +3970,7 @@ function renderBpPage() {
   ]).then(() => renderBpGroups());
 }
 
-function renderBpSalaryBar() {
-  const salary = getSalaryAmount();
-  const allocated = BP.items.reduce((s, it) => s + (BP.monthAmounts[it.Id] ?? 0), 0);
-  const remaining = salary - allocated;
-  const pct = salary > 0 ? Math.min(100, (allocated / salary) * 100) : 0;
-
-  $('bpSalaryAmt').textContent  = salary > 0 ? fmtGHS(salary) : 'Set salary on Income page →';
-  $('bpAllocated').textContent  = fmtGHS(allocated);
-  $('bpRemaining').textContent  = salary > 0 ? fmtGHS(remaining) : '—';
-  $('bpProgressFill').style.width = pct + '%';
-  $('bpProgressFill').style.background = pct > 100 ? '#a8533f' : 'rgba(250,247,242,0.6)';
-  $('bpProgressText').textContent = salary > 0 ? `${fmtPct(pct)} allocated` : 'Set salary first';
-}
+function renderBpSalaryBar() {}
 
 function renderBpGroups() {
   const container = $('bpGroups');
