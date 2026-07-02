@@ -1815,6 +1815,12 @@
       <button style="flex:1;padding:7px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Calculated</button>
     </div>
     <div id="dailyWeeksHint" style="font-size:13px;opacity:.55;margin-bottom:14px;"></div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;opacity:.5;margin-bottom:5px;">Monthly target</div>
+      <input id="dailyMonthlyTarget" type="number" min="0" placeholder="0"
+        style="width:100%;padding:9px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;"
+        oninput="onMonthlyTargetInput()">
+    </div>
     <div id="dailyDaysRows"></div>
     <div id="dailyTotalHint" style="font-size:13px;opacity:.6;padding-top:8px;border-top:1px solid rgba(0,0,0,0.08);margin-top:8px;"></div>
   </div>
@@ -1975,16 +1981,39 @@ const DATA = {
       this.load('data/days.csv'),
       this.load('data/items.csv'),
       this.load('data/transactions.csv'),
+      this.load('data/constraints.csv'),
     ]);
   },
 };
 
 // Shorthand accessors to cached data
-function FIN()    { return DATA.get('data/financeOS.csv')   || { headers: [], rows: [] }; }
-function INC()    { return DATA.get('data/income.csv')       || { headers: [], rows: [] }; }
-function DAYS_D() { return DATA.get('data/days.csv')         || { headers: [], rows: [] }; }
-function ITMS()   { return DATA.get('data/items.csv')        || { headers: [], rows: [] }; }
-function TXNS()   { return DATA.get('data/transactions.csv') || { headers: [], rows: [] }; }
+function FIN()    { return DATA.get('data/financeOS.csv')      || { headers: [], rows: [] }; }
+function INC()    { return DATA.get('data/income.csv')          || { headers: [], rows: [] }; }
+function DAYS_D() { return DATA.get('data/days.csv')            || { headers: [], rows: [] }; }
+function ITMS()   { return DATA.get('data/items.csv')           || { headers: [], rows: [] }; }
+function TXNS()   { return DATA.get('data/transactions.csv')    || { headers: [], rows: [] }; }
+function CONS()   { return DATA.get('data/constraints.csv')     || { headers: [], rows: [] }; }
+
+function getCurrentSalary() {
+  if (!S.currentMonth) return null;
+  const row = FIN().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+  const v = parseFloat(row && row.Salary);
+  return v > 0 ? v : null;
+}
+
+function getConstraintAmount(salaryAmount, numberOfWeeks) {
+  const row = CONS().rows.find(r =>
+    parseFloat(r.SalaryAmount) === parseFloat(salaryAmount) &&
+    parseInt(r.NumberOfWeeks)  === parseInt(numberOfWeeks)
+  );
+  return row ? parseFloat(row.Amount) : null;}
+
+function getBudgetForCurrentMonth() {
+  const wk     = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
+  const salary = getCurrentSalary();
+  if (!salary) return null;
+  return getConstraintAmount(salary, wk) ?? salary;
+}
 
 // ── Calculation helpers ────────────────────────────────────────────────────
 
@@ -2307,7 +2336,7 @@ const LocalAPI = {
       const applyCol = name === 'Food' ? 'FoodDayApply' : name === 'Transport' ? 'TransportDayApply' : null;
       if (applyCol) _ensureCol(daysData, applyCol);
       for (const row of daysData.rows) {
-        if (row.Month === mo && row.Year === yr) {
+        if (row.MonthYearToUse === period) {
           const dn = row.DayName;
           const applies = body[`${dn.toLowerCase()}_applies`] !== false;
           const amt = applies ? body[dn.toLowerCase()] : '';
@@ -3303,12 +3332,13 @@ function renderIncomeByReceived(container) {
 }
 
 function buildIncomeCard(src) {
-  const amount    = parseFloat(src.Amount || '0') || 0;
-  const name      = src.Items;
-  const allocated = calcIncomeRequired();
-  const remaining = amount - allocated;
-  const over      = remaining < 0;
-  const pct       = amount > 0 ? Math.min(100, (allocated / amount) * 100) : 0;
+  const amount     = parseFloat(src.Amount || '0') || 0;
+  const name       = src.Items;
+  const budget     = getBudgetForCurrentMonth() ?? amount;
+  const allocated  = calcIncomeRequired();
+  const remaining  = budget - allocated;
+  const over       = remaining < 0;
+  const pct        = budget > 0 ? Math.min(100, (allocated / budget) * 100) : 0;
 
   // check if this income source is managed via an accounts transaction
   const curM = S.currentMonth ? S.currentMonth.Month : '';
@@ -3335,13 +3365,14 @@ function buildIncomeCard(src) {
     </div>
     <div class="salary-card-amount${amount > 0 ? '' : ' empty'}">${amount > 0 ? fmtGHS(amount) : '—'}</div>
     ${amount > 0 ? `
+    ${budget !== amount ? `<div style="font-size:12px;opacity:.45;margin-bottom:8px;">Budget: ${fmtGHS(budget)}</div>` : ''}
     <div class="salary-split">
       <div class="salary-split-item">
-        <span class="salary-split-label">Required</span>
+        <span class="salary-split-label">Allocated</span>
         <span class="salary-split-value">${allocated > 0 ? fmtGHS(allocated) : '—'}</span>
       </div>
       <div class="salary-split-item">
-        <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">${S.currentMonth ? nextMonthName(S.currentMonth.Month) : 'Next'}</span>
+        <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
         <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
       </div>
     </div>
@@ -4358,9 +4389,14 @@ async function openDailyAmountModal(itemName) {
     container.appendChild(row);
   });
 
+  const targetEl = $('dailyMonthlyTarget');
+  if (targetEl) {
+    const existing = BP.monthAmounts[itemName] || 0;
+    targetEl.value = existing > 0 ? existing : '';
+  }
   onDailyInput();
   $('dailyAmountOverlay').classList.add('open');
-  setTimeout(() => { const f = container.querySelector('input:not([disabled])'); if(f) f.focus(); }, 80);
+  setTimeout(() => { const f = $('dailyMonthlyTarget'); if (f) f.focus(); }, 80);
 }
 
 function toggleDayApply(dayKey) {
@@ -4393,10 +4429,24 @@ function switchDailyToActual() {
   openBpAmountModal(name, name);
 }
 
+function onMonthlyTargetInput() {
+  const wk = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
+  const target = parseFloat($('dailyMonthlyTarget').value) || 0;
+  if (target <= 0) return;
+  const KEYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const applicableCount = KEYS.filter(k => _dailyApplies[k] !== false).length;
+  const totalDays = applicableCount * wk;
+  const rate = totalDays > 0 ? Math.round(target / totalDays * 100) / 100 : 0;
+  KEYS.forEach(k => {
+    if (_dailyApplies[k] === false) return;
+    const input = $(`daily_${k}`);
+    if (input && !input.disabled) input.value = rate;
+  });
+  onDailyInput();
+}
+
 function onDailyInput() {
-  const _year     = parseInt(S.currentMonth ? S.currentMonth.Year : new Date().getFullYear());
-  const _monthIdx = S.currentMonth ? (MONTH_NAMES.indexOf(S.currentMonth.Month) + 1) : (new Date().getMonth() + 1);
-  const _dc       = weekdayCounts(_year, _monthIdx);
+  const wk  = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
   const KEYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
   let itemTotal = 0;
   KEYS.forEach(k => {
@@ -4406,7 +4456,7 @@ function onDailyInput() {
       return;
     }
     const amt = parseFloat($(`daily_${k}`) ? $(`daily_${k}`).value : '0') || 0;
-    const cnt = _dc[k] || 0;
+    const cnt = wk;
     itemTotal += amt * cnt;
     if (resultEl) resultEl.textContent = amt > 0 ? `${amt} × ${cnt} = ${fmtGHS(amt * cnt)}` : '';
   });
