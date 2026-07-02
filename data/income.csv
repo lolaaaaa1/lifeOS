@@ -24,8 +24,8 @@ January,2026,Budget,Charges,,20.1,20.1,Actual,20.1,,20
 February,2026,Budget,Rent,,1000,1000,Actual,1000,,1000
 February,2026,Budget,Rent Charges,,120,120,Actual,120,,120
 February,2026,Budget,Bundle,,,,Actual,,,
-February,2026,Budget,Shoes,,100,100,Actual,100,,
-February,2026,Budget,Hair,,100,100,Actual,100,,
+February,2026,Budget,Shoes,,100,,Actual,100,,
+February,2026,Budget,Hair,,100,,Actual,100,,
 February,2026,Budget,Tithe,,500,500,Actual,500,,500
 February,2026,Budget,Electricity,,200,200,Actual,200,,200
 February,2026,Budget,Rental Utilities,,140,140,Actual,140,,140
@@ -38,11 +38,11 @@ February,2026,Budget,Department Dues,,100,100,Actual,100,,100
 February,2026,Budget,Gifting,,,,Actual,,,
 February,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
 February,2026,Budget,Transport,,840,840,Calculated,840,,840
-February,2026,Budget,Food,,840,840,Calculated,840,,840
+February,2026,Budget,Food,,580,580,Calculated,580,,580
 February,2026,Budget,Utilities,,,,Actual,,,
 February,2026,Budget,Travel,,,,Actual,,,
 February,2026,Budget,Outing,,,,Actual,,,
-February,2026,Budget,Charges,,30,30,Actual,30,,30
+February,2026,Budget,Charges,,30,18.5,Actual,30,,30
 March,2026,Budget,Rent,,1000,1000,Actual,1000,,1000
 March,2026,Budget,Rent Charges,,120,120,Actual,120,,120
 March,2026,Budget,Bundle,,,,Actual,,,
