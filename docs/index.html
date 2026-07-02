@@ -1714,16 +1714,6 @@
       <label class="form-label">Budget Item</label>
       <select id="allocateBudgetItem" class="form-input"></select>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="form-field">
-        <label class="form-label">Month</label>
-        <select id="allocateMonth" class="form-input"></select>
-      </div>
-      <div class="form-field">
-        <label class="form-label">Year</label>
-        <input id="allocateYear" class="form-input" type="number" placeholder="2026">
-      </div>
-    </div>
     <div class="form-field">
       <label class="form-label">Amount (GHS)</label>
       <input id="allocateAmount" class="form-input" type="number" step="0.01" placeholder="0.00">
@@ -2713,16 +2703,14 @@ const LocalAPI = {
 
     // POST /allocations — record a variable income allocation
     if (method === 'POST' && rawPath === '/allocations') {
-      const { source, item, month, year, amount } = body;
-      if (!source || !item || !month || !year || !amount) throw new Error('Missing allocation fields');
+      const { source, item, amount } = body;
+      if (!source || !item || !amount) throw new Error('Missing allocation fields');
       const allocData = ALLOC();
       _ensureCol(allocData, 'Source');
       _ensureCol(allocData, 'BudgetItem');
-      _ensureCol(allocData, 'Month');
-      _ensureCol(allocData, 'Year');
       _ensureCol(allocData, 'Amount');
-      allocData.rows.push({ Source: source, BudgetItem: item, Month: month, Year: String(year), Amount: String(amount) });
-      await DATA.save('data/allocations.csv', `Allocate ${amount} from ${source} to ${item} ${month} ${year}`);
+      allocData.rows.push({ Source: source, BudgetItem: item, Amount: String(amount) });
+      await DATA.save('data/allocations.csv', `Allocate ${amount} from ${source} to ${item}`);
       return { ok: true };
     }
 
@@ -3799,16 +3787,6 @@ function openAllocateModal(source) {
   const budgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
   $('allocateBudgetItem').innerHTML = budgetItems.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
 
-  $('allocateMonth').innerHTML = MONTH_NAMES.map(m => `<option value="${m}">${m}</option>`).join('');
-  if (S.currentMonth && !isAllMonths()) {
-    $('allocateMonth').value = S.currentMonth.Month;
-    $('allocateYear').value  = S.currentMonth.Year;
-  } else {
-    const now = new Date();
-    $('allocateMonth').value = MONTH_NAMES[now.getMonth()];
-    $('allocateYear').value  = now.getFullYear();
-  }
-
   $('allocateAmount').value = '';
   $('allocateModalOverlay').classList.add('open');
   setTimeout(() => $('allocateAmount').focus(), 80);
@@ -3821,14 +3799,12 @@ function closeAllocateModal(event) {
 
 async function saveAllocation() {
   const item   = $('allocateBudgetItem').value;
-  const month  = $('allocateMonth').value;
-  const year   = parseInt($('allocateYear').value, 10);
   const amount = parseFloat($('allocateAmount').value) || 0;
-  if (!item || !month || !year || !amount) { alert('Please fill all fields.'); return; }
+  if (!item || !amount) { alert('Please fill all fields.'); return; }
   try {
     await apiFetch('/allocations', {
       method: 'POST',
-      body: JSON.stringify({ source: ALLOC_M.source, item, month, year, amount }),
+      body: JSON.stringify({ source: ALLOC_M.source, item, amount }),
     });
   } catch (e) { alert('Error: ' + e.message); return; }
   $('allocateModalOverlay').classList.remove('open');
