@@ -3529,7 +3529,6 @@ function renderIncomeSections() {
         vsec.innerHTML = `<div class="budget-section-header">
           <span class="budget-section-title">${escHtml(g.source)}</span>
           <div class="budget-section-line"></div>
-          <span class="budget-section-total">${fmtGHS(g.received)}</span>
         </div>`;
 
         const card = document.createElement('div');
@@ -3542,7 +3541,7 @@ function renderIncomeSections() {
             <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
               onclick="event.stopPropagation();openAllocateModal('${escHtml(g.source)}')">Allocate</button>
           </div>
-          `;
+          <div class="salary-card-amount">${fmtGHS(g.received)}</div>`;
 
         const vlist = document.createElement('div');
         vlist.className = 'budget-items';
