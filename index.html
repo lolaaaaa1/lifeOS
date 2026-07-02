@@ -3326,6 +3326,8 @@ function updateMonthTrigger() {
 
 async function selectMonth(month, year) {
   S.currentMonth = { Month: month, Year: year };
+  localStorage.setItem('lifeos_month', month);
+  localStorage.setItem('lifeos_year', String(year));
   updateMonthTrigger();
   renderMonthDropdown();
   await fetchMonthData();
@@ -3349,8 +3351,13 @@ async function fetchMonths() {
     const curMonthName = monthNames[now.getMonth()];
     const curYear = now.getFullYear();
 
-    // find in months list; fall back to first
-    let found = months.find(m => m.Month === curMonthName && parseInt(m.Year) === curYear);
+    // restore saved month, else default to current month, else first
+    const savedMo = localStorage.getItem('lifeos_month');
+    const savedYr = parseInt(localStorage.getItem('lifeos_year') || '0');
+    let found = (savedMo && savedYr)
+      ? months.find(m => m.Month === savedMo && parseInt(m.Year) === savedYr)
+      : null;
+    if (!found) found = months.find(m => m.Month === curMonthName && parseInt(m.Year) === curYear);
     if (!found && months.length > 0) found = months[0];
 
     if (found) {
