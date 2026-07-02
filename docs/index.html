@@ -1540,9 +1540,15 @@
         <input id="acctTxnYearRecv" class="form-input" type="number" placeholder="2026">
       </div>
     </div>
-    <div class="form-field">
-      <label class="form-label">Amount (GHS)</label>
-      <input id="acctTxnCredit" class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-field">
+        <label class="form-label">Amount (GHS)</label>
+        <input id="acctTxnCredit" class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-field" id="acctChargesField" style="display:none;">
+        <label class="form-label">Charges (GHS)</label>
+        <input id="acctTxnCharges" class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
+      </div>
     </div>
   </div>
 </div>
@@ -2431,7 +2437,6 @@ const LocalAPI = {
       const amount = String(parseFloat(body.amount || 0));
       const base = {
         TransactionID:   id,
-        Item:            body.item            || '',
         IncomePeriod:    body.incomePeriod    || '',
         MonthReceived:   body.monthReceived   || '',
         YearReceived:    String(body.yearReceived || ''),
@@ -2439,8 +2444,15 @@ const LocalAPI = {
         YearFor:         String(body.yearFor  || ''),
         TransactionType: body.transactionType || '',
       };
-      txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '' });
-      txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount });
+      // Debit leg (money leaving AccountFrom)
+      txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '', Item: body.item || '' });
+      // Optional charges debit leg (same transaction ID, same AccountFrom)
+      const chargesAmt = parseFloat(body.charges || 0);
+      if (chargesAmt > 0) {
+        txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: String(chargesAmt), Credit: '', Item: 'Charges' });
+      }
+      // Credit leg (money arriving at AccountTo)
+      txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount, Item: body.item || '' });
       await DATA.save('data/transactions.csv', `Add txn ${id}`);
       const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
       if (incomeSet.has(base.Item)) {
@@ -2458,7 +2470,6 @@ const LocalAPI = {
       const amount = String(parseFloat(body.amount) || 0);
       const base = {
         TransactionID:   tid,
-        Item:            body.item            || '',
         IncomePeriod:    body.incomePeriod    || '',
         MonthReceived:   body.monthReceived   || '',
         YearReceived:    String(body.yearReceived || ''),
@@ -2466,8 +2477,12 @@ const LocalAPI = {
         YearFor:         String(body.yearFor  || ''),
         TransactionType: body.transactionType || '',
       };
-      txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '' });
-      txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount });
+      txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '', Item: body.item || '' });
+      const updCharges = parseFloat(body.charges || 0);
+      if (updCharges > 0) {
+        txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: String(updCharges), Credit: '', Item: 'Charges' });
+      }
+      txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount, Item: body.item || '' });
       await DATA.save('data/transactions.csv', `Update txn ${tid}`);
       const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
       if (incomeSet.has(base.Item)) {
@@ -4292,31 +4307,37 @@ function _acctBalance(name) {
   }, 0);
 }
 
-// Group double-entry rows into logical transactions [{id, accountFrom, accountTo, amount, item, ...}]
+// Group double-entry rows into logical transactions
+// Each transaction may have: 1 credit row + 1-2 debit rows (main + optional charges)
 function _groupTxns(rows) {
   const map = new Map();
   for (const r of rows) {
     const id = r.TransactionID || '';
-    if (!map.has(id)) map.set(id, { dr: null, cr: null });
+    if (!map.has(id)) map.set(id, { drs: [], cr: null });
     const g = map.get(id);
-    if (r.AccountFrom && (parseFloat(r.Debit) || 0) > 0) g.dr = r;
-    if (r.AccountTo   && (parseFloat(r.Credit) || 0) > 0) g.cr = r;
-    if (!g.dr && r.AccountFrom) g.dr = r;
-    if (!g.cr && r.AccountTo)   g.cr = r;
+    if (r.AccountFrom !== undefined && r.AccountTo === '') g.drs.push(r);
+    else if (r.AccountTo) g.cr = r;
+    else if (r.AccountFrom) g.drs.push(r); // fallback
   }
-  return Array.from(map.entries()).map(([id, g]) => ({
-    id,
-    accountFrom:     g.dr?.AccountFrom  || '',
-    accountTo:       g.cr?.AccountTo    || '',
-    amount:          parseFloat(g.dr?.Debit || g.cr?.Credit) || 0,
-    item:            (g.dr || g.cr)?.Item            || '',
-    incomePeriod:    (g.dr || g.cr)?.IncomePeriod    || '',
-    monthFor:        (g.dr || g.cr)?.MonthFor        || '',
-    yearFor:         (g.dr || g.cr)?.YearFor         || '',
-    monthRecv:       (g.dr || g.cr)?.MonthReceived   || '',
-    yearRecv:        (g.dr || g.cr)?.YearReceived    || '',
-    transactionType: (g.dr || g.cr)?.TransactionType || '',
-  }));
+  return Array.from(map.entries()).map(([id, g]) => {
+    const mainDr   = g.drs.find(r => r.Item !== 'Charges') || g.drs[0];
+    const chargesDr = g.drs.find(r => r.Item === 'Charges');
+    const ref = mainDr || g.cr;
+    return {
+      id,
+      accountFrom:     mainDr?.AccountFrom    || '',
+      accountTo:       g.cr?.AccountTo        || '',
+      amount:          parseFloat(mainDr?.Debit || g.cr?.Credit) || 0,
+      charges:         parseFloat(chargesDr?.Debit) || 0,
+      item:            ref?.Item              || '',
+      incomePeriod:    ref?.IncomePeriod      || '',
+      monthFor:        ref?.MonthFor          || '',
+      yearFor:         ref?.YearFor           || '',
+      monthRecv:       ref?.MonthReceived     || '',
+      yearRecv:        ref?.YearReceived      || '',
+      transactionType: ref?.TransactionType   || '',
+    };
+  });
 }
 
 function setAcctTab(tab) {
@@ -4430,9 +4451,10 @@ function _renderWalletsAccountsList(container) {
       const safeI      = escHtml(itemLabel);
       const otherAcct  = isCredit ? (t.accountFrom || '—') : (t.accountTo || '—');
 
-      const forPart  = t.monthFor ? `For ${escHtml(t.monthFor)} ${escHtml(t.yearFor)}` : '';
-      const recvPart = t.monthRecv ? `Recv ${escHtml(t.monthRecv)} ${escHtml(t.yearRecv)}` : '';
-      const metaTxt  = [forPart, recvPart].filter(Boolean).join(' · ');
+      const forPart     = t.monthFor  ? `For ${escHtml(t.monthFor)} ${escHtml(t.yearFor)}` : '';
+      const recvPart    = t.monthRecv ? `Recv ${escHtml(t.monthRecv)} ${escHtml(t.yearRecv)}` : '';
+      const chargesPart = t.charges   ? `+${fmtGHS(t.charges)} charges` : '';
+      const metaTxt     = [forPart, recvPart, chargesPart].filter(Boolean).join(' · ');
 
       const row = document.createElement('div');
       row.className = 'txn-row';
@@ -4537,8 +4559,9 @@ function setTxnType(type) {
     toField.style.display   = 'none';
     $('acctFromLabel').textContent = 'From Account';
   }
-  $('acctItemField').style.display      = type === 'transfer' ? 'none' : '';
+  $('acctItemField').style.display         = type === 'transfer' ? 'none' : '';
   $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
+  $('acctChargesField').style.display      = type === 'transfer' ? ''     : 'none';
   const recvRow = $('acctMonthRecvRow');
   if (recvRow) recvRow.style.display = type === 'transfer' ? 'none' : 'grid';
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
@@ -4642,7 +4665,8 @@ async function openAddTxnModal(accountName) {
   $('acctTxnYearFor').value   = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Year  : '';
   $('acctTxnMonthRecv').value = '';
   $('acctTxnYearRecv').value  = '';
-  $('acctTxnCredit').value    = '';
+  $('acctTxnCredit').value             = '';
+  if ($('acctTxnCharges')) $('acctTxnCharges').value = '';
   setAcctIncomePeriod('Monthly');
   setTxnType('expense');
   if (accountName && $('acctTxnFrom')) $('acctTxnFrom').value = accountName;
@@ -4671,7 +4695,8 @@ async function openEditTxnModal(txnId) {
   $('acctTxnYearFor').value   = t.yearFor   || '';
   $('acctTxnMonthRecv').value = t.monthRecv || '';
   $('acctTxnYearRecv').value  = t.yearRecv  || '';
-  $('acctTxnCredit').value    = t.amount    || '';
+  $('acctTxnCredit').value                   = t.amount  || '';
+  if ($('acctTxnCharges')) $('acctTxnCharges').value = t.charges || '';
   setAcctIncomePeriod(t.incomePeriod || 'Monthly');
   setTxnType(type);
   if ($('acctTxnFrom')) $('acctTxnFrom').value = t.accountFrom || '';
@@ -4705,13 +4730,14 @@ async function saveAccountTxn() {
     accountFrom,
     accountTo,
     item,
-    transactionType: type.charAt(0).toUpperCase() + type.slice(1), // 'Income'|'Expense'|'Transfer'
+    transactionType: type.charAt(0).toUpperCase() + type.slice(1),
     incomePeriod:    AC.incomePeriod,
     monthFor:        $('acctTxnMonthFor').value,
     yearFor:         $('acctTxnYearFor').value,
     monthReceived:   $('acctTxnMonthRecv').value,
     yearReceived:    $('acctTxnYearRecv').value,
-    amount:          parseFloat($('acctTxnCredit').value) || 0,
+    amount:          parseFloat($('acctTxnCredit').value)  || 0,
+    charges:         parseFloat($('acctTxnCharges')?.value) || 0,
   };
   try {
     if (AC.editingTxn) {
