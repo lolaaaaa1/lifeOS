@@ -1535,6 +1535,10 @@
       </div>
     </div>
     <div class="form-field">
+      <label class="form-label">Minimum Balance</label>
+      <input id="acctDefMinBal" class="form-input" type="number" min="0" placeholder="0">
+    </div>
+    <div class="form-field">
       <label class="form-label">Show as Account Card</label>
       <div class="toggle-row" id="accountDisplayToggle">
         <button class="toggle-btn active" onclick="setAccountDisplay(true)">Yes</button>
@@ -2587,16 +2591,18 @@ const LocalAPI = {
     // GET /account-defs
     if (method === 'GET' && rawPath === '/account-defs')
       return ITMS().rows.filter(r => r.Section === 'Accounts').map(r => ({
-        AccountName: r.ItemName, Type: r.AccountType || '', Display: r.Display !== 'FALSE'
+        AccountName: r.ItemName, Type: r.AccountType || '', Display: r.Display !== 'FALSE',
+        MinimumAmount: parseFloat(r.MinimumAmount) || 0
       }));
 
     // POST /account-defs
     if (method === 'POST' && rawPath === '/account-defs') {
-      const { accountName, type = 'Bank', display = true } = body;
+      const { accountName, type = 'Bank', display = true, minimumAmount = 0 } = body;
       if (!accountName) throw new Error('accountName required');
       const itms = ITMS();
+      _ensureCol(itms, 'MinimumAmount');
       if (itms.rows.some(r => r.ItemName === accountName && r.Section === 'Accounts')) throw new Error('account already exists');
-      itms.rows.push({ ItemName: accountName, Section: 'Accounts', AccountType: type, Display: display ? 'TRUE' : 'FALSE' });
+      itms.rows.push({ ItemName: accountName, Section: 'Accounts', AccountType: type, Display: display ? 'TRUE' : 'FALSE', MinimumAmount: minimumAmount > 0 ? String(minimumAmount) : '' });
       await DATA.save('data/items.csv', `Add account ${accountName}`);
       return { ok: true };
     }
@@ -2606,10 +2612,12 @@ const LocalAPI = {
       const name = decodeURIComponent(m[1]);
       const { accountName: newName = name, type: newType = '' } = body;
       const itms = ITMS();
+      _ensureCol(itms, 'MinimumAmount');
       const found = itms.rows.find(r => r.ItemName === name && r.Section === 'Accounts');
       if (!found) throw new Error('account not found');
       found.ItemName = newName; if (newType) found.AccountType = newType;
       if (body.display !== undefined) found.Display = body.display ? 'TRUE' : 'FALSE';
+      if (body.minimumAmount !== undefined) found.MinimumAmount = body.minimumAmount > 0 ? String(body.minimumAmount) : '';
       await DATA.save('data/items.csv', `Update account ${name}`);
       if (newName !== name) {
         const txns = TXNS();
@@ -5249,6 +5257,8 @@ function _renderAllAccountsList(container) {
     const bal   = _acctBalance(name);
     const isDisplay = def.Display !== false;
 
+    const minAmt = def.MinimumAmount || 0;
+    const available = bal - minAmt;
     const card = document.createElement('div');
     card.className = 'budget-item-card';
     card.innerHTML = `
@@ -5259,6 +5269,7 @@ function _renderAllAccountsList(container) {
         </div>
         <div class="budget-item-right">
           <div class="budget-item-amount">${fmtGHS(bal)}</div>
+          ${minAmt > 0 ? `<div class="salary-split-value" style="font-size:11px;text-align:right;margin-top:2px;">Available ${fmtGHS(available)}</div>` : ''}
         </div>
         <div class="budget-item-actions">
           <button class="btn btn-icon" onclick="openEditAccountModal('${safeN}')" title="Edit">✎</button>
@@ -5655,6 +5666,7 @@ function openAddAccountModal() {
   AC.editingDef = null;
   $('addAccountModalTitle').textContent = 'Add Account';
   $('acctDefName').value = '';
+  $('acctDefMinBal').value = '';
   setAccountType('Bank');
   setAccountDisplay(true);
   $('addAccountModalOverlay').classList.add('open');
@@ -5667,6 +5679,7 @@ function openEditAccountModal(name) {
   AC.editingDef = name;
   $('addAccountModalTitle').textContent = 'Edit Account';
   $('acctDefName').value = name;
+  $('acctDefMinBal').value = def.MinimumAmount > 0 ? def.MinimumAmount : '';
   setAccountType(def.Type || 'Bank');
   setAccountDisplay(def.Display !== false);
   $('addAccountModalOverlay').classList.add('open');
@@ -5683,13 +5696,14 @@ async function saveAccountDef() {
   const name = $('acctDefName').value.trim();
   if (!name) { $('acctDefName').focus(); return; }
   try {
+    const minBal = parseFloat($('acctDefMinBal').value) || 0;
     if (AC.editingDef) {
       await apiFetch(`/account-defs/${encodeURIComponent(AC.editingDef)}`, {
-        method: 'PUT', body: JSON.stringify({ accountName: name, type: AC.type, display: AC.display }),
+        method: 'PUT', body: JSON.stringify({ accountName: name, type: AC.type, display: AC.display, minimumAmount: minBal }),
       });
     } else {
       await apiFetch('/account-defs', {
-        method: 'POST', body: JSON.stringify({ accountName: name, type: AC.type, display: AC.display }),
+        method: 'POST', body: JSON.stringify({ accountName: name, type: AC.type, display: AC.display, minimumAmount: minBal }),
       });
     }
     [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
