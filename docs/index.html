@@ -1979,7 +1979,7 @@ function TXNS()   { return DATA.get('data/transactions.csv') || { headers: [], r
 
 // ── Calculation helpers ────────────────────────────────────────────────────
 
-const _DAYS_META = new Set(['Day','Month','Year','DayName','MonthYearToUse']);
+const _DAYS_META = new Set(['Day','Month','Year','DayName','FoodDayApply','TransportDayApply','MonthYearToUse']);
 const _WEEKDAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 function _portionCol(name)   { return name.replace(/ /g, '') + 'Portion'; }
@@ -2287,13 +2287,7 @@ const LocalAPI = {
     // PUT /income/{month}/{year}/budget/{name}/daily  ← before generic /{name}
     if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/budget\/(.+)\/daily$/)) && method === 'PUT') {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      // 1. applies in income.csv
-      const inc = INC();
-      _WEEKDAYS.forEach(d => _ensureCol(inc, `${d}Applies`));
-      const incRow = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-      if (incRow) _WEEKDAYS.forEach(d => { incRow[`${d}Applies`] = body[`${d.toLowerCase()}_applies`] === false ? 'false' : 'true'; });
-      await DATA.save('data/income.csv', `Daily applies ${name} ${mo} ${yr}`);
-      // 2. per-day amounts in days.csv
+      // 1. per-day amounts + applies in days.csv
       const daysData = DAYS_D(); const prefixes = _incPrefixes();
       let colName = _daysItemCols(daysData.headers).find(c => _colToItem(c, prefixes) === name);
       if (!colName) {
@@ -2301,12 +2295,15 @@ const LocalAPI = {
         colName = primary.replace(/ /g, '') + name || name;
       }
       _ensureCol(daysData, colName);
+      const applyCol = name === 'Food' ? 'FoodDayApply' : name === 'Transport' ? 'TransportDayApply' : null;
+      if (applyCol) _ensureCol(daysData, applyCol);
       for (const row of daysData.rows) {
         if (row.Month === mo && row.Year === yr) {
           const dn = row.DayName;
           const applies = body[`${dn.toLowerCase()}_applies`] !== false;
           const amt = applies ? body[dn.toLowerCase()] : '';
           row[colName] = (amt !== undefined && amt !== '') ? String(amt) : '';
+          if (applyCol) row[applyCol] = applies ? 'TRUE' : 'FALSE';
         }
       }
       await DATA.save('data/days.csv', `Daily amounts ${name} ${mo} ${yr}`);
@@ -2415,8 +2412,14 @@ const LocalAPI = {
       }
       const applies = {};
       _WEEKDAYS.forEach(d => applies[d] = true);
-      const incRow = INC().rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-      if (incRow) _WEEKDAYS.forEach(d => { if (String(incRow[`${d}Applies`]).toLowerCase() === 'false') applies[d] = false; });
+      const applyColG = name === 'Food' ? 'FoodDayApply' : name === 'Transport' ? 'TransportDayApply' : null;
+      if (applyColG) {
+        const mDays = DAYS_D().rows.filter(r => r.Month === mo && r.Year === yr);
+        _WEEKDAYS.forEach(d => {
+          const dayRows = mDays.filter(r => r.DayName === d);
+          if (dayRows.length && dayRows.some(r => String(r[applyColG]).toUpperCase() === 'FALSE')) applies[d] = false;
+        });
+      }
       const result = {};
       _WEEKDAYS.forEach(d => result[d] = { amount: amounts[d] || 0, applies: applies[d] });
       return result;
@@ -3787,12 +3790,20 @@ async function loadBpData() {
     allRows.filter(r => r.Type === 'Budget').forEach(r => {
       calcTypes[r.Items] = r.CalculatedType || calcTypes[r.Items] || '';
 
-      // applies booleans for the daily amounts modal
+      // applies booleans from days.csv
       const app = {};
-      DAYS_LC.forEach(d => {
-        const appVal = r[(d.charAt(0).toUpperCase()+d.slice(1))+'Applies'];
-        app[d] = !appVal || appVal.toLowerCase() !== 'false';
-      });
+      DAYS_LC.forEach(d => { app[d] = true; });
+      if ((r.CalculatedType || '') === 'Calculated') {
+        const applyColBP = r.Items === 'Food' ? 'FoodDayApply' : r.Items === 'Transport' ? 'TransportDayApply' : null;
+        if (applyColBP) {
+          const mDays = DAYS_D().rows.filter(dr => dr.Month === m.Month && dr.Year === m.Year);
+          DAYS_LC.forEach(d => {
+            const cap = d.charAt(0).toUpperCase() + d.slice(1);
+            const dayRows = mDays.filter(dr => dr.DayName === cap);
+            if (dayRows.length && dayRows.some(dr => String(dr[applyColBP]).toUpperCase() === 'FALSE')) app[d] = false;
+          });
+        }
+      }
       if (scope.length === 1 || isCurrentMonth(m)) {
         dailyApp[r.Items] = app;
       }
