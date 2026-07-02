@@ -2101,6 +2101,13 @@ function _ensureCol(entry, col) {
   }
 }
 
+function _updatePortionsTotal(row, incData) {
+  _ensureCol(incData, 'PortionsTotal');
+  const portionCols = incData.headers.filter(h => h !== 'PortionsTotal' && h.endsWith('Portion'));
+  const total = portionCols.reduce((s, h) => s + (parseFloat(row[h]) || 0), 0);
+  row['PortionsTotal'] = total > 0 ? String(total) : '';
+}
+
 function _genTxnId(rows) {
   const now = new Date();
   const dd  = String(now.getDate()).padStart(2, '0');
@@ -2193,11 +2200,12 @@ const LocalAPI = {
       const [, mo, yr] = m; const inc = INC();
       for (const [name, amount] of Object.entries(body)) {
         const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-        if (found) { found.SalaryPortion = String(amount); found.ActualAmount = String(amount); found.CalculatedAmount = String(amount); found.Amount = ''; }
+        if (found) { found.SalaryPortion = String(amount); found.ActualAmount = String(amount); found.CalculatedAmount = String(amount); found.Amount = ''; _updatePortionsTotal(found, inc); }
         else {
           const row = {}; inc.headers.forEach(h => row[h] = '');
           Object.assign(row, { Month: mo, Year: yr, Type: 'Budget', Items: name, SalaryPortion: String(amount) });
           inc.rows.push(row);
+          _updatePortionsTotal(row, inc);
         }
       }
       await DATA.save('data/income.csv', `Budget ${mo} ${yr}`);
@@ -2724,6 +2732,7 @@ const LocalAPI = {
         incData.rows.push(row);
       }
       row[col] = String(amount);
+      _updatePortionsTotal(row, incData);
       await DATA.save('data/income.csv', `Allocate ${amount} from ${source} to ${item} ${month} ${yr}`);
       return { ok: true };
     }
@@ -2735,7 +2744,7 @@ const LocalAPI = {
       const incData = INC();
       const row = incData.rows.find(r => r.Type === 'Budget' && r.Items === itm
         && r.Month === mon && String(r.Year) === yr);
-      if (row) { row[col] = ''; }
+      if (row) { row[col] = ''; _updatePortionsTotal(row, incData); }
       await DATA.save('data/income.csv', `Remove bonus allocation ${src} ${itm} ${mon} ${yr}`);
       return { ok: true };
     }
@@ -5879,6 +5888,17 @@ async function init() {
     await DATA.loadAll();
     _ensureCol(ITMS(), 'Display');
     await _migrateTxns();
+    // backfill PortionsTotal for all existing Budget rows
+    const _incM = INC();
+    _ensureCol(_incM, 'PortionsTotal');
+    let _ptDirty = false;
+    _incM.rows.filter(r => r.Type === 'Budget').forEach(r => {
+      const portionCols = _incM.headers.filter(h => h !== 'PortionsTotal' && h.endsWith('Portion'));
+      const total = portionCols.reduce((s, h) => s + (parseFloat(r[h]) || 0), 0);
+      const expected = total > 0 ? String(total) : '';
+      if (r['PortionsTotal'] !== expected) { r['PortionsTotal'] = expected; _ptDirty = true; }
+    });
+    if (_ptDirty) await DATA.save('data/income.csv', 'Backfill PortionsTotal');
   } catch (err) {
     showOfflineBanner(true);
     if ($('monthTriggerValue')) $('monthTriggerValue').textContent = 'Error';
