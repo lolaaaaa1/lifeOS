@@ -4516,15 +4516,21 @@ function renderBpByIncome(container) {
     container.innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Add income on the Income page first.</div>';
   }
 
-  // Variable income cards (Company Bonus etc.)
+  // Variable income cards (Company Bonus etc.) — show month-allocated amount
   const nonSalarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.ItemName !== 'Salary').map(r => r.ItemName);
   const budgetIncRows = INC().rows.filter(r => r.Type === 'Budget');
+  const curM = S.currentMonth && !isAllMonths() ? S.currentMonth.Month : null;
+  const curY = curM ? String(S.currentMonth.Year) : null;
   nonSalarySrcs.forEach(src => {
     const col = src.replace(/\s+/g, '') + 'Portion';
+    const allocatedAll = budgetIncRows.reduce((s, r) => s + (parseFloat(r[col]) || 0), 0);
+    const allocatedMonth = curM
+      ? budgetIncRows.filter(r => r.Month === curM && String(r.Year) === curY).reduce((s, r) => s + (parseFloat(r[col]) || 0), 0)
+      : allocatedAll;
     const received = AC.rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
       .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
-    const allocatedAll = budgetIncRows.reduce((s, r) => s + (parseFloat(r[col]) || 0), 0);
     if (received === 0 && allocatedAll === 0) return;
+    const displayAmt = allocatedMonth;
     const card = document.createElement('div');
     card.className = 'salary-card';
     card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
@@ -4535,7 +4541,7 @@ function renderBpByIncome(container) {
         <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
           onclick="event.stopPropagation();openAllocateModal('${escHtml(src)}')">Allocate</button>
       </div>
-      <div class="salary-card-amount">${fmtGHS(received)}</div>`;
+      <div class="salary-card-amount${displayAmt > 0 ? '' : ' empty'}">${displayAmt > 0 ? fmtGHS(displayAmt) : '—'}</div>`;
     container.appendChild(card);
   });
 }
@@ -5879,8 +5885,10 @@ async function init() {
   loadBudgetItems();
   try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
   await fetchMonths();
-  if (S.currentPage === 'budget')      renderBudgetPage();
-  if (S.currentPage === 'budget-plan') renderBpPage();
+  if (S.currentPage === 'budget')       renderBudgetPage();
+  if (S.currentPage === 'budget-plan')  renderBpPage();
+  if (S.currentPage === 'transactions') renderTransactionsPage();
+  if (S.currentPage === 'accounts')     renderAccountsPage();
 }
 
 init();
