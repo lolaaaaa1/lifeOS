@@ -179,3 +179,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2811202501,,Ecobank,,668,Salary,Monthly,November,2025,December,2025,Income
 2811202503,Ecobank,,200,,Trust Fund,Monthly,,,December,2025,Transfer
 2811202503,,Achieve Trust Fund,,200,Trust Fund,Monthly,,,December,2025,Transfer
+0207202602,,,900,,Company Bonus,Variable,June,2026,,,Income
+0207202602,,Ecobank,,900,Company Bonus,Variable,June,2026,,,Income
