@@ -57,5 +57,19 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0107202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,July,2026,Expense
 0107202603,Ecobank,,140,,Rental Utilities,Monthly,,,July,2026,Expense
 0107202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,July,2026,Expense
+0101202604,Ecobank,,200,,Electricity,Monthly,,,January,2026,Expense
+0101202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,January,2026,Expense
+0102202604,Ecobank,,200,,Electricity,Monthly,,,February,2026,Expense
+0102202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,February,2026,Expense
+0103202604,Ecobank,,200,,Electricity,Monthly,,,March,2026,Expense
+0103202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,March,2026,Expense
+0104202604,Ecobank,,200,,Electricity,Monthly,,,April,2026,Expense
+0104202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,April,2026,Expense
+0105202604,Ecobank,,200,,Electricity,Monthly,,,May,2026,Expense
+0105202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,May,2026,Expense
+0106202604,Ecobank,,200,,Electricity,Monthly,,,June,2026,Expense
+0106202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,June,2026,Expense
+0107202604,Ecobank,,200,,Electricity,Monthly,,,July,2026,Expense
+0107202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,July,2026,Expense
 0207202601,Ecobank,,1,,Transfer,Monthly,,,,,Transfer
 0207202601,,Telecel Cash,,1,Transfer,Monthly,,,,,Transfer
