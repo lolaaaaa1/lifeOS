@@ -67,16 +67,16 @@ March,2026,Budget,Outing,,,,Actual,,,
 March,2026,Budget,Charges,,18.5,18.5,Actual,18.5,,18.5
 April,2026,Budget,Rent,,1000,1000,Actual,1000,,1000
 April,2026,Budget,Rent Charges,,120,120,Actual,120,,120
-April,2026,Budget,Bundle,,100,100,Actual,100,,
+April,2026,Budget,Bundle,,300,100,Actual,300,,
 April,2026,Budget,Shoes,,100,100,Actual,100,,
-April,2026,Budget,Hair,,100,100,Actual,100,,
+April,2026,Budget,Hair,,300,300,Actual,300,,
 April,2026,Budget,Tithe,,700,700,Actual,700,,700
 April,2026,Budget,Electricity,,200,200,Actual,200,,200
 April,2026,Budget,Rental Utilities,,140,140,Actual,140,,140
 April,2026,Budget,MSc. Actuarial Science,,1500,1500,Actual,1500,,Paid
 April,2026,Budget,SOA Exams,,340,340,Actual,340,,
 April,2026,Budget,Clothes,,100,100,Actual,100,,
-April,2026,Budget,Skincare,,100,100,Actual,100,,
+April,2026,Budget,Skincare,,300,300,Actual,300,,
 April,2026,Budget,Trust Fund,,100,100,Actual,100,,
 April,2026,Budget,Department Dues,,100,100,Actual,100,,100
 April,2026,Budget,Gifting,,100,100,Actual,100,,
@@ -86,12 +86,12 @@ April,2026,Budget,Food,,930,1085,Calculated,,,1085
 April,2026,Budget,Utilities,,100,100,Actual,100,,
 April,2026,Budget,Travel,,100,100,Actual,100,,
 April,2026,Budget,Outing,,100,100,Actual,100,,
-April,2026,Budget,Charges,,40,40,Actual,40,,40
+April,2026,Budget,Charges,,61.1,61.1,Actual,61.1,,61.1
 May,2026,Budget,Rent,,1000,1000,Actual,1000,,1000
 May,2026,Budget,Rent Charges,,120,120,Actual,120,,120
-May,2026,Budget,Bundle,,100,100,Actual,100,,
-May,2026,Budget,Shoes,,100,100,Actual,100,,
-May,2026,Budget,Hair,,100,100,Actual,100,,
+May,2026,Budget,Bundle,,,,Actual,,,
+May,2026,Budget,Shoes,,,,Actual,,,
+May,2026,Budget,Hair,,,,Actual,,,
 May,2026,Budget,Tithe,,700,700,Actual,700,,700
 May,2026,Budget,Electricity,,200,200,Actual,200,,200
 May,2026,Budget,Rental Utilities,,140,140,Actual,140,,140
@@ -106,18 +106,18 @@ May,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
 May,2026,Budget,Transport,,930,840,Calculated,,,840
 May,2026,Budget,Food,,961,868,Calculated,,,868
 May,2026,Budget,Utilities,,100,100,Actual,100,,
-May,2026,Budget,Travel,,100,100,Actual,100,,
-May,2026,Budget,Outing,,100,100,Actual,100,,
-May,2026,Budget,Charges,,40,40,Actual,40,,40
+May,2026,Budget,Travel,,,,Actual,,,
+May,2026,Budget,Outing,,,,Actual,,,
+May,2026,Budget,Charges,,0.5,0.5,Actual,0.5,,0.5
 June,2026,Budget,Rent,,1000,1000,Actual,1000,,1000
 June,2026,Budget,Rent Charges,,120,120,Actual,120,,120
-June,2026,Budget,Bundle,,100,100,Actual,100,,
-June,2026,Budget,Shoes,,100,100,Actual,100,,
-June,2026,Budget,Hair,,100,100,Actual,100,,
+June,2026,Budget,Bundle,,,,Actual,,,
+June,2026,Budget,Shoes,,,,Actual,,,
+June,2026,Budget,Hair,,,,Actual,,,
 June,2026,Budget,Tithe,,700,700,Actual,700,,700
 June,2026,Budget,Electricity,,200,200,Actual,200,,200
 June,2026,Budget,Rental Utilities,,140,140,Actual,140,,140
-June,2026,Budget,MSc. Actuarial Science,,1500,1500,Actual,1500,,
+June,2026,Budget,MSc. Actuarial Science,,1500,1500,Actual,1500,,Paid
 June,2026,Budget,SOA Exams,,340,340,Actual,340,,
 June,2026,Budget,Clothes,,100,100,Actual,100,,
 June,2026,Budget,Skincare,,100,100,Actual,100,,
@@ -128,9 +128,9 @@ June,2026,Budget,Apple Music Subscription,,30,30,Actual,30,,30
 June,2026,Budget,Transport,,900,840,Calculated,,,840
 June,2026,Budget,Food,,930,868,Calculated,,,868
 June,2026,Budget,Utilities,,100,100,Actual,100,,
-June,2026,Budget,Travel,,100,100,Actual,100,,
-June,2026,Budget,Outing,,100,100,Actual,100,,
-June,2026,Budget,Charges,,40,40,Actual,40,,40
+June,2026,Budget,Travel,,,,Actual,,,
+June,2026,Budget,Outing,,,,Actual,,,
+June,2026,Budget,Charges,,0.5,0.5,Actual,0.5,,0.5
 July,2026,Budget,Rent,,1000,1000,Actual,1000,,1000
 July,2026,Budget,Rent Charges,,120,120,Actual,120,,120
 July,2026,Budget,Bundle,,100,100,Actual,100,,
