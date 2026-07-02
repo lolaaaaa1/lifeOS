@@ -2915,8 +2915,9 @@ function navigate(page) {
   if (!VALID_PAGES.includes(page)) page = 'dashboard';
   S.currentPage = page;
 
-  // persist in URL hash (survives reload)
+  // persist in URL hash and localStorage (localStorage survives iOS PWA reload)
   history.replaceState(null, '', `#${page}`);
+  localStorage.setItem('lifeos_page', page);
 
   // toggle page visibility
   document.querySelectorAll('.page').forEach(el => {
@@ -5884,8 +5885,11 @@ async function init() {
     return;
   }
 
-  const hashPage  = window.location.hash.replace('#', '');
-  const startPage = VALID_PAGES.includes(hashPage) ? hashPage : 'dashboard';
+  const hashPage    = window.location.hash.replace('#', '');
+  const savedPage   = localStorage.getItem('lifeos_page');
+  const startPage   = VALID_PAGES.includes(hashPage) ? hashPage
+                    : VALID_PAGES.includes(savedPage) ? savedPage
+                    : 'dashboard';
   navigate(startPage);
 
   loadBudgetItems();
