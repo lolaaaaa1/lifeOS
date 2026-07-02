@@ -71,5 +71,19 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0106202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,June,2026,Expense
 0107202604,Ecobank,,200,,Electricity,Monthly,,,July,2026,Expense
 0107202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,July,2026,Expense
+0101202605,Ecobank,,500,,Tithe,Monthly,,,January,2026,Expense
+0101202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,January,2026,Expense
+0102202605,Ecobank,,500,,Tithe,Monthly,,,February,2026,Expense
+0102202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,February,2026,Expense
+0103202605,Ecobank,,500,,Tithe,Monthly,,,March,2026,Expense
+0103202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,March,2026,Expense
+0104202605,Ecobank,,700,,Tithe,Monthly,,,April,2026,Expense
+0104202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,April,2026,Expense
+0105202605,Ecobank,,700,,Tithe,Monthly,,,May,2026,Expense
+0105202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,May,2026,Expense
+0106202605,Ecobank,,700,,Tithe,Monthly,,,June,2026,Expense
+0106202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,June,2026,Expense
+0107202605,Ecobank,,700,,Tithe,Monthly,,,July,2026,Expense
+0107202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,July,2026,Expense
 0207202601,Ecobank,,1,,Transfer,Monthly,,,,,Transfer
 0207202601,,Telecel Cash,,1,Transfer,Monthly,,,,,Transfer
