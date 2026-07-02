@@ -3843,38 +3843,31 @@ function openVariableIncomeDetail(source) {
 
   const list = $('varIncomeDetailList');
   list.innerHTML = '';
+
+  const allBudgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
   const allocRows = ALLOC().rows.map((r, i) => ({ ...r, _idx: i })).filter(r => r.Source === source);
 
-  if (!allocRows.length) {
-    list.innerHTML = '<div style="padding:20px 0;opacity:.5;text-align:center;font-size:14px;">No allocations yet. Tap Allocate below.</div>';
-  } else {
-    const byPeriod = {};
-    allocRows.forEach(r => {
-      const key = `${r.Month} ${r.Year}`;
-      if (!byPeriod[key]) byPeriod[key] = [];
-      byPeriod[key].push(r);
-    });
+  // total per budget item across all months
+  const amtByItem = {};
+  allocRows.forEach(r => {
+    amtByItem[r.BudgetItem] = (amtByItem[r.BudgetItem] || 0) + (parseFloat(r.Amount) || 0);
+  });
 
-    Object.entries(byPeriod).forEach(([period, rows]) => {
-      const hdr = document.createElement('div');
-      hdr.style = 'font-size:11px;letter-spacing:.06em;opacity:.5;text-transform:uppercase;padding:12px 0 5px;border-top:1px solid var(--border);margin-top:2px;';
-      hdr.textContent = period;
-      list.appendChild(hdr);
-
-      rows.forEach(r => {
-        const row = document.createElement('div');
-        row.style = 'display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);';
-        row.innerHTML = `
-          <span style="font-size:14px;">${escHtml(r.BudgetItem)}</span>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <span style="font-size:14px;font-weight:500;">${fmtGHS(parseFloat(r.Amount) || 0)}</span>
-            <button style="background:none;border:none;cursor:pointer;opacity:.35;font-size:18px;line-height:1;padding:0 2px;"
-              onclick="removeAllocation(${r._idx})">×</button>
-          </div>`;
-        list.appendChild(row);
-      });
-    });
-  }
+  allBudgetItems.forEach(name => {
+    const amt = amtByItem[name] || 0;
+    const hasAmt = amt > 0;
+    const row = document.createElement('div');
+    row.style = `display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${!hasAmt ? 'opacity:.4;' : ''}`;
+    row.innerHTML = `
+      <span style="font-size:14px;">${escHtml(name)}</span>
+      <span style="font-size:14px;font-weight:${hasAmt ? '500' : '400'};">${hasAmt ? fmtGHS(amt) : 'tap to set'}</span>`;
+    row.onclick = () => {
+      closeVariableIncomeDetail();
+      openAllocateModal(source);
+      setTimeout(() => { if ($('allocateBudgetItem')) $('allocateBudgetItem').value = name; }, 100);
+    };
+    list.appendChild(row);
+  });
 
   $('varIncomeDetailOverlay').classList.add('open');
 }
