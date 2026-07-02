@@ -3574,7 +3574,10 @@ function sbItemRow(it) {
   const noAmt = it.amount === 0;
   const unset = isCalcUnset(it.name);
   const paidAmt = parseFloat(it.paid) || 0;
-  const paidBadge = paidAmt > 0
+  const isTransferredItem = it.paid === 'Transferred';
+  const paidBadge = isTransferredItem
+    ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#4a6b8a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">TRANSFERRED</span>`
+    : paidAmt > 0
     ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
     : '';
   const row = document.createElement('div');
@@ -3867,6 +3870,7 @@ const BP = {
   items:          [],   // [{Id, Name, Type}] from /api/budget/items
   monthAmounts:   {},   // {itemId: amount} — period total from days.csv (Calculated) or SalaryPortion (Actual)
   paidAmounts:    {},   // {itemId: amount} — sum of expense transactions for current scope
+  transferredItems: new Set(), // itemIds where Paid === 'Transferred'
   calculatedTypes:{},   // {itemId: 'Actual'|'Calculated'}
   dailyApplies:   {},   // {itemId: {monday:bool, ...}} — which days apply (from income.csv)
   view:           'income',
@@ -3954,14 +3958,21 @@ async function loadBpData() {
 
   // BP.paidAmounts: read Paid column from income.csv budget rows
   const paid = {};
+  const transferred = new Set();
   for (const m of scope) {
     let rows = [];
     try { rows = await apiFetch(`/income/${m.Month}/${m.Year}`); } catch {}
     rows.filter(r => r.Type === 'Budget' && r.Paid).forEach(r => {
-      paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.Paid) || 0);
+      if (r.Paid === 'Transferred') {
+        transferred.add(r.Items);
+        paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.ActualAmount || r.SalaryPortion) || 0);
+      } else {
+        paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.Paid) || 0);
+      }
     });
   }
   BP.paidAmounts = paid;
+  BP.transferredItems = transferred;
 }
 
 function getSalaryAmount() {
@@ -4122,12 +4133,13 @@ function buildBpCard(item) {
   const paid   = BP.paidAmounts[item.Id] || 0;
   const unset  = isCalcUnset(item.Id);
   const isCalcType = (BP.calculatedTypes[item.Id] || '') === 'Calculated';
+  const isTransferred = BP.transferredItems.has(item.Id);
   const paidFull = isSet && paid >= amount && amount > 0;
 
   const card = document.createElement('div');
   card.className = 'budget-item-card';
   if (unset) card.style.borderLeft = '3px solid #d4a017';
-  if (paidFull) card.style.borderLeft = '3px solid #3a6b4a';
+  if (paidFull) card.style.borderLeft = `3px solid ${isTransferred ? '#4a6b8a' : '#3a6b4a'}`;
   card.innerHTML = `
     <div class="bp-table-row">
       <div class="budget-item-name-cell">
@@ -4137,8 +4149,8 @@ function buildBpCard(item) {
       <div class="bp-col-amount" style="cursor:pointer;" onclick="openBpAmountModal('${escHtml(item.Id)}','${escHtml(item.Name)}')">
         ${isSet ? fmtGHS(amount) : '<span style="opacity:0.4">tap to set</span>'}
       </div>
-      <div class="bp-col-paid${paidFull ? ' paid-full' : ''}">
-        ${paid > 0 ? fmtGHS(paid) + (paidFull ? ' ✓' : '') : '<span style="opacity:0.35">—</span>'}
+      <div class="bp-col-paid${paidFull ? ' paid-full' : ''}" style="${isTransferred && paidFull ? 'color:#4a6b8a;' : ''}">
+        ${isTransferred && paidFull ? 'Transferred ↗' : paid > 0 ? fmtGHS(paid) + (paidFull ? ' ✓' : '') : '<span style="opacity:0.35">—</span>'}
       </div>
       <div class="budget-item-actions">
         <button class="btn btn-icon" onclick="openBudgetItemModal('${escHtml(item.Id)}')" title="Edit">✎</button>
