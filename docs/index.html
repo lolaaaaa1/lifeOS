@@ -5247,6 +5247,12 @@ function setTxnType(type) {
     toField.style.display   = '';
     $('acctFromLabel').textContent = 'Source';
     $('acctToLabel').textContent   = 'Into Account';
+    const fromSel = $('acctTxnFrom');
+    if (fromSel) {
+      const incomeSources = ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName);
+      fromSel.innerHTML = `<option value="">— Select —</option>` +
+        incomeSources.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+    }
   } else {
     grid.style.gridTemplateColumns = '1fr';
     fromField.style.display = '';
