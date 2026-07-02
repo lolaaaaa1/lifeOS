@@ -4633,25 +4633,72 @@ function _renderInvestmentAccountsList(container) {
 
   const list = document.createElement('div');
   list.className = 'budget-items';
+  const acctNames = new Set(AC.defs.map(d => d.AccountName));
+
   investDefs.forEach(def => {
-    const name = def.AccountName;
-    const bal  = _acctBalance(name);
+    const name  = def.AccountName;
+    const safeN = escHtml(name);
+    const bal   = _acctBalance(name);
+
+    const relatedIds = new Set(
+      AC.rows.filter(r => r.AccountTo === name || r.AccountFrom === name).map(r => r.TransactionID)
+    );
+    const txns = _groupTxns(AC.rows.filter(r => relatedIds.has(r.TransactionID)));
+
     const card = document.createElement('div');
     card.className = 'budget-item-card';
+
+    const txnContainer = document.createElement('div');
+    txnContainer.className = 'txn-list';
+
+    txns.forEach(t => {
+      const isCredit   = t.accountTo === name;
+      const sign       = isCredit ? '+' : '−';
+      const color      = isCredit ? 'var(--green)' : 'var(--red)';
+      const txnId      = escHtml(t.id || '');
+      const isTransfer = t.accountFrom && t.accountTo && acctNames.has(t.accountFrom) && acctNames.has(t.accountTo);
+      const itemLabel  = t.item || (isTransfer ? 'Transfer' : '—');
+      const otherAcct  = isCredit ? (t.accountFrom || '—') : (t.accountTo || '—');
+      const forPart    = t.monthFor  ? `For ${escHtml(t.monthFor)} ${escHtml(t.yearFor)}` : '';
+      const recvPart   = t.monthRecv ? `Recv ${escHtml(t.monthRecv)} ${escHtml(t.yearRecv)}` : '';
+      const metaTxt    = [forPart, recvPart].filter(Boolean).join(' · ');
+      const row = document.createElement('div');
+      row.className = 'txn-row';
+      row.innerHTML = `
+        <div class="txn-row-left">
+          <div class="txn-row-item">${escHtml(itemLabel)} <span style="font-size:11px;opacity:.5;">${isCredit ? '← ' : '→ '}${escHtml(otherAcct)}</span></div>
+          ${metaTxt ? `<div class="txn-row-meta">${metaTxt}</div>` : ''}
+        </div>
+        <div class="txn-row-right">
+          <span class="txn-row-amount" style="color:${color};">${sign} ${fmtGHS(t.amount)}</span>
+          <button class="btn btn-icon" onclick="openEditTxnModal('${txnId}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','','','','')" title="Delete">✕</button>
+        </div>`;
+      txnContainer.appendChild(row);
+    });
+
+    const recBtn = document.createElement('button');
+    recBtn.className = 'txn-add-btn';
+    recBtn.textContent = '+ Record Transaction';
+    recBtn.onclick = (e) => { e.stopPropagation(); openAddTxnModal(name); };
+    txnContainer.appendChild(recBtn);
+
     card.innerHTML = `
-      <div class="budget-item-main">
+      <div class="budget-item-main" style="cursor:pointer;" onclick="toggleAccountTxns(this)">
         <div class="budget-item-left">
-          <div class="budget-item-name">📈 ${escHtml(name)}</div>
-          <div class="budget-item-sublabel">Investment</div>
+          <div class="budget-item-name">📈 ${safeN}</div>
+          <div class="budget-item-sublabel">Investment · ${txns.length} transaction${txns.length !== 1 ? 's' : ''}</div>
         </div>
         <div class="budget-item-right">
           <div class="budget-item-amount">${fmtGHS(bal)}</div>
         </div>
         <div class="budget-item-actions">
-          <button class="btn btn-icon" onclick="openEditAccountModal('${escHtml(name)}')" title="Edit">✎</button>
-          <button class="btn btn-icon danger" onclick="deleteAccount('${escHtml(name)}')" title="Delete">✕</button>
+          <span class="acct-chevron" style="color:var(--muted);font-size:16px;line-height:1;transition:transform 0.2s;">›</span>
+          <button class="btn btn-icon" onclick="event.stopPropagation();openEditAccountModal('${safeN}')" title="Edit">✎</button>
+          <button class="btn btn-icon danger" onclick="event.stopPropagation();deleteAccount('${safeN}')" title="Delete">✕</button>
         </div>
       </div>`;
+    card.appendChild(txnContainer);
     list.appendChild(card);
   });
   container.appendChild(list);
