@@ -113,5 +113,3 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0106202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,June,2026,Expense
 0107202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,July,2026,Expense
 0107202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,July,2026,Expense
-0207202601,Ecobank,,1,,Transfer,Monthly,,,,,Transfer
-0207202601,,Telecel Cash,,1,Transfer,Monthly,,,,,Transfer
