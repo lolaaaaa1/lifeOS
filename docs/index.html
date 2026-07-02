@@ -1982,7 +1982,7 @@ function _syncTxnToIncome(item, monthRcv, yearRcv, credit, period) {
 async function _migrateTxns() {
   const txns = TXNS();
   let changed = false;
-  const TARGET = ['TransactionID', 'AccountFrom', 'AccountTo', 'Debit', 'Credit', 'Item', 'IncomePeriod', 'MonthReceived', 'YearReceived', 'MonthFor', 'YearFor'];
+  const TARGET = ['TransactionID', 'AccountFrom', 'AccountTo', 'Debit', 'Credit', 'Item', 'IncomePeriod', 'MonthReceived', 'YearReceived', 'MonthFor', 'YearFor', 'TransactionType'];
 
   // ── 1. Patch old AccountName → AccountTo ─────────────────────────────────────
   for (const row of txns.rows) {
@@ -2430,13 +2430,14 @@ const LocalAPI = {
       const id = _genTxnId(txns.rows);
       const amount = String(parseFloat(body.amount || 0));
       const base = {
-        TransactionID: id,
-        Item:          body.item          || '',
-        IncomePeriod:  body.incomePeriod  || '',
-        MonthReceived: body.monthReceived || '',
-        YearReceived:  String(body.yearReceived || ''),
-        MonthFor:      body.monthFor      || '',
-        YearFor:       String(body.yearFor || ''),
+        TransactionID:   id,
+        Item:            body.item            || '',
+        IncomePeriod:    body.incomePeriod    || '',
+        MonthReceived:   body.monthReceived   || '',
+        YearReceived:    String(body.yearReceived || ''),
+        MonthFor:        body.monthFor        || '',
+        YearFor:         String(body.yearFor  || ''),
+        TransactionType: body.transactionType || '',
       };
       txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '' });
       txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount });
@@ -2456,13 +2457,14 @@ const LocalAPI = {
       txns.rows = txns.rows.filter(r => r.TransactionID !== tid);
       const amount = String(parseFloat(body.amount) || 0);
       const base = {
-        TransactionID: tid,
-        Item:          body.item          || '',
-        IncomePeriod:  body.incomePeriod  || '',
-        MonthReceived: body.monthReceived || '',
-        YearReceived:  String(body.yearReceived || ''),
-        MonthFor:      body.monthFor      || '',
-        YearFor:       String(body.yearFor || ''),
+        TransactionID:   tid,
+        Item:            body.item            || '',
+        IncomePeriod:    body.incomePeriod    || '',
+        MonthReceived:   body.monthReceived   || '',
+        YearReceived:    String(body.yearReceived || ''),
+        MonthFor:        body.monthFor        || '',
+        YearFor:         String(body.yearFor  || ''),
+        TransactionType: body.transactionType || '',
       };
       txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '' });
       txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount });
@@ -4304,15 +4306,16 @@ function _groupTxns(rows) {
   }
   return Array.from(map.entries()).map(([id, g]) => ({
     id,
-    accountFrom:  g.dr?.AccountFrom  || '',
-    accountTo:    g.cr?.AccountTo    || '',
-    amount:       parseFloat(g.dr?.Debit || g.cr?.Credit) || 0,
-    item:         (g.dr || g.cr)?.Item         || '',
-    incomePeriod: (g.dr || g.cr)?.IncomePeriod || '',
-    monthFor:     (g.dr || g.cr)?.MonthFor     || '',
-    yearFor:      (g.dr || g.cr)?.YearFor      || '',
-    monthRecv:    (g.dr || g.cr)?.MonthReceived || '',
-    yearRecv:     (g.dr || g.cr)?.YearReceived  || '',
+    accountFrom:     g.dr?.AccountFrom  || '',
+    accountTo:       g.cr?.AccountTo    || '',
+    amount:          parseFloat(g.dr?.Debit || g.cr?.Credit) || 0,
+    item:            (g.dr || g.cr)?.Item            || '',
+    incomePeriod:    (g.dr || g.cr)?.IncomePeriod    || '',
+    monthFor:        (g.dr || g.cr)?.MonthFor        || '',
+    yearFor:         (g.dr || g.cr)?.YearFor         || '',
+    monthRecv:       (g.dr || g.cr)?.MonthReceived   || '',
+    yearRecv:        (g.dr || g.cr)?.YearReceived    || '',
+    transactionType: (g.dr || g.cr)?.TransactionType || '',
   }));
 }
 
@@ -4653,10 +4656,15 @@ async function openEditTxnModal(txnId) {
   if (!t) return;
   acctPopulateMonthSelects();
   acctPopulateFromToSelects('');
-  const acctSet = new Set(AC.defs.map(d => d.AccountName));
+  // Use stored TransactionType if present, otherwise infer
   let type = 'expense';
-  if (!t.accountFrom && t.accountTo) type = 'income';
-  else if (t.accountFrom && t.accountTo && acctSet.has(t.accountFrom) && acctSet.has(t.accountTo)) type = 'transfer';
+  if (t.transactionType) {
+    type = t.transactionType.toLowerCase();
+  } else {
+    const acctSet = new Set(AC.defs.map(d => d.AccountName));
+    if (!t.accountFrom && t.accountTo) type = 'income';
+    else if (t.accountFrom && t.accountTo && acctSet.has(t.accountFrom) && acctSet.has(t.accountTo)) type = 'transfer';
+  }
   AC.editingTxn = { transactionId: txnId };
   $('accountModalTitle').textContent = 'Edit Transaction';
   $('acctTxnMonthFor').value  = t.monthFor  || '';
@@ -4693,19 +4701,17 @@ async function saveAccountTxn() {
     if (!accountFrom || !accountTo) { alert('Select both accounts'); return; }
   }
   const item = type === 'transfer' ? 'Transfer' : ($('acctTxnItem')?.value || '');
-  const monthFor = $('acctTxnMonthFor').value;
-  const yearFor  = $('acctTxnYearFor').value;
-  const amount   = parseFloat($('acctTxnCredit').value) || 0;
   const payload  = {
     accountFrom,
     accountTo,
     item,
-    incomePeriod:  AC.incomePeriod,
-    monthFor,
-    yearFor,
-    monthReceived: $('acctTxnMonthRecv').value,
-    yearReceived:  $('acctTxnYearRecv').value,
-    amount,
+    transactionType: type.charAt(0).toUpperCase() + type.slice(1), // 'Income'|'Expense'|'Transfer'
+    incomePeriod:    AC.incomePeriod,
+    monthFor:        $('acctTxnMonthFor').value,
+    yearFor:         $('acctTxnYearFor').value,
+    monthReceived:   $('acctTxnMonthRecv').value,
+    yearReceived:    $('acctTxnYearRecv').value,
+    amount:          parseFloat($('acctTxnCredit').value) || 0,
   };
   try {
     if (AC.editingTxn) {
