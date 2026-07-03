@@ -1600,7 +1600,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="form-field">
         <label class="form-label">Amount (GHS)</label>
-        <input id="acctTxnCredit" class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
+        <input id="acctTxnCredit" class="form-input" type="number" min="0" step="0.01" placeholder="0.00" oninput="onAcctAmountInput()">
       </div>
       <div class="form-field" id="acctChargesField" style="display:none;">
         <label class="form-label">Charges (GHS)</label>
@@ -5885,12 +5885,16 @@ function setAcctIncomePeriod(period) {
   if (row) row.style.display = 'grid';
 }
 
-function onAcctItemChange(val) {
+function onAcctItemChange(val) { renderAllocInfo(val); }
+function onAcctAmountInput()   { renderAllocInfo($('acctTxnItem')?.value || ''); }
+
+function renderAllocInfo(val) {
   const info = $('acctItemAllocInfo');
   if (!info) return;
 
   if (!val || AC.txnType !== 'expense') {
     info.innerHTML = '';
+    AC.txnSplit = null;
     return;
   }
 
@@ -5899,7 +5903,7 @@ function onAcctItemChange(val) {
   const incRows = INC().rows;
   const txnRows = TXNS().rows;
 
-  // Gather ALL months where this item exists (including zero allocation)
+  // All months where this item exists in income.csv
   const allocMap = {};
   incRows.filter(r => r.Type === 'Budget' && r.Items === val && !r.AllocationBalancing).forEach(r => {
     const sal = parseFloat(r.SalaryPortion) || 0;
@@ -5908,58 +5912,83 @@ function onAcctItemChange(val) {
     allocMap[`${r.Month}|${r.Year}`] = { month: r.Month, year: String(r.Year), alloc: amt, spent: 0 };
   });
 
-  if (!Object.keys(allocMap).length) { info.innerHTML = ''; return; }
+  if (!Object.keys(allocMap).length) { info.innerHTML = ''; AC.txnSplit = null; return; }
 
-  // Sum expense debits per month for this item
+  // Sum expense debits already recorded for this item per month
   txnRows.forEach(t => {
     if (t.TransactionType !== 'Expense' || t.Item !== val) return;
     const key = `${t.MonthFor}|${t.YearFor}`;
     if (allocMap[key]) allocMap[key].spent += (parseFloat(t.Debit) || 0);
   });
 
-  // Sort by year then month
+  // Sort chronologically (oldest first — split draws from earliest available)
   const rows = Object.values(allocMap).sort((a, b) => {
     const yd = parseInt(a.year) - parseInt(b.year);
     return yd !== 0 ? yd : MONTHS_AC.indexOf(a.month) - MONTHS_AC.indexOf(b.month);
   });
 
+  // Compute auto-split across available months for the entered amount
+  const totalAmt = parseFloat($('acctTxnCredit')?.value) || 0;
+  const splitMap = {};
+  AC.txnSplit = null;
+  let leftToSplit = totalAmt;
+
+  if (totalAmt > 0) {
+    const plan = [];
+    for (const r of rows) {
+      if (leftToSplit <= 0.001) break;
+      const avail = Math.max(0, r.alloc - r.spent);
+      if (avail <= 0) continue;
+      const take = Math.min(avail, leftToSplit);
+      plan.push({ month: r.month, year: r.year, amount: Math.round(take * 100) / 100 });
+      splitMap[`${r.month}|${r.year}`] = Math.round(take * 100) / 100;
+      leftToSplit -= take;
+    }
+    if (plan.length > 1) AC.txnSplit = plan;
+  }
+
+  const showSplit  = totalAmt > 0;
+  const cols       = showSplit ? '1fr 80px 80px 80px' : '1fr 90px 90px';
+  const headerCols = showSplit ? '1fr 80px 80px 80px' : '1fr 90px 90px';
   const curM = $('acctTxnMonthFor')?.value || '';
   const curY = String($('acctTxnYearFor')?.value || '');
 
   info.innerHTML = `
-    <div style="margin-top:8px;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:grid;grid-template-columns:1fr 90px 90px;padding:0 10px;">
-      <span>Month</span><span style="text-align:right;">Allocated</span><span style="text-align:right;">Remaining</span>
+    <div style="margin-top:8px;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:grid;grid-template-columns:${headerCols};padding:0 10px;">
+      <span>Month</span><span style="text-align:right;">Allocated</span><span style="text-align:right;">Remaining</span>${showSplit ? '<span style="text-align:right;">Split</span>' : ''}
     </div>
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
       ${rows.map(r => {
-        const rem      = r.alloc - r.spent;
-        const noAlloc  = r.alloc <= 0;
-        const over     = rem < 0;
-        const zero     = rem <= 0;
-        const isSel    = r.month === curM && r.year === curY;
-        const remColor = over ? '#a8533f' : zero ? 'var(--muted)' : '#3a6b4a';
-        const dimmed   = noAlloc || zero;
-        const remText  = noAlloc ? '—' : `${over ? '−' : ''}${fmtGHS(Math.abs(rem))}`;
-        const allocText = noAlloc ? '—' : fmtGHS(r.alloc);
+        const rem       = r.alloc - r.spent;
+        const noAlloc   = r.alloc <= 0;
+        const zero      = rem <= 0;
+        const isSel     = r.month === curM && r.year === curY;
+        const splitAmt  = splitMap[`${r.month}|${r.year}`] || 0;
+        const remColor  = rem < 0 ? '#a8533f' : zero ? 'var(--muted)' : '#3a6b4a';
+        const splitColor = splitAmt > 0 ? '#5a4a3a' : 'var(--muted)';
+        const dimmed    = noAlloc || (zero && splitAmt === 0);
         return `<div class="alloc-row${isSel ? ' selected' : ''}" onclick="setMonthFor('${r.month}','${r.year}')"
-          style="display:grid;grid-template-columns:1fr 90px 90px;align-items:center;padding:8px 10px;cursor:${noAlloc ? 'default' : 'pointer'};border-bottom:1px solid var(--border);opacity:${dimmed ? '0.45' : '1'};">
+          style="display:grid;grid-template-columns:${cols};align-items:center;padding:8px 10px;cursor:${noAlloc ? 'default' : 'pointer'};border-bottom:1px solid var(--border);opacity:${dimmed ? '0.4' : '1'};">
           <span style="font-size:13px;">${r.month} ${r.year}</span>
-          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${allocText}</span>
-          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${remText}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${noAlloc ? '—' : fmtGHS(r.alloc)}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${noAlloc ? '—' : (rem < 0 ? '−' : '') + fmtGHS(Math.abs(rem))}</span>
+          ${showSplit ? `<span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${splitColor};font-weight:${splitAmt > 0 ? '600' : '400'};">${splitAmt > 0 ? fmtGHS(splitAmt) : '—'}</span>` : ''}
         </div>`;
       }).join('')}
-    </div>`;
+    </div>
+    ${showSplit && leftToSplit > 0.001 ? `<div style="margin-top:6px;font-size:12px;color:#a8533f;">⚠ ${fmtGHS(leftToSplit)} has no allocation available</div>` : ''}
+    ${showSplit && AC.txnSplit ? `<div style="margin-top:6px;font-size:12px;color:var(--muted);">Will create ${AC.txnSplit.length} transactions</div>` : ''}`;
 }
 
 function setMonthFor(month, year) {
   const m = $('acctTxnMonthFor'), y = $('acctTxnYearFor');
   if (m) m.value = month;
   if (y) y.value = year;
-  onAcctItemChange($('acctTxnItem')?.value || '');
+  renderAllocInfo($('acctTxnItem')?.value || '');
 }
 
 function onAcctMonthForChange() {
-  onAcctItemChange($('acctTxnItem')?.value || '');
+  renderAllocInfo($('acctTxnItem')?.value || '');
 }
 
 // ── Add / Edit Account Definition ───────────────────────────────────────────
@@ -6022,6 +6051,7 @@ async function openAddTxnModal(accountName, itemName, lockExpense) {
   acctPopulateFromToSelects('');
   AC.editingTxn = null;
   AC.lockExpense = lockExpense || false;
+  AC.txnSplit    = null;
   $('accountModalTitle').textContent = 'Record Transaction';
   $('acctTxnMonthFor').value  = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Month : '';
   $('acctTxnYearFor').value   = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Year  : '';
@@ -6104,50 +6134,54 @@ async function saveAccountTxn() {
     accountTo   = $('acctTxnTo')?.value   || '';
     if (!accountFrom || !accountTo) { alert('Select both accounts'); return; }
   }
-  const item = $('acctTxnItem')?.value || '';
-  const payload  = {
+  const item    = $('acctTxnItem')?.value || '';
+  const txnType = type === 'opening balance' ? 'Opening Balance' : type === 'closing balance' ? 'Closing Balance' : type.charAt(0).toUpperCase() + type.slice(1);
+  const basePayload = {
     accountFrom,
     accountTo,
     item,
-    transactionType: type === 'opening balance' ? 'Opening Balance' : type === 'closing balance' ? 'Closing Balance' : type.charAt(0).toUpperCase() + type.slice(1),
+    transactionType: txnType,
     incomePeriod:    AC.incomePeriod,
-    monthFor:        $('acctTxnMonthFor').value,
-    yearFor:         $('acctTxnYearFor').value,
     monthReceived:   '',
     yearReceived:    '',
-    amount:          parseFloat($('acctTxnCredit').value)  || 0,
     charges:         parseFloat($('acctTxnCharges')?.value) || 0,
     note:            ($('acctTxnNote')?.value || '').trim(),
   };
+  const totalAmount = parseFloat($('acctTxnCredit').value) || 0;
+
   try {
     if (AC.editingTxn) {
+      // Editing: single transaction update
+      const payload = { ...basePayload, monthFor: $('acctTxnMonthFor').value, yearFor: $('acctTxnYearFor').value, amount: totalAmount };
       await apiFetch('/accounts/transaction', {
         method: 'PUT',
         body: JSON.stringify({ ...payload, transactionId: AC.editingTxn.transactionId }),
       });
+    } else if (type === 'expense' && AC.txnSplit && AC.txnSplit.length > 1) {
+      // Multi-month split: one transaction per month
+      for (const s of AC.txnSplit) {
+        await apiFetch('/accounts/transaction', {
+          method: 'POST',
+          body: JSON.stringify({ ...basePayload, monthFor: s.month, yearFor: s.year, amount: s.amount }),
+        });
+      }
     } else {
+      // Single transaction
+      const payload = { ...basePayload, monthFor: $('acctTxnMonthFor').value, yearFor: $('acctTxnYearFor').value, amount: totalAmount };
       await apiFetch('/accounts/transaction', { method: 'POST', body: JSON.stringify(payload) });
     }
     [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
-    // If expense with a budget item, write Paid to income.csv
-    if (type === 'expense' && payload.item && payload.monthFor && payload.yearFor) {
-      const paidAmt = payload.amount + (payload.charges || 0);
-      try {
-        await apiFetch(`/income/${payload.monthFor}/${payload.yearFor}/budget/${encodeURIComponent(payload.item)}/paid`, {
-          method: 'PUT', body: JSON.stringify({ amount: paidAmt }),
-        });
-      } catch {}
-    }
     // If opened from home daily section, update today's expense column in days.csv
-    if (AC.lockExpense && type === 'expense' && (payload.item === 'Food' || payload.item === 'Transport')) {
+    if (AC.lockExpense && type === 'expense' && (item === 'Food' || item === 'Transport')) {
       try {
         await apiFetch('/days/today/expense', {
-          method: 'PATCH', body: JSON.stringify({ item: payload.item, amount: payload.amount }),
+          method: 'PATCH', body: JSON.stringify({ item, amount: totalAmount }),
         });
       } catch {}
     }
     $('accountModalOverlay').classList.remove('open');
     AC.editingTxn = null;
+    AC.txnSplit   = null;
     renderAccountsList();
     if (S.currentMonth) await loadBpData();
   } catch (e) { alert('Error: ' + e.message); }
