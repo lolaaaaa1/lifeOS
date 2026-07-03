@@ -1,4 +1,4 @@
-TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,TransactionType
+TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,TransactionType,BalancingPeriod
 3012202501,Nationwide Medical Insurance,,5000,,Salary,Monthly,December,2025,January,2026,Income
 3012202501,,Ecobank,,5000,Salary,Monthly,December,2025,January,2026,Income
 3101202601,Nationwide Medical Insurance,,5000,,Salary,Monthly,January,2026,February,2026,Income
