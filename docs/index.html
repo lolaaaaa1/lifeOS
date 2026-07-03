@@ -2778,10 +2778,11 @@ const LocalAPI = {
       };
       // Debit leg (money leaving AccountFrom)
       txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '', Item: body.item || '' });
-      // Optional charges debit leg (same transaction ID, same AccountFrom)
+      // Optional charges debit + credit legs
       const chargesAmt = parseFloat(body.charges || 0);
       if (chargesAmt > 0) {
-        txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: String(chargesAmt), Credit: '', Item: 'Charges' });
+        txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '',        Debit: String(chargesAmt), Credit: '',                Item: 'Charges' });
+        txns.rows.push({ ...base, AccountFrom: '',                      AccountTo: 'Charges', Debit: '',                 Credit: String(chargesAmt), Item: 'Charges' });
       }
       // Credit leg (money arriving at AccountTo)
       txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount, Item: body.item || '' });
@@ -2816,7 +2817,8 @@ const LocalAPI = {
       txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '', Item: body.item || '' });
       const updCharges = parseFloat(body.charges || 0);
       if (updCharges > 0) {
-        txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: String(updCharges), Credit: '', Item: 'Charges' });
+        txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '',        Debit: String(updCharges), Credit: '',                 Item: 'Charges' });
+        txns.rows.push({ ...base, AccountFrom: '',                      AccountTo: 'Charges', Debit: '',                 Credit: String(updCharges), Item: 'Charges' });
       }
       txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount, Item: body.item || '' });
       await DATA.save('data/transactions.csv', `Update txn ${tid}`);
