@@ -502,6 +502,11 @@
 
     .dash-item-name { font-size: 14px; color: var(--ink-lt); }
 
+    .alloc-row { transition: background 0.1s; }
+    .alloc-row:hover { background: rgba(0,0,0,0.04) !important; }
+    .alloc-row.selected { background: rgba(0,0,0,0.06) !important; font-weight: 500; }
+    .alloc-row:last-child { border-bottom: none !important; }
+
     .dash-item-amount {
       font-family: 'DM Mono', monospace;
       font-size: 13px;
@@ -1569,6 +1574,7 @@
       <label class="form-label">Item</label>
       <select id="acctTxnItem" class="form-input" onchange="onAcctItemChange(this.value)"></select>
     </div>
+    <div id="acctItemAllocInfo"></div>
     <div class="form-field" id="acctIncomePeriodField" style="display:none;">
       <label class="form-label">Income Period</label>
       <div class="toggle-row" id="acctIncomePeriodToggle">
@@ -5771,24 +5777,20 @@ async function acctPopulateItemSelect(selected, section) {
   if (!sel) return;
 
   if (section === 'Budget') {
-    const month = $('acctTxnMonthFor')?.value || '';
-    const year  = String($('acctTxnYearFor')?.value || '');
-    let budgetRows = [];
-    if (month && year) {
-      try {
-        const incRows = await apiFetch(`/income/${month}/${year}`);
-        budgetRows = (incRows || []).filter(r => r.Type === 'Budget' && r.CalculatedType === 'Actual');
-      } catch {}
-    }
-    AC.budgetAmounts = {};
-    budgetRows.forEach(r => { AC.budgetAmounts[r.Items] = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0; });
-    const _budgeted = budgetRows.filter(r => (parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0) > 0);
-    const _unbudgeted = budgetRows.filter(r => !((parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0) > 0));
+    // Load all unique budget items from in-memory income data (all months, all types)
+    const seenItems = new Set(), hasAlloc = new Set();
+    INC().rows.filter(r => r.Type === 'Budget' && !r.AllocationBalancing).forEach(r => {
+      seenItems.add(r.Items);
+      const sal = parseFloat(r.SalaryPortion) || 0;
+      const bon = parseFloat(r.CompanyBonusPortion) || 0;
+      if (sal + bon > 0 || (parseFloat(r.PortionsTotal) || 0) > 0) hasAlloc.add(r.Items);
+    });
+    const budgeted   = [...seenItems].filter(k => hasAlloc.has(k));
+    const unbudgeted = [...seenItems].filter(k => !hasAlloc.has(k));
     sel.innerHTML = `<option value="">— Select Item —</option>` +
-      [..._budgeted, ..._unbudgeted].map(r => {
-        const hasAmt = (parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0) > 0;
-        const isSel = r.Items === selected;
-        return `<option value="${escHtml(r.Items)}"${isSel ? ' selected' : ''}${!hasAmt && !isSel ? ' disabled' : ''}>${escHtml(r.Items)}</option>`;
+      [...budgeted, ...unbudgeted].map(name => {
+        const isSel = name === selected;
+        return `<option value="${escHtml(name)}"${isSel ? ' selected' : ''}>${escHtml(name)}</option>`;
       }).join('');
   } else {
     let items = [];
@@ -5884,15 +5886,76 @@ function setAcctIncomePeriod(period) {
 }
 
 function onAcctItemChange(val) {
-  if (AC.txnType === 'expense' && val && AC.budgetAmounts[val] > 0) {
-    $('acctTxnCredit').value = AC.budgetAmounts[val];
+  const info = $('acctItemAllocInfo');
+  if (!info) return;
+
+  if (!val || AC.txnType !== 'expense') {
+    info.innerHTML = '';
+    return;
   }
+
+  const MONTHS_AC = ['January','February','March','April','May','June','July','August',
+                     'September','October','November','December'];
+  const incRows = INC().rows;
+  const txnRows = TXNS().rows;
+
+  // Gather all months with an allocation for this item
+  const allocMap = {};
+  incRows.filter(r => r.Type === 'Budget' && r.Items === val && !r.AllocationBalancing).forEach(r => {
+    const sal = parseFloat(r.SalaryPortion) || 0;
+    const bon = parseFloat(r.CompanyBonusPortion) || 0;
+    const amt = sal + bon || parseFloat(r.PortionsTotal) || 0;
+    if (amt > 0) allocMap[`${r.Month}|${r.Year}`] = { month: r.Month, year: String(r.Year), alloc: amt, spent: 0 };
+  });
+
+  if (!Object.keys(allocMap).length) { info.innerHTML = ''; return; }
+
+  // Sum expense debits per month for this item
+  txnRows.forEach(t => {
+    if (t.TransactionType !== 'Expense' || t.Item !== val) return;
+    const key = `${t.MonthFor}|${t.YearFor}`;
+    if (allocMap[key]) allocMap[key].spent += (parseFloat(t.Debit) || 0);
+  });
+
+  // Sort by year then month
+  const rows = Object.values(allocMap).sort((a, b) => {
+    const yd = parseInt(a.year) - parseInt(b.year);
+    return yd !== 0 ? yd : MONTHS_AC.indexOf(a.month) - MONTHS_AC.indexOf(b.month);
+  });
+
+  const curM = $('acctTxnMonthFor')?.value || '';
+  const curY = String($('acctTxnYearFor')?.value || '');
+
+  info.innerHTML = `
+    <div style="margin-top:8px;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:grid;grid-template-columns:1fr 90px 90px;padding:0 10px;">
+      <span>Month</span><span style="text-align:right;">Allocated</span><span style="text-align:right;">Remaining</span>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+      ${rows.map(r => {
+        const rem  = r.alloc - r.spent;
+        const over = rem < 0;
+        const zero = rem <= 0;
+        const isSel = r.month === curM && r.year === curY;
+        const remColor = over ? '#a8533f' : zero ? 'var(--muted)' : '#3a6b4a';
+        return `<div class="alloc-row${isSel ? ' selected' : ''}" onclick="setMonthFor('${r.month}','${r.year}')"
+          style="display:grid;grid-template-columns:1fr 90px 90px;align-items:center;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);${zero ? 'opacity:0.5;' : ''}">
+          <span style="font-size:13px;">${r.month} ${r.year}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${fmtGHS(r.alloc)}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${over ? '−' : ''}${fmtGHS(Math.abs(rem))}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function setMonthFor(month, year) {
+  const m = $('acctTxnMonthFor'), y = $('acctTxnYearFor');
+  if (m) m.value = month;
+  if (y) y.value = year;
+  onAcctItemChange($('acctTxnItem')?.value || '');
 }
 
 function onAcctMonthForChange() {
-  if (AC.txnType === 'expense') {
-    acctPopulateItemSelect($('acctTxnItem')?.value || '', 'Budget');
-  }
+  onAcctItemChange($('acctTxnItem')?.value || '');
 }
 
 // ── Add / Edit Account Definition ───────────────────────────────────────────
@@ -5970,6 +6033,7 @@ async function openAddTxnModal(accountName, itemName, lockExpense) {
   const itemField = $('acctItemField');
   if (itemField && lockExpense && itemName) {
     itemField.innerHTML = `<label class="form-label">Item</label><div class="form-input" style="background:var(--bg);pointer-events:none;opacity:0.8;">${escHtml(itemName)}</div>`;
+    onAcctItemChange(itemName);
   } else if (itemField && !lockExpense) {
     if (!itemField.querySelector('select')) {
       itemField.innerHTML = `<label class="form-label">Item</label><select id="acctTxnItem" class="form-input" onchange="onAcctItemChange(this.value)"></select>`;
@@ -6017,6 +6081,8 @@ function closeAccountModal(event) {
   if (event && event.target !== $('accountModalOverlay')) return;
   $('accountModalOverlay').classList.remove('open');
   AC.editingTxn = null;
+  const info = $('acctItemAllocInfo');
+  if (info) info.innerHTML = '';
 }
 
 async function saveAccountTxn() {
