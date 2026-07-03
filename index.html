@@ -4552,16 +4552,84 @@ function renderBpGroups() {
   }
 }
 
+function _getBudgetItemStatus() {
+  const MOS = ['January','February','March','April','May','June','July','August',
+               'September','October','November','December'];
+  const result = {};
+  if (!S.currentMonth) return result;
+  const incRows = INC().rows;
+  const txnRows = AC.rows;
+  const yearly  = isAllMonths();
+
+  let targetMonth, targetYear;
+  if (yearly) {
+    const now = new Date();
+    const nowYear = now.getFullYear();
+    const viewYear = parseInt(S.currentMonth.Year) || nowYear;
+    targetYear  = String(viewYear);
+    targetMonth = viewYear < nowYear ? 'December' : MOS[now.getMonth()];
+  } else {
+    targetMonth = S.currentMonth.Month;
+    targetYear  = String(S.currentMonth.Year);
+  }
+  const targetIdx = MOS.indexOf(targetMonth);
+
+  const items = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
+  for (const itemName of items) {
+    let budgeted = 0;
+    if (yearly) {
+      const openRow = incRows.find(r =>
+        r.Type === 'Budget' && r.Items === itemName &&
+        r.Month === targetMonth && String(r.Year) === targetYear &&
+        r.AllocationBalancing === 'Opening'
+      );
+      const allocRow = incRows.find(r =>
+        r.Type === 'Budget' && r.Items === itemName &&
+        r.Month === targetMonth && String(r.Year) === targetYear &&
+        !r.AllocationBalancing
+      );
+      budgeted = (parseFloat(openRow?.Credit) || 0) +
+                 (parseFloat(allocRow?.PortionsTotal) || 0);
+    } else {
+      const allocRow = incRows.find(r =>
+        r.Type === 'Budget' && r.Items === itemName &&
+        r.Month === targetMonth && String(r.Year) === targetYear &&
+        !r.AllocationBalancing
+      );
+      budgeted = parseFloat(allocRow?.PortionsTotal) || 0;
+    }
+
+    let spent = 0;
+    for (const r of txnRows) {
+      if (r.TransactionType !== 'Expense') continue;
+      if (r.Item !== itemName) continue;
+      const dbt = parseFloat(r.Debit) || 0;
+      if (dbt <= 0) continue;
+      if (yearly) {
+        if (String(r.YearFor) !== targetYear) continue;
+        if (MOS.indexOf(r.MonthFor) > targetIdx) continue;
+      } else {
+        if (r.MonthFor !== targetMonth || String(r.YearFor) !== targetYear) continue;
+      }
+      spent += dbt;
+    }
+
+    result[itemName] = { budgeted, spent, remaining: budgeted - spent };
+  }
+  return result;
+}
+
 function renderBpByItem(container, items) {
+  const status = _getBudgetItemStatus();
   const list = document.createElement('div');
   list.className = 'budget-items';
   // Table header
   const hdr = document.createElement('div');
   hdr.className = 'bp-table-header';
-  hdr.innerHTML = `<span>Item</span><span>Allocated</span><span>Paid</span>`;
+  hdr.innerHTML = `<span>Item</span><span>Budgeted</span><span>Remaining</span>`;
   list.appendChild(hdr);
   const sorted = [...items].sort((a, b) => isCalc(a.Id) ? -1 : isCalc(b.Id) ? 1 : 0);
-  sorted.forEach(item => list.appendChild(buildBpCard(item)));
+  sorted.forEach(item => list.appendChild(buildBpCard(item, status[item.Id])));
   container.appendChild(list);
 }
 
@@ -4698,31 +4766,31 @@ function isCalcUnset(itemId) {
   return !(BP.monthAmounts[itemId] > 0);
 }
 
-function buildBpCard(item) {
-  const raw    = BP.monthAmounts[item.Id];
-  const amount = raw ?? 0;
-  const isSet  = raw !== null && raw !== undefined;
-  const paid   = BP.paidAmounts[item.Id] || 0;
-  const unset  = isCalcUnset(item.Id);
+function buildBpCard(item, status) {
+  const { budgeted = 0, remaining = 0 } = status || {};
+  const over = remaining < 0 && budgeted > 0;
+  const done = budgeted > 0 && remaining === 0;
   const isCalcType = (BP.calculatedTypes[item.Id] || '') === 'Calculated';
-  const isTransferred = BP.transferredItems.has(item.Id);
-  const paidFull = isSet && paid >= amount && amount > 0;
 
   const card = document.createElement('div');
   card.className = 'budget-item-card';
-  if (unset) card.style.borderLeft = '3px solid #d4a017';
-  if (paidFull) card.style.borderLeft = `3px solid ${isTransferred ? '#4a6b8a' : '#3a6b4a'}`;
+  if (over) card.style.borderLeft = '3px solid #a8533f';
+  else if (done) card.style.borderLeft = '3px solid #3a6b4a';
   card.innerHTML = `
     <div class="bp-table-row">
       <div class="budget-item-name-cell">
         <div class="budget-item-name">${escHtml(item.Name)}</div>
-        ${isCalcType ? `<div class="budget-item-sublabel" style="${unset ? 'color:#d4a017;' : ''}">${unset ? 'Calculated — tap to set daily' : 'Calculated'}</div>` : ''}
+        ${isCalcType ? `<div class="budget-item-sublabel">Calculated</div>` : ''}
       </div>
-      <div class="bp-col-amount" style="cursor:pointer;" onclick="openBpAmountModal('${escHtml(item.Id)}','${escHtml(item.Name)}')">
-        ${isSet ? fmtGHS(amount) : '<span style="opacity:0.4">tap to set</span>'}
+      <div class="bp-col-amount">
+        ${budgeted > 0 ? fmtGHS(budgeted) : '<span style="opacity:0.4">—</span>'}
       </div>
-      <div class="bp-col-paid${paidFull ? ' paid-full' : ''}" style="${isTransferred && paidFull ? 'color:#4a6b8a;' : ''}">
-        ${isTransferred && paidFull ? 'Transferred ↗' : paid > 0 ? fmtGHS(paid) + (paidFull ? ' ✓' : '') : '<span style="opacity:0.35">—</span>'}
+      <div class="bp-col-paid${done ? ' paid-full' : ''}">
+        ${budgeted > 0
+          ? (over
+              ? `<span style="color:#a8533f;">−${fmtGHS(Math.abs(remaining))}</span>`
+              : fmtGHS(remaining))
+          : '<span style="opacity:0.35">—</span>'}
       </div>
       <div class="budget-item-actions">
         <button class="btn btn-icon" onclick="openBudgetItemModal('${escHtml(item.Id)}')" title="Edit">✎</button>
