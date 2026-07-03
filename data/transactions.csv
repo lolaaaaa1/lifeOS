@@ -201,3 +201,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0307202609,,Philip Twum,,100,Utilities,Monthly,,,April,2026,Expense,Charger
 0307202610,Ecobank,,256,,Utilities,Monthly,,,April,2026,Expense,"Collapsible Packing Boxes-Big(4),Small(2)"
 0307202610,,Others,,256,Utilities,Monthly,,,April,2026,Expense,"Collapsible Packing Boxes-Big(4),Small(2)"
+0307202611,Ecobank,,35,,Nails,Monthly,,,July,2026,Expense,Stick Ons-Packs(5)
+0307202611,,Others,,35,Nails,Monthly,,,July,2026,Expense,Stick Ons-Packs(5)
