@@ -4590,11 +4590,8 @@ function _getBudgetItemStatus() {
       }
       var allocAmt = 0;
       if (allocRow) {
-        if (allocRow.CalculatedType === 'Calculated') {
-          allocAmt = parseFloat(allocRow.CalculatedAmount) || 0;
-        } else {
-          allocAmt = parseFloat(allocRow.PortionsTotal || allocRow.ActualAmount || allocRow.SalaryPortion) || 0;
-        }
+        allocAmt = (parseFloat(allocRow.SalaryPortion) || 0) + (parseFloat(allocRow.CompanyBonusPortion) || 0);
+        if (!allocAmt) allocAmt = parseFloat(allocRow.PortionsTotal) || 0;
       }
       budgeted = (parseFloat(openRow ? openRow.Credit : 0) || 0) + allocAmt;
     } else {
