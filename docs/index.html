@@ -2351,7 +2351,8 @@ const LocalAPI = {
         }
       });
       TXNS().rows.forEach(r => {
-        if (r.TransactionType === 'Expense' && r.Item && (parseFloat(r.Debit) || 0) > 0
+        const txType = (r.TransactionType || '').toLowerCase();
+        if ((txType === 'expense' || txType === 'transfer') && r.Item && (parseFloat(r.Debit) || 0) > 0
             && String(r.YearFor) === yr && MONTHS.indexOf(r.MonthFor) <= upToIdx
             && !transferredYtdMonths.has(`${r.Item}|${r.MonthFor}|${r.YearFor}`)) {
           paidMap[r.Item] = (paidMap[r.Item] || 0) + (parseFloat(r.Debit) || 0);
@@ -4410,7 +4411,8 @@ async function loadBpData() {
   }
   const scopeSet = new Set(scope.map(m => `${m.Month}_${String(m.Year)}`));
   const allTxns = await apiFetch('/accounts');
-  allTxns.filter(r => r.TransactionType === 'Expense' && r.Item && (parseFloat(r.Debit) || 0) > 0
+  const txType = r => (r.TransactionType || '').toLowerCase();
+  allTxns.filter(r => (txType(r) === 'expense' || txType(r) === 'transfer') && r.Item && (parseFloat(r.Debit) || 0) > 0
       && scopeSet.has(`${r.MonthFor}_${String(r.YearFor)}`)
       && !transferredMonths.has(`${r.Item}|${r.MonthFor}|${String(r.YearFor)}`))
     .forEach(r => { paid[r.Item] = (paid[r.Item] || 0) + (parseFloat(r.Debit) || 0); });
