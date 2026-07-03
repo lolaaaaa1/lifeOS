@@ -4474,6 +4474,32 @@ async function loadBpData() {
   const scope = monthsInScope();
   if (!scope.length) return;
 
+  // Auto-copy previous month's budget if current specific month has no entries
+  if (S.currentMonth && !isAllMonths()) {
+    const curM = S.currentMonth.Month, curY = String(S.currentMonth.Year);
+    const incData = INC();
+    const hasEntries = incData.rows.some(r =>
+      r.Type === 'Budget' && r.Month === curM && String(r.Year) === curY && !r.AllocationBalancing
+    );
+    if (!hasEntries && BP.items.length > 0) {
+      const MOS = ['January','February','March','April','May','June','July','August',
+                   'September','October','November','December'];
+      const idx = MOS.indexOf(curM);
+      const prevM = idx === 0 ? 'December' : MOS[idx - 1];
+      const prevY = String(idx === 0 ? parseInt(curY) - 1 : parseInt(curY));
+      const prevRows = incData.rows.filter(r =>
+        r.Type === 'Budget' && r.Month === prevM && String(r.Year) === prevY && !r.AllocationBalancing
+      );
+      if (prevRows.length) {
+        prevRows.forEach(r => {
+          const newRow = { ...r, Month: curM, Year: curY, Paid: '' };
+          incData.rows.push(newRow);
+        });
+        await DATA.save('data/income.csv', `Auto-copy budget from ${prevM} ${prevY} to ${curM} ${curY}`);
+      }
+    }
+  }
+
   const DAYS_LC = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
   const amounts = {}, salaryAmts = {}, calcTypes = {}, dailyApp = {}, hasAmt = new Set();
   const isCurrentMonth = (m) => S.currentMonth && m.Month === S.currentMonth.Month && String(m.Year) === String(S.currentMonth.Year);
