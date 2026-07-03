@@ -1,185 +1,187 @@
-TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,TransactionType
-3012202501,Nationwide Medical Insurance,,5000,,Salary,Monthly,December,2025,January,2026,Income
-3012202501,,Ecobank,,5000,Salary,Monthly,December,2025,January,2026,Income
-3101202601,Nationwide Medical Insurance,,5000,,Salary,Monthly,January,2026,February,2026,Income
-3101202601,,Ecobank,,5000,Salary,Monthly,January,2026,February,2026,Income
-2802202601,Nationwide Medical Insurance,,5000,,Salary,Monthly,February,2026,March,2026,Income
-2802202601,,Ecobank,,5000,Salary,Monthly,February,2026,March,2026,Income
-3103202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,March,2026,April,2026,Income
-3103202601,,Ecobank,,7000,Salary,Monthly,March,2026,April,2026,Income
-3004202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,April,2026,May,2026,Income
-3004202601,,Ecobank,,7000,Salary,Monthly,April,2026,May,2026,Income
-3105202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,May,2026,June,2026,Income
-3105202601,,Ecobank,,7000,Salary,Monthly,May,2026,June,2026,Income
-3006202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,June,2026,July,2026,Income
-3006202601,,Ecobank,,7000,Salary,Monthly,June,2026,July,2026,Income
-3006202602,Nationwide Medical Insurance,,2500,,Company Bonus,Variable,June,2026,,,Income
-3006202602,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,Income
-0101202601,Ecobank,,1000,,Rent,Monthly,,,January,2026,Expense
-0101202601,,National Rental Assistance,,1000,Rent,Monthly,,,January,2026,Expense
-0101202601,Ecobank,,20.1,,Charges,Monthly,,,January,2026,Expense
-0101202602,Ecobank,,120,,Rent Charges,Monthly,,,January,2026,Expense
-0101202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,January,2026,Expense
-0101202603,Ecobank,,140,,Rental Utilities,Monthly,,,January,2026,Expense
-0101202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,January,2026,Expense
-0102202601,Ecobank,,1000,,Rent,Monthly,,,February,2026,Expense
-0102202601,,National Rental Assistance,,1000,Rent,Monthly,,,February,2026,Expense
-0102202601,Ecobank,,18.5,,Charges,Monthly,,,February,2026,Expense
-0102202602,Ecobank,,120,,Rent Charges,Monthly,,,February,2026,Expense
-0102202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,February,2026,Expense
-0102202603,Ecobank,,140,,Rental Utilities,Monthly,,,February,2026,Expense
-0102202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,February,2026,Expense
-0103202601,Ecobank,,1000,,Rent,Monthly,,,March,2026,Expense
-0103202601,,National Rental Assistance,,1000,Rent,Monthly,,,March,2026,Expense
-0103202601,Ecobank,,18.5,,Charges,Monthly,,,March,2026,Expense
-0103202602,Ecobank,,120,,Rent Charges,Monthly,,,March,2026,Expense
-0103202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,March,2026,Expense
-0103202603,Ecobank,,140,,Rental Utilities,Monthly,,,March,2026,Expense
-0103202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,March,2026,Expense
-0104202601,Ecobank,,1000,,Rent,Monthly,,,April,2026,Expense
-0104202601,,National Rental Assistance,,1000,Rent,Monthly,,,April,2026,Expense
-0104202601,Ecobank,,61.1,,Charges,Monthly,,,April,2026,Expense
-0104202602,Ecobank,,120,,Rent Charges,Monthly,,,April,2026,Expense
-0104202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,April,2026,Expense
-0104202603,Ecobank,,140,,Rental Utilities,Monthly,,,April,2026,Expense
-0104202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,April,2026,Expense
-0105202601,Ecobank,,1000,,Rent,Monthly,,,May,2026,Expense
-0105202601,,National Rental Assistance,,1000,Rent,Monthly,,,May,2026,Expense
-0105202601,Ecobank,,0.5,,Charges,Monthly,,,May,2026,Expense
-0105202602,Ecobank,,120,,Rent Charges,Monthly,,,May,2026,Expense
-0105202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,May,2026,Expense
-0105202603,Ecobank,,140,,Rental Utilities,Monthly,,,May,2026,Expense
-0105202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,May,2026,Expense
-0106202601,Ecobank,,1000,,Rent,Monthly,,,June,2026,Expense
-0106202601,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense
-0106202601,Ecobank,,0.5,,Charges,Monthly,,,June,2026,Expense
-0106202602,Ecobank,,120,,Rent Charges,Monthly,,,June,2026,Expense
-0106202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,June,2026,Expense
-0106202603,Ecobank,,140,,Rental Utilities,Monthly,,,June,2026,Expense
-0106202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,June,2026,Expense
-0107202601,Ecobank,,1000,,Rent,Monthly,,,July,2026,Expense
-0107202601,,National Rental Assistance,,1000,Rent,Monthly,,,July,2026,Expense
-0107202602,Ecobank,,120,,Rent Charges,Monthly,,,July,2026,Expense
-0107202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,July,2026,Expense
-0107202603,Ecobank,,140,,Rental Utilities,Monthly,,,July,2026,Expense
-0107202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,July,2026,Expense
-0101202608,Ecobank,,1000,,SOA Exams,Monthly,,,January,2026,Expense
-0101202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,January,2026,Expense
-0102202608,Ecobank,,1000,,SOA Exams,Monthly,,,February,2026,Expense
-0102202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,February,2026,Expense
-0103202608,Ecobank,,1000,,SOA Exams,Monthly,,,March,2026,Expense
-0103202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,March,2026,Expense
-0101202604,Ecobank,,200,,Electricity,Monthly,,,January,2026,Expense
-0101202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,January,2026,Expense
-0102202604,Ecobank,,200,,Electricity,Monthly,,,February,2026,Expense
-0102202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,February,2026,Expense
-0103202604,Ecobank,,200,,Electricity,Monthly,,,March,2026,Expense
-0103202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,March,2026,Expense
-0104202604,Ecobank,,200,,Electricity,Monthly,,,April,2026,Expense
-0104202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,April,2026,Expense
-0105202604,Ecobank,,200,,Electricity,Monthly,,,May,2026,Expense
-0105202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,May,2026,Expense
-0106202604,Ecobank,,200,,Electricity,Monthly,,,June,2026,Expense
-0106202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,June,2026,Expense
-0107202604,Ecobank,,200,,Electricity,Monthly,,,July,2026,Expense
-0107202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,July,2026,Expense
-0101202605,Ecobank,,500,,Tithe,Monthly,,,January,2026,Expense
-0101202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,January,2026,Expense
-0102202605,Ecobank,,500,,Tithe,Monthly,,,February,2026,Expense
-0102202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,February,2026,Expense
-0103202605,Ecobank,,500,,Tithe,Monthly,,,March,2026,Expense
-0103202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,March,2026,Expense
-0104202605,Ecobank,,700,,Tithe,Monthly,,,April,2026,Expense
-0104202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,April,2026,Expense
-0105202605,Ecobank,,700,,Tithe,Monthly,,,May,2026,Expense
-0105202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,May,2026,Expense
-0106202605,Ecobank,,700,,Tithe,Monthly,,,June,2026,Expense
-0106202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,June,2026,Expense
-0107202605,Ecobank,,700,,Tithe,Monthly,,,July,2026,Expense
-0107202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,July,2026,Expense
-0101202606,Ecobank,,100,,Department Dues,Monthly,,,January,2026,Expense
-0101202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,January,2026,Expense
-0102202606,Ecobank,,100,,Department Dues,Monthly,,,February,2026,Expense
-0102202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,February,2026,Expense
-0103202606,Ecobank,,100,,Department Dues,Monthly,,,March,2026,Expense
-0103202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,March,2026,Expense
-0104202606,Ecobank,,100,,Department Dues,Monthly,,,April,2026,Expense
-0104202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,April,2026,Expense
-0105202606,Ecobank,,100,,Department Dues,Monthly,,,May,2026,Expense
-0105202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,May,2026,Expense
-0106202606,Ecobank,,100,,Department Dues,Monthly,,,June,2026,Expense
-0106202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,June,2026,Expense
-0107202606,Ecobank,,100,,Department Dues,Monthly,,,July,2026,Expense
-0107202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,July,2026,Expense
-0101202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,January,2026,Expense
-0101202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,January,2026,Expense
-0102202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,February,2026,Expense
-0102202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,February,2026,Expense
-0103202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,March,2026,Expense
-0103202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,March,2026,Expense
-0104202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,April,2026,Expense
-0104202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,April,2026,Expense
-0105202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,May,2026,Expense
-0105202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,May,2026,Expense
-0106202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,June,2026,Expense
-0106202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,June,2026,Expense
-0101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense
-0101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense
-0101202610,Ecobank,,1050,,Transport,Monthly,,,January,2026,Expense
-0101202610,,Others,,1050,Transport,Monthly,,,January,2026,Expense
-0102202609,Ecobank,,580,,Food,Monthly,,,February,2026,Expense
-0102202609,,Others,,580,Food,Monthly,,,February,2026,Expense
-0102202610,Ecobank,,840,,Transport,Monthly,,,February,2026,Expense
-0102202610,,Others,,840,Transport,Monthly,,,February,2026,Expense
-0103202609,Ecobank,,580,,Food,Monthly,,,March,2026,Expense
-0103202609,,Others,,580,Food,Monthly,,,March,2026,Expense
-0103202610,Ecobank,,840,,Transport,Monthly,,,March,2026,Expense
-0103202610,,Others,,840,Transport,Monthly,,,March,2026,Expense
-0104202608,Ecobank,,1085,,Food,Monthly,,,April,2026,Expense
-0104202608,,Others,,1085,Food,Monthly,,,April,2026,Expense
-0104202609,Ecobank,,1050,,Transport,Monthly,,,April,2026,Expense
-0104202609,,Others,,1050,Transport,Monthly,,,April,2026,Expense
-0105202608,Ecobank,,868,,Food,Monthly,,,May,2026,Expense
-0105202608,,Others,,868,Food,Monthly,,,May,2026,Expense
-0105202609,Ecobank,,840,,Transport,Monthly,,,May,2026,Expense
-0105202609,,Others,,840,Transport,Monthly,,,May,2026,Expense
-0106202608,Ecobank,,868,,Food,Monthly,,,June,2026,Expense
-0106202608,,Others,,868,Food,Monthly,,,June,2026,Expense
-0106202609,Ecobank,,840,,Transport,Monthly,,,June,2026,Expense
-0106202609,,Others,,840,Transport,Monthly,,,June,2026,Expense
-0104202610,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,April,2026,Transfer
-0104202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,April,2026,Transfer
-0105202610,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,May,2026,Transfer
-0105202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,May,2026,Transfer
-0107202607,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,July,2026,Transfer
-0107202607,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Transfer
-2811202502,Ecobank,,344.52,,Long Term Savings,Monthly,,,December,2025,Transfer
-2811202502,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,,,December,2025,Transfer
-0107202609,Ecobank,,340,,SOA Exams,Monthly,,,July,2026,Transfer
-0107202609,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,July,2026,Transfer
-0104202612,Ecobank,,340,,SOA Exams,Monthly,,,April,2026,Transfer
-0104202612,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,April,2026,Transfer
-0105202612,Ecobank,,340,,SOA Exams,Monthly,,,May,2026,Transfer
-0105202612,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,May,2026,Transfer
-0106202611,Ecobank,,340,,SOA Exams,Monthly,,,June,2026,Transfer
-0106202611,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,June,2026,Transfer
-0101202611,Ecobank,,100,,Trust Fund,Monthly,,,January,2026,Transfer
-0101202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,January,2026,Transfer
-0104202611,Ecobank,,100,,Trust Fund,Monthly,,,April,2026,Transfer
-0104202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,April,2026,Transfer
-0105202611,Ecobank,,100,,Trust Fund,Monthly,,,May,2026,Transfer
-0105202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,May,2026,Transfer
-0106202610,Ecobank,,100,,Trust Fund,Monthly,,,June,2026,Transfer
-0106202610,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,June,2026,Transfer
-0107202608,Ecobank,,100,,Trust Fund,Monthly,,,July,2026,Transfer
-0107202608,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,July,2026,Transfer
-0207202601,Ecobank,,488,,Transfer,Monthly,,,December,2025,Transfer
-0207202601,,Achieve SOA Exams,,488,Transfer,Monthly,,,December,2025,Transfer
-2811202501,Nationwide Medical Insurance,,918,,Salary,Monthly,November,2025,December,2025,Income
-2811202501,,Ecobank,,918,Salary,Monthly,November,2025,December,2025,Income
-2811202503,Ecobank,,200,,Trust Fund,Monthly,,,December,2025,Transfer
-2811202503,,Achieve Trust Fund,,200,Trust Fund,Monthly,,,December,2025,Transfer
-0207202602,,,900,,Company Bonus,Variable,June,2026,,,Income
-0207202602,,Ecobank,,900,Company Bonus,Variable,June,2026,,,Income
-0307202601,Ecobank,,400,,Hair,Monthly,,,June,2026,Expense
-0307202601,,Auntie Happy (Hair Dresser),,400,Hair,Monthly,,,June,2026,Expense
+TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,TransactionType,Note
+3012202501,Nationwide Medical Insurance,,5000,,Salary,Monthly,December,2025,January,2026,Income,
+3012202501,,Ecobank,,5000,Salary,Monthly,December,2025,January,2026,Income,
+3101202601,Nationwide Medical Insurance,,5000,,Salary,Monthly,January,2026,February,2026,Income,
+3101202601,,Ecobank,,5000,Salary,Monthly,January,2026,February,2026,Income,
+2802202601,Nationwide Medical Insurance,,5000,,Salary,Monthly,February,2026,March,2026,Income,
+2802202601,,Ecobank,,5000,Salary,Monthly,February,2026,March,2026,Income,
+3103202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,March,2026,April,2026,Income,
+3103202601,,Ecobank,,7000,Salary,Monthly,March,2026,April,2026,Income,
+3004202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,April,2026,May,2026,Income,
+3004202601,,Ecobank,,7000,Salary,Monthly,April,2026,May,2026,Income,
+3105202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,May,2026,June,2026,Income,
+3105202601,,Ecobank,,7000,Salary,Monthly,May,2026,June,2026,Income,
+3006202601,Nationwide Medical Insurance,,7000,,Salary,Monthly,June,2026,July,2026,Income,
+3006202601,,Ecobank,,7000,Salary,Monthly,June,2026,July,2026,Income,
+3006202602,Nationwide Medical Insurance,,2500,,Company Bonus,Variable,June,2026,,,Income,
+3006202602,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,Income,
+0101202601,Ecobank,,1000,,Rent,Monthly,,,January,2026,Expense,
+0101202601,,National Rental Assistance,,1000,Rent,Monthly,,,January,2026,Expense,
+0101202601,Ecobank,,20.1,,Charges,Monthly,,,January,2026,Expense,
+0101202602,Ecobank,,120,,Rent Charges,Monthly,,,January,2026,Expense,
+0101202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,January,2026,Expense,
+0101202603,Ecobank,,140,,Rental Utilities,Monthly,,,January,2026,Expense,
+0101202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,January,2026,Expense,
+0102202601,Ecobank,,1000,,Rent,Monthly,,,February,2026,Expense,
+0102202601,,National Rental Assistance,,1000,Rent,Monthly,,,February,2026,Expense,
+0102202601,Ecobank,,18.5,,Charges,Monthly,,,February,2026,Expense,
+0102202602,Ecobank,,120,,Rent Charges,Monthly,,,February,2026,Expense,
+0102202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,February,2026,Expense,
+0102202603,Ecobank,,140,,Rental Utilities,Monthly,,,February,2026,Expense,
+0102202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,February,2026,Expense,
+0103202601,Ecobank,,1000,,Rent,Monthly,,,March,2026,Expense,
+0103202601,,National Rental Assistance,,1000,Rent,Monthly,,,March,2026,Expense,
+0103202601,Ecobank,,18.5,,Charges,Monthly,,,March,2026,Expense,
+0103202602,Ecobank,,120,,Rent Charges,Monthly,,,March,2026,Expense,
+0103202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,March,2026,Expense,
+0103202603,Ecobank,,140,,Rental Utilities,Monthly,,,March,2026,Expense,
+0103202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,March,2026,Expense,
+0104202601,Ecobank,,1000,,Rent,Monthly,,,April,2026,Expense,
+0104202601,,National Rental Assistance,,1000,Rent,Monthly,,,April,2026,Expense,
+0104202601,Ecobank,,61.1,,Charges,Monthly,,,April,2026,Expense,
+0104202602,Ecobank,,120,,Rent Charges,Monthly,,,April,2026,Expense,
+0104202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,April,2026,Expense,
+0104202603,Ecobank,,140,,Rental Utilities,Monthly,,,April,2026,Expense,
+0104202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,April,2026,Expense,
+0105202601,Ecobank,,1000,,Rent,Monthly,,,May,2026,Expense,
+0105202601,,National Rental Assistance,,1000,Rent,Monthly,,,May,2026,Expense,
+0105202601,Ecobank,,0.5,,Charges,Monthly,,,May,2026,Expense,
+0105202602,Ecobank,,120,,Rent Charges,Monthly,,,May,2026,Expense,
+0105202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,May,2026,Expense,
+0105202603,Ecobank,,140,,Rental Utilities,Monthly,,,May,2026,Expense,
+0105202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,May,2026,Expense,
+0106202601,Ecobank,,1000,,Rent,Monthly,,,June,2026,Expense,
+0106202601,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense,
+0106202601,Ecobank,,0.5,,Charges,Monthly,,,June,2026,Expense,
+0106202602,Ecobank,,120,,Rent Charges,Monthly,,,June,2026,Expense,
+0106202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,June,2026,Expense,
+0106202603,Ecobank,,140,,Rental Utilities,Monthly,,,June,2026,Expense,
+0106202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,June,2026,Expense,
+0107202601,Ecobank,,1000,,Rent,Monthly,,,July,2026,Expense,
+0107202601,,National Rental Assistance,,1000,Rent,Monthly,,,July,2026,Expense,
+0107202602,Ecobank,,120,,Rent Charges,Monthly,,,July,2026,Expense,
+0107202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,July,2026,Expense,
+0107202603,Ecobank,,140,,Rental Utilities,Monthly,,,July,2026,Expense,
+0107202603,,National Rental Assistance,,140,Rental Utilities,Monthly,,,July,2026,Expense,
+0101202608,Ecobank,,1000,,SOA Exams,Monthly,,,January,2026,Expense,
+0101202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,January,2026,Expense,
+0102202608,Ecobank,,1000,,SOA Exams,Monthly,,,February,2026,Expense,
+0102202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,February,2026,Expense,
+0103202608,Ecobank,,1000,,SOA Exams,Monthly,,,March,2026,Expense,
+0103202608,,Society of Actuaries,,1000,SOA Exams,Monthly,,,March,2026,Expense,
+0101202604,Ecobank,,200,,Electricity,Monthly,,,January,2026,Expense,
+0101202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,January,2026,Expense,
+0102202604,Ecobank,,200,,Electricity,Monthly,,,February,2026,Expense,
+0102202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,February,2026,Expense,
+0103202604,Ecobank,,200,,Electricity,Monthly,,,March,2026,Expense,
+0103202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,March,2026,Expense,
+0104202604,Ecobank,,200,,Electricity,Monthly,,,April,2026,Expense,
+0104202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,April,2026,Expense,
+0105202604,Ecobank,,200,,Electricity,Monthly,,,May,2026,Expense,
+0105202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,May,2026,Expense,
+0106202604,Ecobank,,200,,Electricity,Monthly,,,June,2026,Expense,
+0106202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,June,2026,Expense,
+0107202604,Ecobank,,200,,Electricity,Monthly,,,July,2026,Expense,
+0107202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,July,2026,Expense,
+0101202605,Ecobank,,500,,Tithe,Monthly,,,January,2026,Expense,
+0101202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,January,2026,Expense,
+0102202605,Ecobank,,500,,Tithe,Monthly,,,February,2026,Expense,
+0102202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,February,2026,Expense,
+0103202605,Ecobank,,500,,Tithe,Monthly,,,March,2026,Expense,
+0103202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,March,2026,Expense,
+0104202605,Ecobank,,700,,Tithe,Monthly,,,April,2026,Expense,
+0104202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,April,2026,Expense,
+0105202605,Ecobank,,700,,Tithe,Monthly,,,May,2026,Expense,
+0105202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,May,2026,Expense,
+0106202605,Ecobank,,700,,Tithe,Monthly,,,June,2026,Expense,
+0106202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,June,2026,Expense,
+0107202605,Ecobank,,700,,Tithe,Monthly,,,July,2026,Expense,
+0107202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,July,2026,Expense,
+0101202606,Ecobank,,100,,Department Dues,Monthly,,,January,2026,Expense,
+0101202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,January,2026,Expense,
+0102202606,Ecobank,,100,,Department Dues,Monthly,,,February,2026,Expense,
+0102202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,February,2026,Expense,
+0103202606,Ecobank,,100,,Department Dues,Monthly,,,March,2026,Expense,
+0103202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,March,2026,Expense,
+0104202606,Ecobank,,100,,Department Dues,Monthly,,,April,2026,Expense,
+0104202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,April,2026,Expense,
+0105202606,Ecobank,,100,,Department Dues,Monthly,,,May,2026,Expense,
+0105202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,May,2026,Expense,
+0106202606,Ecobank,,100,,Department Dues,Monthly,,,June,2026,Expense,
+0106202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,June,2026,Expense,
+0107202606,Ecobank,,100,,Department Dues,Monthly,,,July,2026,Expense,
+0107202606,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,July,2026,Expense,
+0101202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,January,2026,Expense,
+0101202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,January,2026,Expense,
+0102202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,February,2026,Expense,
+0102202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,February,2026,Expense,
+0103202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,March,2026,Expense,
+0103202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,March,2026,Expense,
+0104202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,April,2026,Expense,
+0104202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,April,2026,Expense,
+0105202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,May,2026,Expense,
+0105202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,May,2026,Expense,
+0106202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,June,2026,Expense,
+0106202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,June,2026,Expense,
+0101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense,
+0101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense,
+0101202610,Ecobank,,1050,,Transport,Monthly,,,January,2026,Expense,
+0101202610,,Others,,1050,Transport,Monthly,,,January,2026,Expense,
+0102202609,Ecobank,,580,,Food,Monthly,,,February,2026,Expense,
+0102202609,,Others,,580,Food,Monthly,,,February,2026,Expense,
+0102202610,Ecobank,,840,,Transport,Monthly,,,February,2026,Expense,
+0102202610,,Others,,840,Transport,Monthly,,,February,2026,Expense,
+0103202609,Ecobank,,580,,Food,Monthly,,,March,2026,Expense,
+0103202609,,Others,,580,Food,Monthly,,,March,2026,Expense,
+0103202610,Ecobank,,840,,Transport,Monthly,,,March,2026,Expense,
+0103202610,,Others,,840,Transport,Monthly,,,March,2026,Expense,
+0104202608,Ecobank,,1085,,Food,Monthly,,,April,2026,Expense,
+0104202608,,Others,,1085,Food,Monthly,,,April,2026,Expense,
+0104202609,Ecobank,,1050,,Transport,Monthly,,,April,2026,Expense,
+0104202609,,Others,,1050,Transport,Monthly,,,April,2026,Expense,
+0105202608,Ecobank,,868,,Food,Monthly,,,May,2026,Expense,
+0105202608,,Others,,868,Food,Monthly,,,May,2026,Expense,
+0105202609,Ecobank,,840,,Transport,Monthly,,,May,2026,Expense,
+0105202609,,Others,,840,Transport,Monthly,,,May,2026,Expense,
+0106202608,Ecobank,,868,,Food,Monthly,,,June,2026,Expense,
+0106202608,,Others,,868,Food,Monthly,,,June,2026,Expense,
+0106202609,Ecobank,,840,,Transport,Monthly,,,June,2026,Expense,
+0106202609,,Others,,840,Transport,Monthly,,,June,2026,Expense,
+0104202610,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,
+0104202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,
+0105202610,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,May,2026,Transfer,
+0105202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,May,2026,Transfer,
+0107202607,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,July,2026,Transfer,
+0107202607,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Transfer,
+2811202502,Ecobank,,344.52,,Long Term Savings,Monthly,,,December,2025,Transfer,
+2811202502,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,,,December,2025,Transfer,
+0107202609,Ecobank,,340,,SOA Exams,Monthly,,,July,2026,Transfer,
+0107202609,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,July,2026,Transfer,
+0104202612,Ecobank,,340,,SOA Exams,Monthly,,,April,2026,Transfer,
+0104202612,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,April,2026,Transfer,
+0105202612,Ecobank,,340,,SOA Exams,Monthly,,,May,2026,Transfer,
+0105202612,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,May,2026,Transfer,
+0106202611,Ecobank,,340,,SOA Exams,Monthly,,,June,2026,Transfer,
+0106202611,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,June,2026,Transfer,
+0101202611,Ecobank,,100,,Trust Fund,Monthly,,,January,2026,Transfer,
+0101202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,January,2026,Transfer,
+0104202611,Ecobank,,100,,Trust Fund,Monthly,,,April,2026,Transfer,
+0104202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,April,2026,Transfer,
+0105202611,Ecobank,,100,,Trust Fund,Monthly,,,May,2026,Transfer,
+0105202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,May,2026,Transfer,
+0106202610,Ecobank,,100,,Trust Fund,Monthly,,,June,2026,Transfer,
+0106202610,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,June,2026,Transfer,
+0107202608,Ecobank,,100,,Trust Fund,Monthly,,,July,2026,Transfer,
+0107202608,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,July,2026,Transfer,
+0207202601,Ecobank,,488,,Transfer,Monthly,,,December,2025,Transfer,
+0207202601,,Achieve SOA Exams,,488,Transfer,Monthly,,,December,2025,Transfer,
+2811202501,Nationwide Medical Insurance,,918,,Salary,Monthly,November,2025,December,2025,Income,
+2811202501,,Ecobank,,918,Salary,Monthly,November,2025,December,2025,Income,
+2811202503,Ecobank,,200,,Trust Fund,Monthly,,,December,2025,Transfer,
+2811202503,,Achieve Trust Fund,,200,Trust Fund,Monthly,,,December,2025,Transfer,
+0207202602,,,900,,Company Bonus,Variable,June,2026,,,Income,
+0207202602,,Ecobank,,900,Company Bonus,Variable,June,2026,,,Income,
+0307202601,Ecobank,,400,,Hair,Monthly,,,June,2026,Expense,
+0307202601,,Auntie Happy (Hair Dresser),,400,Hair,Monthly,,,June,2026,Expense,
+0307202602,Ecobank,,270,,Hair,Monthly,,,February,2026,Expense,Cornrows
+0307202602,,Auntie Happy (Hair Dresser),,270,Hair,Monthly,,,February,2026,Expense,Cornrows
