@@ -1553,8 +1553,6 @@
       <button class="toggle-btn" data-txntype="income" onclick="setTxnType('income')">Income</button>
       <button class="toggle-btn active" data-txntype="expense" onclick="setTxnType('expense')">Expense</button>
       <button class="toggle-btn" data-txntype="transfer" onclick="setTxnType('transfer')">Transfer</button>
-      <button class="toggle-btn" data-txntype="opening balance" onclick="setTxnType('opening balance')">Opening Bal.</button>
-      <button class="toggle-btn" data-txntype="closing balance" onclick="setTxnType('closing balance')">Closing Bal.</button>
     </div>
     <!-- Account selects — layout controlled by setTxnType() -->
     <div id="acctFromToGrid" style="display:grid;grid-template-columns:1fr;gap:10px;">
@@ -2139,7 +2137,7 @@ function _syncTxnToIncome(item, monthRcv, yearRcv, credit, period) {
 async function _migrateTxns() {
   const txns = TXNS();
   let changed = false;
-  const TARGET = ['TransactionID', 'AccountFrom', 'AccountTo', 'Debit', 'Credit', 'Item', 'IncomePeriod', 'MonthReceived', 'YearReceived', 'MonthFor', 'YearFor', 'TransactionType'];
+  const TARGET = ['TransactionID', 'AccountFrom', 'AccountTo', 'Debit', 'Credit', 'Item', 'IncomePeriod', 'MonthReceived', 'YearReceived', 'MonthFor', 'YearFor', 'TransactionType', 'BalancingPeriod'];
 
   // ── 1. Patch old AccountName → AccountTo ─────────────────────────────────────
   for (const row of txns.rows) {
@@ -2180,6 +2178,96 @@ async function _migrateTxns() {
   }
 
   if (changed) await DATA.save('data/transactions.csv', 'Migrate to double-entry Debit/Credit');
+}
+
+// ── Automated period-end closing / opening balances ────────────────────────
+const _BALANCEABLE_TYPES = new Set(['Bank', 'Mobile Money', 'Cash', 'Investment']);
+const _PERIOD_CLOSE_KEY  = 'lifeOS_lastPeriodClose';
+const _ALL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function _genTxnIdForDate(idSet, date) {
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = date.getFullYear();
+  const prefix = `${dd}${mm}${yy}`;
+  for (let i = 1; i < 1000; i++) {
+    const tid = `${prefix}${String(i).padStart(2, '0')}`;
+    if (!idSet.has(tid)) { idSet.add(tid); return tid; }
+  }
+  const fallback = `${prefix}99`; idSet.add(fallback); return fallback;
+}
+
+async function autoCloseAccounts() {
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+  const stored = localStorage.getItem(_PERIOD_CLOSE_KEY);
+  if (!stored) {
+    // First run — mark today, no backfill of historical data
+    localStorage.setItem(_PERIOD_CLOSE_KEY, todayStr);
+    return;
+  }
+  if (stored >= todayStr) return; // already processed today
+
+  const accts = (AC.defs || []).filter(d => _BALANCEABLE_TYPES.has(d.Type || ''));
+  if (!accts.length) { localStorage.setItem(_PERIOD_CLOSE_KEY, todayStr); return; }
+
+  // Snapshot balances ONCE before adding any rows (debits/credits would shift them)
+  const snapBal = {};
+  for (const { AccountName } of accts) snapBal[AccountName] = String(Math.abs(_acctBalance(AccountName)));
+
+  const txns = TXNS();
+  _ensureCol(txns, 'BalancingPeriod');
+  const idSet = new Set(txns.rows.map(r => r.TransactionID || ''));
+
+  const addEntry = (type, period, month, year, date, acctName) => {
+    const id  = _genTxnIdForDate(idSet, date);
+    const amt = snapBal[acctName];
+    const base = {
+      TransactionID: id, IncomePeriod: 'Monthly', MonthReceived: '', YearReceived: '',
+      MonthFor: month, YearFor: String(year), TransactionType: type,
+      BalancingPeriod: period, Note: '', Item: '',
+    };
+    if (type === 'Closing Balance') {
+      txns.rows.push({ ...base, AccountFrom: acctName, AccountTo: '', Debit: amt, Credit: '' });
+    } else {
+      txns.rows.push({ ...base, AccountFrom: '', AccountTo: acctName, Debit: '', Credit: amt });
+    }
+  };
+
+  // Walk from day after stored up to today; close prevD, open curD each step
+  const parseDateStr = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+  let prevD = parseDateStr(stored);
+  let curD  = new Date(prevD); curD.setDate(curD.getDate() + 1);
+  const todayD = parseDateStr(todayStr);
+
+  while (curD <= todayD) {
+    const pMo = _ALL_MONTHS[prevD.getMonth()], pYr = prevD.getFullYear();
+    const cMo = _ALL_MONTHS[curD.getMonth()],  cYr = curD.getFullYear();
+
+    for (const { AccountName } of accts) {
+      // Year boundary
+      if (cYr !== pYr) {
+        addEntry('Closing Balance', 'Yearly',  pMo, pYr, prevD, AccountName);
+        addEntry('Opening Balance', 'Yearly',  cMo, cYr, curD,  AccountName);
+      }
+      // Month boundary
+      if (cMo !== pMo || cYr !== pYr) {
+        addEntry('Closing Balance', 'Monthly', pMo, pYr, prevD, AccountName);
+        addEntry('Opening Balance', 'Monthly', cMo, cYr, curD,  AccountName);
+      }
+      // Daily (always)
+      addEntry('Closing Balance', 'Daily',   pMo, pYr, prevD, AccountName);
+      addEntry('Opening Balance', 'Daily',   cMo, cYr, curD,  AccountName);
+    }
+
+    prevD = new Date(curD);
+    curD.setDate(curD.getDate() + 1);
+  }
+
+  await DATA.save('data/transactions.csv', 'Auto period-end closing/opening balances');
+  AC.rows = TXNS().rows;
+  localStorage.setItem(_PERIOD_CLOSE_KEY, todayStr);
 }
 
 // ── LocalAPI router ────────────────────────────────────────────────────────
@@ -2674,6 +2762,7 @@ const LocalAPI = {
       const id = _genTxnId(txns.rows);
       const amount = String(parseFloat(body.amount || 0));
       _ensureCol(txns, 'Note');
+      _ensureCol(txns, 'BalancingPeriod');
       const base = {
         TransactionID:   id,
         IncomePeriod:    body.incomePeriod    || '',
@@ -2682,6 +2771,7 @@ const LocalAPI = {
         MonthFor:        body.monthFor        || '',
         YearFor:         String(body.yearFor  || ''),
         TransactionType: body.transactionType || '',
+        BalancingPeriod: body.balancingPeriod || '',
         Note:            body.note            || '',
       };
       // Debit leg (money leaving AccountFrom)
@@ -2709,6 +2799,7 @@ const LocalAPI = {
       txns.rows = txns.rows.filter(r => r.TransactionID !== tid);
       const amount = String(parseFloat(body.amount) || 0);
       _ensureCol(txns, 'Note');
+      _ensureCol(txns, 'BalancingPeriod');
       const base = {
         TransactionID:   tid,
         IncomePeriod:    body.incomePeriod    || '',
@@ -2717,6 +2808,7 @@ const LocalAPI = {
         MonthFor:        body.monthFor        || '',
         YearFor:         String(body.yearFor  || ''),
         TransactionType: body.transactionType || '',
+        BalancingPeriod: body.balancingPeriod || '',
         Note:            body.note            || '',
       };
       txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '', Item: body.item || '' });
@@ -2891,6 +2983,7 @@ async function retryConnection() {
     navigate(startPage);
     loadBudgetItems();
     try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
+    try { await autoCloseAccounts(); } catch {}
     await fetchMonths();
     if (S.currentPage === 'budget')      renderBudgetPage();
     if (S.currentPage === 'budget-plan') renderBpPage();
@@ -2928,6 +3021,7 @@ async function saveGHToken() {
     navigate(startPage);
     loadBudgetItems();
     try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
+    try { await autoCloseAccounts(); } catch {}
     await fetchMonths();
     if (S.currentPage === 'budget')      renderBudgetPage();
     if (S.currentPage === 'budget-plan') renderBpPage();
@@ -5961,6 +6055,7 @@ async function init() {
 
   loadBudgetItems();
   try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
+  try { await autoCloseAccounts(); } catch {}
   await fetchMonths();
   if (S.currentPage === 'budget')       renderBudgetPage();
   if (S.currentPage === 'budget-plan')  renderBpPage();
