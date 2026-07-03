@@ -5899,13 +5899,13 @@ function onAcctItemChange(val) {
   const incRows = INC().rows;
   const txnRows = TXNS().rows;
 
-  // Gather all months with an allocation for this item
+  // Gather ALL months where this item exists (including zero allocation)
   const allocMap = {};
   incRows.filter(r => r.Type === 'Budget' && r.Items === val && !r.AllocationBalancing).forEach(r => {
     const sal = parseFloat(r.SalaryPortion) || 0;
     const bon = parseFloat(r.CompanyBonusPortion) || 0;
     const amt = sal + bon || parseFloat(r.PortionsTotal) || 0;
-    if (amt > 0) allocMap[`${r.Month}|${r.Year}`] = { month: r.Month, year: String(r.Year), alloc: amt, spent: 0 };
+    allocMap[`${r.Month}|${r.Year}`] = { month: r.Month, year: String(r.Year), alloc: amt, spent: 0 };
   });
 
   if (!Object.keys(allocMap).length) { info.innerHTML = ''; return; }
@@ -5932,16 +5932,20 @@ function onAcctItemChange(val) {
     </div>
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
       ${rows.map(r => {
-        const rem  = r.alloc - r.spent;
-        const over = rem < 0;
-        const zero = rem <= 0;
-        const isSel = r.month === curM && r.year === curY;
+        const rem      = r.alloc - r.spent;
+        const noAlloc  = r.alloc <= 0;
+        const over     = rem < 0;
+        const zero     = rem <= 0;
+        const isSel    = r.month === curM && r.year === curY;
         const remColor = over ? '#a8533f' : zero ? 'var(--muted)' : '#3a6b4a';
+        const dimmed   = noAlloc || zero;
+        const remText  = noAlloc ? '—' : `${over ? '−' : ''}${fmtGHS(Math.abs(rem))}`;
+        const allocText = noAlloc ? '—' : fmtGHS(r.alloc);
         return `<div class="alloc-row${isSel ? ' selected' : ''}" onclick="setMonthFor('${r.month}','${r.year}')"
-          style="display:grid;grid-template-columns:1fr 90px 90px;align-items:center;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);${zero ? 'opacity:0.5;' : ''}">
+          style="display:grid;grid-template-columns:1fr 90px 90px;align-items:center;padding:8px 10px;cursor:${noAlloc ? 'default' : 'pointer'};border-bottom:1px solid var(--border);opacity:${dimmed ? '0.45' : '1'};">
           <span style="font-size:13px;">${r.month} ${r.year}</span>
-          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${fmtGHS(r.alloc)}</span>
-          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${over ? '−' : ''}${fmtGHS(Math.abs(rem))}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${allocText}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${remText}</span>
         </div>`;
       }).join('')}
     </div>`;
