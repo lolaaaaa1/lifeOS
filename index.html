@@ -1554,6 +1554,7 @@
       <button class="toggle-btn active" data-txntype="expense" onclick="setTxnType('expense')">Expense</button>
       <button class="toggle-btn" data-txntype="transfer" onclick="setTxnType('transfer')">Transfer</button>
       <button class="toggle-btn" data-txntype="opening balance" onclick="setTxnType('opening balance')">Opening Bal.</button>
+      <button class="toggle-btn" data-txntype="closing balance" onclick="setTxnType('closing balance')">Closing Bal.</button>
     </div>
     <!-- Account selects — layout controlled by setTxnType() -->
     <div id="acctFromToGrid" style="display:grid;grid-template-columns:1fr;gap:10px;">
@@ -5601,12 +5602,12 @@ function setTxnType(type) {
   const fromField = $('acctFromField');
   const toField   = $('acctToField');
   const grid      = $('acctFromToGrid');
-  if (type === 'transfer' || type === 'opening balance') {
+  if (type === 'transfer' || type === 'opening balance' || type === 'closing balance') {
     grid.style.gridTemplateColumns = '1fr 1fr';
     fromField.style.display = '';
     toField.style.display   = '';
-    $('acctFromLabel').textContent = type === 'opening balance' ? 'From (Savings)' : 'From';
-    $('acctToLabel').textContent   = type === 'opening balance' ? 'Into Account'   : 'To';
+    $('acctFromLabel').textContent = 'From';
+    $('acctToLabel').textContent   = 'To';
   } else if (type === 'income') {
     grid.style.gridTemplateColumns = '1fr 1fr';
     fromField.style.display = '';
@@ -5631,7 +5632,7 @@ function setTxnType(type) {
   $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const forRow = $('acctMonthForRow');
   if (forRow) forRow.style.display = (type === 'transfer') ? 'none' : 'grid';
-  if (type === 'transfer' || type === 'opening balance') onAcctTxnToChange();
+  if (type === 'transfer' || type === 'opening balance' || type === 'closing balance') onAcctTxnToChange();
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
   acctPopulateItemSelect(($('acctTxnItem')?.value) || '', section);
 }
@@ -5832,7 +5833,7 @@ async function saveAccountTxn() {
     accountFrom,
     accountTo,
     item,
-    transactionType: type === 'opening balance' ? 'Opening Balance' : type.charAt(0).toUpperCase() + type.slice(1),
+    transactionType: type === 'opening balance' ? 'Opening Balance' : type === 'closing balance' ? 'Closing Balance' : type.charAt(0).toUpperCase() + type.slice(1),
     incomePeriod:    AC.incomePeriod,
     monthFor:        $('acctTxnMonthFor').value,
     yearFor:         $('acctTxnYearFor').value,
