@@ -2794,7 +2794,7 @@ function weekdayCounts(year, monthIdx) {
 }
 
 function calcIncomeRequired() {
-  return Object.values(BP.monthAmounts).reduce((s, v) => s + (v || 0), 0);
+  return Object.values(BP.salaryAmounts || BP.monthAmounts).reduce((s, v) => s + (v || 0), 0);
 }
 
 function budgetProgressHtml(allocated, budget, extraStyle) {
@@ -4287,7 +4287,8 @@ function deleteItem(id) {
 
 const BP = {
   items:          [],   // [{Id, Name, Type}] from /api/budget/items
-  monthAmounts:   {},   // {itemId: amount} — period total from days.csv (Calculated) or SalaryPortion (Actual)
+  monthAmounts:   {},   // {itemId: amount} — PortionsTotal (all sources) for budget display
+  salaryAmounts:  {},   // {itemId: amount} — SalaryPortion only, for salary card comparison
   paidAmounts:    {},   // {itemId: amount} — sum of expense transactions for current scope
   transferredItems: new Set(), // itemIds where Paid === 'Transferred'
   calculatedTypes:{},   // {itemId: 'Actual'|'Calculated'}
@@ -4312,7 +4313,7 @@ async function loadBpData() {
   if (!scope.length) return;
 
   const DAYS_LC = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  const amounts = {}, calcTypes = {}, dailyApp = {}, hasAmt = new Set();
+  const amounts = {}, salaryAmts = {}, calcTypes = {}, dailyApp = {}, hasAmt = new Set();
   const isCurrentMonth = (m) => S.currentMonth && m.Month === S.currentMonth.Month && String(m.Year) === String(S.currentMonth.Year);
 
   for (const m of scope) {
@@ -4344,21 +4345,26 @@ async function loadBpData() {
         dailyApp[r.Items] = app;
       }
 
-      let v;
+      let v, vSalary;
       if ((r.CalculatedType || '') === 'Calculated') {
         const raw = r.CalculatedAmount;
         v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
+        vSalary = v;
         if (v > 0) hasAmt.add(r.Items);
       } else {
         const raw = r.PortionsTotal || r.ActualAmount || r.SalaryPortion;
         v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
         if (raw !== '' && raw !== null && raw !== undefined) hasAmt.add(r.Items);
+        const rawSal = r.SalaryPortion || r.ActualAmount;
+        vSalary = (rawSal !== '' && rawSal !== null && rawSal !== undefined) ? parseFloat(rawSal) : 0;
       }
-      amounts[r.Items] = (amounts[r.Items] || 0) + v;
+      amounts[r.Items]     = (amounts[r.Items] || 0) + v;
+      salaryAmts[r.Items]  = (salaryAmts[r.Items] || 0) + vSalary;
     });
   }
 
   BP.monthAmounts    = amounts;
+  BP.salaryAmounts   = salaryAmts;
   BP.hasAmount       = hasAmt;
   BP.calculatedTypes = calcTypes;
   BP.dailyApplies    = dailyApp;
