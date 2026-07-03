@@ -210,3 +210,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0307202613,,Cash,,350.6,Transfer,Monthly,,,July,2026,Transfer,
 0307202614,Ecobank,,133.96,,Transfer,Monthly,,,July,2026,Transfer,
 0307202614,,Telecel Cash,,133.96,Transfer,Monthly,,,July,2026,Transfer,
+0307202615,Ecobank,,250,,Shoes,Monthly,,,July,2026,Expense,Black Ballet Flats
+0307202615,,Gadolsoles,,250,Shoes,Monthly,,,July,2026,Expense,Black Ballet Flats
