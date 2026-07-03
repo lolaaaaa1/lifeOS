@@ -2035,8 +2035,19 @@ const DATA = {
     const d = this._c[path];
     if (!d) throw new Error(`${path} not loaded`);
     const content = serializeCSV(d.headers, d.rows);
-    const result  = await GH.writeFile(path, content, d.sha, message);
-    d.sha = result.content.sha;
+    try {
+      const result = await GH.writeFile(path, content, d.sha, message);
+      d.sha = result.content.sha;
+    } catch (e) {
+      if (e.message && e.message.includes('409')) {
+        const { sha: freshSha } = await GH.fetchFile(path);
+        d.sha = freshSha;
+        const result = await GH.writeFile(path, content, d.sha, message);
+        d.sha = result.content.sha;
+      } else {
+        throw e;
+      }
+    }
   },
 
   async loadAll() {
