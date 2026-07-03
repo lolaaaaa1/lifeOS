@@ -197,3 +197,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0307202607,,Others,,100,Utilities,Monthly,,,March,2026,Expense,Water-Packs(4)
 0307202608,Ecobank,,332.1,,Utilities,Monthly,,,February,2026,Expense,WC Cleaner-725ml(2)
 0307202608,,Others,,332.1,Utilities,Monthly,,,February,2026,Expense,WC Cleaner-725ml(2)
+0307202609,Ecobank,,100,,Utilities,Monthly,,,April,2026,Expense,Charger
+0307202609,,Philip Twum,,100,Utilities,Monthly,,,April,2026,Expense,Charger
