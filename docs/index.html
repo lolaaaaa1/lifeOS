@@ -4486,7 +4486,7 @@ function computeMonthContributions() {
 }
 
 function renderBpByIncome(container) {
-  const allocated  = Object.values(BP.monthAmounts).reduce((s, v) => s + v, 0);
+  const allocated  = Object.values(BP.salaryAmounts || BP.monthAmounts).reduce((s, v) => s + v, 0);
   const budget     = getBudgetForCurrentMonth();
   const required   = budget ?? allocated;
   const remaining  = required - allocated;
