@@ -2768,16 +2768,18 @@ const LocalAPI = {
       const amount = String(parseFloat(body.amount || 0));
       _ensureCol(txns, 'Note');
       _ensureCol(txns, 'BalancingPeriod');
+      _ensureCol(txns, 'GroupTransactionID');
       const base = {
-        TransactionID:   id,
-        IncomePeriod:    body.incomePeriod    || '',
-        MonthReceived:   body.monthReceived   || '',
-        YearReceived:    String(body.yearReceived || ''),
-        MonthFor:        body.monthFor        || '',
-        YearFor:         String(body.yearFor  || ''),
-        TransactionType: body.transactionType || '',
-        BalancingPeriod: body.balancingPeriod || '',
-        Note:            body.note            || '',
+        TransactionID:      id,
+        GroupTransactionID: body.groupTransactionId || '',
+        IncomePeriod:       body.incomePeriod    || '',
+        MonthReceived:      body.monthReceived   || '',
+        YearReceived:       String(body.yearReceived || ''),
+        MonthFor:           body.monthFor        || '',
+        YearFor:            String(body.yearFor  || ''),
+        TransactionType:    body.transactionType || '',
+        BalancingPeriod:    body.balancingPeriod || '',
+        Note:               body.note            || '',
       };
       // Debit leg (money leaving AccountFrom)
       txns.rows.push({ ...base, AccountFrom: body.accountFrom || '', AccountTo: '', Debit: amount, Credit: '', Item: body.item || '' });
@@ -6158,11 +6160,12 @@ async function saveAccountTxn() {
         body: JSON.stringify({ ...payload, transactionId: AC.editingTxn.transactionId }),
       });
     } else if (type === 'expense' && AC.txnSplit && AC.txnSplit.length > 1) {
-      // Multi-month split: one transaction per month
+      // Multi-month split: one transaction per month, all sharing a GroupTransactionID
+      const groupId = 'GRP' + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
       for (const s of AC.txnSplit) {
         await apiFetch('/accounts/transaction', {
           method: 'POST',
-          body: JSON.stringify({ ...basePayload, monthFor: s.month, yearFor: s.year, amount: s.amount }),
+          body: JSON.stringify({ ...basePayload, monthFor: s.month, yearFor: s.year, amount: s.amount, groupTransactionId: groupId }),
         });
       }
     } else {
