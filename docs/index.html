@@ -3276,21 +3276,31 @@ async function renderDashboardCalc() {
   // ── Monthly section (collapsed, swipeable) ────────────────────────────────
   const { sec: monthlySec, body: monthlyBody } = makeDashSection('Monthly', false);
 
+  const txnRows = TXNS().rows;
+
   const monthSlideEls = monthSlides.map((m, i) => {
-    const [dayTotals, incRows] = monthDataArr[i];
-    const periodBudget = { ...dayTotals };
-    const monthPaid = {};
-    (incRows || []).filter(r => r.Type === 'Budget').forEach(r => {
-      if ((r.CalculatedType || '') !== 'Calculated')
-        periodBudget[r.Items] = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
-      if (r.Paid) {
-        const p = parseFloat(r.Paid);
-        const amt = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
-        const pAmt = !isNaN(p) ? p : (r.Paid === 'Paid' || r.Paid === 'Transferred') ? amt : 0;
-        if (pAmt > 0) monthPaid[r.Items] = (monthPaid[r.Items] || 0) + pAmt;
-      }
+    const [, incRows] = monthDataArr[i];
+    const mStr = m.Month, yStr = String(m.Year);
+
+    // Budgeted = SalaryPortion + CompanyBonusPortion (all items, including Calculated)
+    const periodBudget = {};
+    (incRows || []).filter(r => r.Type === 'Budget' && !r.AllocationBalancing).forEach(r => {
+      const sal = parseFloat(r.SalaryPortion) || 0;
+      const bon = parseFloat(r.CompanyBonusPortion) || 0;
+      const total = sal + bon || parseFloat(r.PortionsTotal) || 0;
+      if (total > 0) periodBudget[r.Items] = total;
     });
-    return makeSlide(`${m.Month} ${m.Year}`, periodBudget, monthPaid);
+
+    // Spent = expense debits from transactions for this month
+    const monthSpent = {};
+    txnRows.forEach(t => {
+      if (t.TransactionType !== 'Expense') return;
+      if (t.MonthFor !== mStr || String(t.YearFor) !== yStr) return;
+      const dbt = parseFloat(t.Debit) || 0;
+      if (dbt > 0) monthSpent[t.Item] = (monthSpent[t.Item] || 0) + dbt;
+    });
+
+    return makeSlide(`${m.Month} ${m.Year}`, periodBudget, monthSpent);
   });
 
   const { wrap: monthlyWrap, dots: monthlyDots, scrollTo: monthlyScrollTo } = makeSwiper(monthSlideEls, 1);
@@ -3306,7 +3316,36 @@ async function renderDashboardCalc() {
   // ── Yearly section (collapsed, static) ───────────────────────────────────
   const { sec: yearlySec, body: yearlyBody } = makeDashSection('Yearly', false);
 
-  const yearlyKeys = Object.keys(yearlyMap).filter(k => yearlyMap[k] > 0);
+  // Budgeted = Opening Credit (current month) + PortionsTotal (current month)
+  // Spent    = YTD expense debits from transactions up to current month
+  const incRows_yr = INC().rows;
+  const yearlyBudget = {};
+  incRows_yr.filter(r =>
+    r.Type === 'Budget' && String(r.Year) === String(curYear) &&
+    r.Month === curMonthStr && !r.AllocationBalancing
+  ).forEach(r => {
+    const openRow = incRows_yr.find(o =>
+      o.Type === 'Budget' && o.Items === r.Items &&
+      o.Month === curMonthStr && String(o.Year) === String(curYear) &&
+      o.AllocationBalancing === 'Opening'
+    );
+    const sal = parseFloat(r.SalaryPortion) || 0;
+    const bon = parseFloat(r.CompanyBonusPortion) || 0;
+    const alloc = sal + bon || parseFloat(r.PortionsTotal) || 0;
+    const budget = (parseFloat(openRow && openRow.Credit) || 0) + alloc;
+    if (budget > 0) yearlyBudget[r.Items] = budget;
+  });
+
+  const yearlySpent = {};
+  txnRows.forEach(t => {
+    if (t.TransactionType !== 'Expense') return;
+    if (String(t.YearFor) !== String(curYear)) return;
+    if (MONTHS.indexOf(t.MonthFor) > curMonthIdx) return;
+    const dbt = parseFloat(t.Debit) || 0;
+    if (dbt > 0) yearlySpent[t.Item] = (yearlySpent[t.Item] || 0) + dbt;
+  });
+
+  const yearlyKeys = Object.keys(yearlyBudget).filter(k => yearlyBudget[k] > 0);
   if (yearlyKeys.length) {
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
@@ -3321,32 +3360,33 @@ async function renderDashboardCalc() {
     const list = document.createElement('div');
     list.className = 'dash-items';
     yearlyKeys.forEach(item => {
-      const allocated = yearlyMap[item] || 0;
-      const paid      = ytdPaidMap[item] || 0;
-      const rem       = allocated - paid;
-      const over      = rem < 0;
-      const remColor  = over ? '#a8533f' : paid > 0 ? '#3a6b4a' : 'inherit';
+      const budgeted = yearlyBudget[item] || 0;
+      const spent    = yearlySpent[item] || 0;
+      const rem      = budgeted - spent;
+      const over     = rem < 0;
+      const remColor = over ? '#a8533f' : spent > 0 ? '#3a6b4a' : 'inherit';
       const row = document.createElement('div');
       row.className = 'dash-item-row dash-item-row--3col';
       row.innerHTML = `
         <span class="dash-item-name">${escHtml(item)}</span>
-        <span class="dash-item-amount">${fmtGHS(allocated)}</span>
-        <span style="font-size:11px;color:${remColor};text-align:right;">${paid > 0 ? `${over ? '−' : ''}${fmtGHS(Math.abs(rem))}` : ''}</span>`;
+        <span class="dash-item-amount">${fmtGHS(budgeted)}</span>
+        <span style="font-size:11px;color:${remColor};text-align:right;">${spent > 0 ? `${over ? '−' : ''}${fmtGHS(Math.abs(rem))}` : ''}</span>`;
       list.appendChild(row);
     });
     slide.appendChild(list);
+    const totBudgeted = yearlyKeys.reduce((s, k) => s + (yearlyBudget[k] || 0), 0);
+    const totSpent    = yearlyKeys.reduce((s, k) => s + (yearlySpent[k] || 0), 0);
+    const totRem      = totBudgeted - totSpent;
+    const totOver     = totRem < 0;
     const totRow = document.createElement('div');
     totRow.className = 'dash-total-row';
-    const totAmt = yearlyKeys.reduce((s, k) => s + (yearlyMap[k] || 0), 0);
-    totRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(totAmt)}</span>`;
+    totRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(totBudgeted)}</span>`;
     slide.appendChild(totRow);
-    if (ytdSalary > 0) {
-      const ytdRem = ytdSalary - ytdPaid;
-      const over   = ytdRem < 0;
+    if (totSpent > 0) {
       const remRow = document.createElement('div');
       remRow.className = 'dash-total-row';
-      remRow.style.cssText = `margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08);color:${over ? '#a8533f' : '#3a6b4a'};`;
-      remRow.innerHTML = `<span class="dash-total-label">${over ? 'Over budget' : 'Remaining'}</span><span class="dash-total-amount">${over ? '−' : ''}${fmtGHS(Math.abs(ytdRem))}</span>`;
+      remRow.style.cssText = `margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.08);color:${totOver ? '#a8533f' : '#3a6b4a'};`;
+      remRow.innerHTML = `<span class="dash-total-label">${totOver ? 'Over budget' : 'Remaining'}</span><span class="dash-total-amount">${totOver ? '−' : ''}${fmtGHS(Math.abs(totRem))}</span>`;
       slide.appendChild(remRow);
     }
     slide.classList.remove('dash-slide');
