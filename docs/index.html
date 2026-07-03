@@ -2338,12 +2338,14 @@ const LocalAPI = {
           }
         }
       });
-      // paidMap from actual expense transactions (Debit side), not income.csv Paid column
+      // paidMap: Transferred months use budget total from income.csv; others sum expense transactions
       const paidMap = {};
       const transferredYtd = new Set();
+      const transferredYtdMonths = new Set(); // 'Item|Month|Year'
       INC().rows.forEach(r => {
         if (r.Year === yr && r.Type === 'Budget' && r.Items && r.Paid === 'Transferred' && MONTHS.indexOf(r.Month) <= upToIdx) {
           transferredYtd.add(r.Items);
+          transferredYtdMonths.add(`${r.Items}|${r.Month}|${r.Year}`);
           const amt = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
           paidMap[r.Items] = (paidMap[r.Items] || 0) + amt;
         }
@@ -2351,7 +2353,7 @@ const LocalAPI = {
       TXNS().rows.forEach(r => {
         if (r.TransactionType === 'Expense' && r.Item && (parseFloat(r.Debit) || 0) > 0
             && String(r.YearFor) === yr && MONTHS.indexOf(r.MonthFor) <= upToIdx
-            && !transferredYtd.has(r.Item)) {
+            && !transferredYtdMonths.has(`${r.Item}|${r.MonthFor}|${r.YearFor}`)) {
           paidMap[r.Item] = (paidMap[r.Item] || 0) + (parseFloat(r.Debit) || 0);
         }
       });
@@ -4393,23 +4395,24 @@ async function loadBpData() {
   }
   IC.sources = Object.values(icTotals);
 
-  // BP.paidAmounts: compute from actual expense transactions, not income.csv Paid column
+  // BP.paidAmounts: Transferred months use budget total from income.csv; others sum expense transactions
   const paid = {};
   const transferred = new Set();
-  // Transferred items still come from income.csv (full budget amount)
+  const transferredMonths = new Set(); // 'Item|Month|Year'
   for (const m of scope) {
     let rows = [];
     try { rows = await apiFetch(`/income/${m.Month}/${m.Year}`); } catch {}
     rows.filter(r => r.Type === 'Budget' && r.Paid === 'Transferred').forEach(r => {
       transferred.add(r.Items);
+      transferredMonths.add(`${r.Items}|${m.Month}|${String(m.Year)}`);
       paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0);
     });
   }
-  // Sum Debit from expense transactions for items within scope
   const scopeSet = new Set(scope.map(m => `${m.Month}_${String(m.Year)}`));
   const allTxns = await apiFetch('/accounts');
   allTxns.filter(r => r.TransactionType === 'Expense' && r.Item && (parseFloat(r.Debit) || 0) > 0
-      && scopeSet.has(`${r.MonthFor}_${String(r.YearFor)}`) && !transferred.has(r.Item))
+      && scopeSet.has(`${r.MonthFor}_${String(r.YearFor)}`)
+      && !transferredMonths.has(`${r.Item}|${r.MonthFor}|${String(r.YearFor)}`))
     .forEach(r => { paid[r.Item] = (paid[r.Item] || 0) + (parseFloat(r.Debit) || 0); });
   BP.paidAmounts = paid;
   BP.transferredItems = transferred;
