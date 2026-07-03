@@ -414,3 +414,15 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0101202620,Ecobank,,114.52,,,Monthly,,,January,2026,Opening Balance,Yearly
 3112202510,Nationwide Medical Insurance,,918.00,,,Monthly,,,December,2025,Closing Balance,Yearly
 0101202621,Nationwide Medical Insurance,,918.00,,,Monthly,,,January,2026,Opening Balance,Yearly
+3101202614,,Charges,,20.1,,Monthly,,,January,2026,Closing Balance,Monthly
+0102202623,,Charges,,20.1,,Monthly,,,February,2026,Opening Balance,Monthly
+2802202615,,Charges,,38.6,,Monthly,,,February,2026,Closing Balance,Monthly
+0103202624,,Charges,,38.6,,Monthly,,,March,2026,Opening Balance,Monthly
+3103202615,,Charges,,57.1,,Monthly,,,March,2026,Closing Balance,Monthly
+0104202626,,Charges,,57.1,,Monthly,,,April,2026,Opening Balance,Monthly
+3004202617,,Charges,,118.2,,Monthly,,,April,2026,Closing Balance,Monthly
+0105202628,,Charges,,118.2,,Monthly,,,May,2026,Opening Balance,Monthly
+3105202619,,Charges,,118.7,,Monthly,,,May,2026,Closing Balance,Monthly
+0106202629,,Charges,,118.7,,Monthly,,,June,2026,Opening Balance,Monthly
+3006202620,,Charges,,119.2,,Monthly,,,June,2026,Closing Balance,Monthly
+0107202627,,Charges,,119.2,,Monthly,,,July,2026,Opening Balance,Monthly

@@ -2209,12 +2209,12 @@ async function autoCloseAccounts() {
   }
   if (stored >= todayStr) return; // already processed today
 
-  const accts = (AC.defs || []).filter(d => _BALANCEABLE_TYPES.has(d.Type || ''));
+  const accts = (AC.defs || []);
   if (!accts.length) { localStorage.setItem(_PERIOD_CLOSE_KEY, todayStr); return; }
 
   // Snapshot balances ONCE before adding any rows (debits/credits would shift them)
   const snapBal = {};
-  for (const { AccountName } of accts) snapBal[AccountName] = String(Math.abs(_acctBalance(AccountName)));
+  for (const { AccountName } of accts) snapBal[AccountName] = _acctBalance(AccountName);
 
   const txns = TXNS();
   _ensureCol(txns, 'BalancingPeriod');
@@ -2258,9 +2258,6 @@ async function autoCloseAccounts() {
         addEntry('Closing Balance', 'Monthly', pMo, pYr, prevD, AccountName);
         addEntry('Opening Balance', 'Monthly', cMo, cYr, curD,  AccountName);
       }
-      // Daily (always)
-      addEntry('Closing Balance', 'Daily',   pMo, pYr, prevD, AccountName);
-      addEntry('Opening Balance', 'Daily',   cMo, cYr, curD,  AccountName);
     }
 
     prevD = new Date(curD);
