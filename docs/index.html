@@ -6184,8 +6184,8 @@ async function saveAccountTxn() {
         body: JSON.stringify({ ...payload, transactionId: AC.editingTxn.transactionId }),
       });
     } else if (type === 'expense' && AC.txnSplit && AC.txnSplit.length > 1) {
-      // Multi-month split: one transaction per month, all sharing a GroupTransactionID
-      const groupId = 'GRP' + new Date().toISOString().replace(/\D/g, '').slice(0, 14);
+      // Multi-month split: one transaction per month, GroupTransactionID = first transaction's ID
+      const groupId = _genTxnId(TXNS().rows);
       for (const s of AC.txnSplit) {
         await apiFetch('/accounts/transaction', {
           method: 'POST',
