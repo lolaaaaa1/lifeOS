@@ -1550,9 +1550,10 @@
     </div>
     <!-- Transaction type -->
     <div class="toggle-row" id="txnTypeToggle" style="margin-bottom:4px;">
-      <button class="toggle-btn" onclick="setTxnType('income')">Income</button>
-      <button class="toggle-btn active" onclick="setTxnType('expense')">Expense</button>
-      <button class="toggle-btn" onclick="setTxnType('transfer')">Transfer</button>
+      <button class="toggle-btn" data-txntype="income" onclick="setTxnType('income')">Income</button>
+      <button class="toggle-btn active" data-txntype="expense" onclick="setTxnType('expense')">Expense</button>
+      <button class="toggle-btn" data-txntype="transfer" onclick="setTxnType('transfer')">Transfer</button>
+      <button class="toggle-btn" data-txntype="opening balance" onclick="setTxnType('opening balance')">Opening Bal.</button>
     </div>
     <!-- Account selects — layout controlled by setTxnType() -->
     <div id="acctFromToGrid" style="display:grid;grid-template-columns:1fr;gap:10px;">
@@ -5595,17 +5596,17 @@ async function acctPopulateItemSelect(selected, section) {
 function setTxnType(type) {
   AC.txnType = type;
   document.querySelectorAll('#txnTypeToggle .toggle-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.toLowerCase() === type);
+    b.classList.toggle('active', (b.dataset.txntype || b.textContent.toLowerCase()) === type);
   });
   const fromField = $('acctFromField');
   const toField   = $('acctToField');
   const grid      = $('acctFromToGrid');
-  if (type === 'transfer') {
+  if (type === 'transfer' || type === 'opening balance') {
     grid.style.gridTemplateColumns = '1fr 1fr';
     fromField.style.display = '';
     toField.style.display   = '';
-    $('acctFromLabel').textContent = 'From';
-    $('acctToLabel').textContent   = 'To';
+    $('acctFromLabel').textContent = type === 'opening balance' ? 'From (Savings)' : 'From';
+    $('acctToLabel').textContent   = type === 'opening balance' ? 'Into Account'   : 'To';
   } else if (type === 'income') {
     grid.style.gridTemplateColumns = '1fr 1fr';
     fromField.style.display = '';
@@ -5629,8 +5630,8 @@ function setTxnType(type) {
   $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
   $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const forRow = $('acctMonthForRow');
-  if (forRow) forRow.style.display = type === 'transfer' ? 'none' : 'grid';
-  if (type === 'transfer') onAcctTxnToChange();
+  if (forRow) forRow.style.display = (type === 'transfer') ? 'none' : 'grid';
+  if (type === 'transfer' || type === 'opening balance') onAcctTxnToChange();
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
   acctPopulateItemSelect(($('acctTxnItem')?.value) || '', section);
 }
@@ -5831,7 +5832,7 @@ async function saveAccountTxn() {
     accountFrom,
     accountTo,
     item,
-    transactionType: type.charAt(0).toUpperCase() + type.slice(1),
+    transactionType: type === 'opening balance' ? 'Opening Balance' : type.charAt(0).toUpperCase() + type.slice(1),
     incomePeriod:    AC.incomePeriod,
     monthFor:        $('acctTxnMonthFor').value,
     yearFor:         $('acctTxnYearFor').value,
