@@ -2222,16 +2222,18 @@ async function autoCloseAccounts() {
 
   const addEntry = (type, period, month, year, date, acctName) => {
     const id  = _genTxnIdForDate(idSet, date);
-    const amt = snapBal[acctName];
+    const rawBal = parseFloat(snapBal[acctName]) || 0;
+    const amt = String(Math.abs(rawBal));
     const base = {
       TransactionID: id, IncomePeriod: 'Monthly', MonthReceived: '', YearReceived: '',
       MonthFor: month, YearFor: String(year), TransactionType: type,
       BalancingPeriod: period, Note: '', Item: '',
     };
-    if (type === 'Closing Balance') {
-      txns.rows.push({ ...base, AccountFrom: acctName, AccountTo: '', Debit: amt, Credit: '' });
-    } else {
+    // positive balance → Credit; negative balance → Debit (same direction for both close and open)
+    if (rawBal >= 0) {
       txns.rows.push({ ...base, AccountFrom: '', AccountTo: acctName, Debit: '', Credit: amt });
+    } else {
+      txns.rows.push({ ...base, AccountFrom: acctName, AccountTo: '', Debit: amt, Credit: '' });
     }
   };
 
@@ -5301,6 +5303,7 @@ async function renderAccountsPage() {
 
 function _acctBalance(name) {
   return AC.rows.reduce((s, r) => {
+    if (r.TransactionType === 'Closing Balance' || r.TransactionType === 'Opening Balance') return s;
     if (r.AccountTo   === name) return s + (parseFloat(r.Credit) || 0);
     if (r.AccountFrom === name) return s - (parseFloat(r.Debit)  || 0);
     return s;
