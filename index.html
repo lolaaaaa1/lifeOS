@@ -5841,7 +5841,7 @@ function setTxnType(type) {
   $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
   $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const forRow = $('acctMonthForRow');
-  if (forRow) forRow.style.display = (type === 'transfer') ? 'none' : 'grid';
+  if (forRow) forRow.style.display = (type === 'transfer' || type === 'expense') ? 'none' : 'grid';
   if (type === 'transfer' || type === 'opening balance' || type === 'closing balance') onAcctTxnToChange();
   const section = type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null;
   acctPopulateItemSelect(($('acctTxnItem')?.value) || '', section);
@@ -6064,8 +6064,6 @@ async function openAddTxnModal(accountName, itemName, lockExpense) {
   setTxnType('expense');
   const typeToggle = $('txnTypeToggle');
   if (typeToggle) typeToggle.style.display = lockExpense ? 'none' : '';
-  const monthForRow  = $('acctMonthForRow');
-  if (monthForRow)  monthForRow.style.display  = lockExpense ? 'none' : '';
   const itemField = $('acctItemField');
   if (itemField && lockExpense && itemName) {
     itemField.innerHTML = `<label class="form-label">Item</label><div class="form-input" style="background:var(--bg);pointer-events:none;opacity:0.8;">${escHtml(itemName)}</div>`;
