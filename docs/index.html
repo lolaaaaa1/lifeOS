@@ -5314,6 +5314,7 @@ function _acctBalance(name) {
 function _groupTxns(rows) {
   const map = new Map();
   for (const r of rows) {
+    if (r.TransactionType === 'Closing Balance' || r.TransactionType === 'Opening Balance') continue;
     const id = r.TransactionID || '';
     if (!map.has(id)) map.set(id, { drs: [], cr: null });
     const g = map.get(id);
@@ -5708,8 +5709,8 @@ function setTxnType(type) {
     grid.style.gridTemplateColumns = '1fr 1fr';
     fromField.style.display = '';
     toField.style.display   = '';
-    $('acctFromLabel').textContent = 'Source';
-    $('acctToLabel').textContent   = 'Into Account';
+    $('acctFromLabel').textContent = 'Account From';
+    $('acctToLabel').textContent   = 'Account To';
     const fromSel = $('acctTxnFrom');
     if (fromSel) {
       const incomeSources = ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName);
