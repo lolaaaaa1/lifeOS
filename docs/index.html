@@ -4557,64 +4557,68 @@ function _getBudgetItemStatus() {
                'September','October','November','December'];
   const result = {};
   if (!S.currentMonth) return result;
-  const incRows = INC().rows;
   const txnRows = AC.rows;
   const yearly  = isAllMonths();
 
-  let targetMonth, targetYear;
+  let targetMonth, targetYear, targetIdx;
   if (yearly) {
     const now = new Date();
     const nowYear = now.getFullYear();
     const viewYear = parseInt(S.currentMonth.Year) || nowYear;
     targetYear  = String(viewYear);
     targetMonth = viewYear < nowYear ? 'December' : MOS[now.getMonth()];
+    targetIdx   = MOS.indexOf(targetMonth);
   } else {
     targetMonth = S.currentMonth.Month;
     targetYear  = String(S.currentMonth.Year);
+    targetIdx   = MOS.indexOf(targetMonth);
   }
-  const targetIdx = MOS.indexOf(targetMonth);
 
-  const items = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
-  for (const itemName of items) {
-    let budgeted = 0;
+  for (var i = 0; i < BP.items.length; i++) {
+    var itemName = BP.items[i].Id;
+    var budgeted = 0;
+
     if (yearly) {
-      const openRow = incRows.find(r =>
-        r.Type === 'Budget' && r.Items === itemName &&
-        r.Month === targetMonth && String(r.Year) === targetYear &&
-        r.AllocationBalancing === 'Opening'
-      );
-      const allocRow = incRows.find(r =>
-        r.Type === 'Budget' && r.Items === itemName &&
-        r.Month === targetMonth && String(r.Year) === targetYear &&
-        !r.AllocationBalancing
-      );
-      budgeted = (parseFloat(openRow?.Credit) || 0) +
-                 (parseFloat(allocRow?.PortionsTotal) || 0);
+      var incRows = INC().rows;
+      var openRow = null, allocRow = null;
+      for (var j = 0; j < incRows.length; j++) {
+        var r = incRows[j];
+        if (r.Type !== 'Budget' || r.Items !== itemName) continue;
+        if (r.Month !== targetMonth || String(r.Year) !== targetYear) continue;
+        if (r.AllocationBalancing === 'Opening') { openRow = r; }
+        else if (!r.AllocationBalancing) { allocRow = r; }
+      }
+      var allocAmt = 0;
+      if (allocRow) {
+        if (allocRow.CalculatedType === 'Calculated') {
+          allocAmt = parseFloat(allocRow.CalculatedAmount) || 0;
+        } else {
+          allocAmt = parseFloat(allocRow.PortionsTotal || allocRow.ActualAmount || allocRow.SalaryPortion) || 0;
+        }
+      }
+      budgeted = (parseFloat(openRow ? openRow.Credit : 0) || 0) + allocAmt;
     } else {
-      const allocRow = incRows.find(r =>
-        r.Type === 'Budget' && r.Items === itemName &&
-        r.Month === targetMonth && String(r.Year) === targetYear &&
-        !r.AllocationBalancing
-      );
-      budgeted = parseFloat(allocRow?.PortionsTotal) || 0;
+      // Monthly: BP.monthAmounts is already PortionsTotal for the current scope
+      budgeted = BP.monthAmounts[itemName] || 0;
     }
 
-    let spent = 0;
-    for (const r of txnRows) {
-      if (r.TransactionType !== 'Expense') continue;
-      if (r.Item !== itemName) continue;
-      const dbt = parseFloat(r.Debit) || 0;
+    var spent = 0;
+    for (var k = 0; k < txnRows.length; k++) {
+      var t = txnRows[k];
+      if (t.TransactionType !== 'Expense') continue;
+      if (t.Item !== itemName) continue;
+      var dbt = parseFloat(t.Debit) || 0;
       if (dbt <= 0) continue;
       if (yearly) {
-        if (String(r.YearFor) !== targetYear) continue;
-        if (MOS.indexOf(r.MonthFor) > targetIdx) continue;
+        if (String(t.YearFor) !== targetYear) continue;
+        if (MOS.indexOf(t.MonthFor) > targetIdx) continue;
       } else {
-        if (r.MonthFor !== targetMonth || String(r.YearFor) !== targetYear) continue;
+        if (t.MonthFor !== targetMonth || String(t.YearFor) !== targetYear) continue;
       }
       spent += dbt;
     }
 
-    result[itemName] = { budgeted, spent, remaining: budgeted - spent };
+    result[itemName] = { budgeted: budgeted, spent: spent, remaining: budgeted - spent };
   }
   return result;
 }
