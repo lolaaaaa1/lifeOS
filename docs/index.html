@@ -5805,7 +5805,7 @@ async function saveAccountTxn() {
     accountTo   = $('acctTxnTo')?.value   || '';
     if (!accountFrom || !accountTo) { alert('Select both accounts'); return; }
   }
-  const item = type === 'transfer' ? 'Transfer' : ($('acctTxnItem')?.value || '');
+  const item = $('acctTxnItem')?.value || '';
   const payload  = {
     accountFrom,
     accountTo,
