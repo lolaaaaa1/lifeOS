@@ -432,3 +432,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0101202601,,Charges,,1000,Rent,Monthly,,,January,2026,Expense,,,
 0407202601,Ecobank,,100,,Bundle,Monthly,,,January,2026,Expense,,,0407202601
 0407202601,,Telecel Company,,100,Bundle,Monthly,,,January,2026,Expense,,,0407202601
+0407202602,Ecobank,,300,,Bundle,Monthly,,,April,2026,Expense,,,0407202601
+0407202602,,Telecel Company,,300,Bundle,Monthly,,,April,2026,Expense,,,0407202601
