@@ -5396,35 +5396,76 @@ function renderTxnPageList() {
   const list = document.createElement('div');
   list.className = 'budget-items';
 
+  // Group by GroupTransactionID so multi-month splits show as one card
+  const groupMap = new Map();
   filtered.forEach(t => {
-    const isIncome   = (t.transactionType || '').toLowerCase() === 'income';
-    const isTransfer = (t.transactionType || '').toLowerCase() === 'transfer' ||
-      (t.accountFrom && t.accountTo && acctNames.has(t.accountFrom) && acctNames.has(t.accountTo));
+    const gid = t.groupTransactionId || t.id;
+    if (!groupMap.has(gid)) groupMap.set(gid, []);
+    groupMap.get(gid).push(t);
+  });
+
+  groupMap.forEach(txns => {
+    const first = txns[0];
+    const isIncome   = (first.transactionType || '').toLowerCase() === 'income';
+    const isTransfer = (first.transactionType || '').toLowerCase() === 'transfer' ||
+      (first.accountFrom && first.accountTo && acctNames.has(first.accountFrom) && acctNames.has(first.accountTo));
     const color = isIncome ? 'var(--green)' : isTransfer ? 'var(--accent)' : 'var(--red)';
     const sign  = isIncome ? '+' : isTransfer ? '⇄' : '−';
-    const fromTo = [t.accountFrom, t.accountTo].filter(Boolean).join(' → ');
-    const forPart    = t.monthFor  ? `${t.monthFor} ${t.yearFor}` : '';
-    const chargesPart = t.charges  ? `+${fmtGHS(t.charges)} charges` : '';
-    const meta = [fromTo, forPart, chargesPart].filter(Boolean).join(' · ');
-    const txnId = escHtml(t.id || '');
+    const total = txns.reduce((s, t) => s + t.amount, 0);
+    const fromTo = [first.accountFrom, first.accountTo].filter(Boolean).join(' → ');
 
     const card = document.createElement('div');
     card.className = 'budget-item-card';
-    card.innerHTML = `
-      <div class="budget-item-main">
-        <div class="budget-item-left">
-          <div class="budget-item-name">${escHtml(t.item || t.transactionType || '—')}</div>
-          <div class="budget-item-sublabel" style="font-size:11px;">${escHtml(meta)}</div>
-          ${t.note ? `<div class="budget-item-sublabel" style="font-size:11px;opacity:0.6;font-style:italic;">${escHtml(t.note)}</div>` : ''}
+
+    if (txns.length === 1) {
+      const t = first;
+      const forPart    = t.monthFor ? `${t.monthFor} ${t.yearFor}` : '';
+      const chargesPart = t.charges ? `+${fmtGHS(t.charges)} charges` : '';
+      const meta = [fromTo, forPart, chargesPart].filter(Boolean).join(' · ');
+      const txnId = escHtml(t.id || '');
+      card.innerHTML = `
+        <div class="budget-item-main">
+          <div class="budget-item-left">
+            <div class="budget-item-name">${escHtml(t.item || t.transactionType || '—')}</div>
+            <div class="budget-item-sublabel" style="font-size:11px;">${escHtml(meta)}</div>
+            ${t.note ? `<div class="budget-item-sublabel" style="font-size:11px;opacity:0.6;font-style:italic;">${escHtml(t.note)}</div>` : ''}
+          </div>
+          <div class="budget-item-right">
+            <div class="budget-item-amount" style="color:${color};">${sign} ${fmtGHS(t.amount)}</div>
+          </div>
+          <div class="budget-item-actions">
+            <button class="btn btn-icon" onclick="openEditTxnModal('${txnId}')" title="Edit">✎</button>
+            <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','','','','')" title="Delete">✕</button>
+          </div>
+        </div>`;
+    } else {
+      // Multi-month split: show total + sub-rows per month
+      const monthSummary = txns.map(t => t.monthFor).filter(Boolean).join(', ');
+      const subRows = txns.map(t => {
+        const txnId = escHtml(t.id || '');
+        const forLabel = t.monthFor ? `${t.monthFor} ${t.yearFor}` : '—';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 4px 8px;border-top:1px solid var(--border);">
+          <span style="font-size:12px;color:var(--muted);">${escHtml(forLabel)}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:12px;font-family:'DM Mono',monospace;color:${color};">${sign} ${fmtGHS(t.amount)}</span>
+            <button class="btn btn-icon" onclick="openEditTxnModal('${txnId}')" title="Edit">✎</button>
+            <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','','','','')" title="Delete">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+      card.innerHTML = `
+        <div class="budget-item-main">
+          <div class="budget-item-left">
+            <div class="budget-item-name">${escHtml(first.item || first.transactionType || '—')}</div>
+            <div class="budget-item-sublabel" style="font-size:11px;">${escHtml([fromTo, monthSummary].filter(Boolean).join(' · '))}</div>
+          </div>
+          <div class="budget-item-right">
+            <div class="budget-item-amount" style="color:${color};">${sign} ${fmtGHS(total)}</div>
+          </div>
+          <div class="budget-item-actions"></div>
         </div>
-        <div class="budget-item-right">
-          <div class="budget-item-amount" style="color:${color};">${sign} ${fmtGHS(t.amount)}</div>
-        </div>
-        <div class="budget-item-actions">
-          <button class="btn btn-icon" onclick="openEditTxnModal('${txnId}')" title="Edit">✎</button>
-          <button class="btn btn-icon danger" onclick="deleteTxn('${txnId}','','','','')" title="Delete">✕</button>
-        </div>
-      </div>`;
+        ${subRows}`;
+    }
     list.appendChild(card);
   });
 
@@ -5479,8 +5520,9 @@ function _groupTxns(rows) {
       yearFor:         ref?.YearFor           || '',
       monthRecv:       ref?.MonthReceived     || '',
       yearRecv:        ref?.YearReceived      || '',
-      transactionType: ref?.TransactionType   || '',
-      note:            ref?.Note              || '',
+      transactionType:    ref?.TransactionType      || '',
+      note:               ref?.Note                 || '',
+      groupTransactionId: ref?.GroupTransactionID   || id,
     };
   });
 }
