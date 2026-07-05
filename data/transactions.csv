@@ -181,8 +181,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0207202602,,Ecobank,,900,Company Bonus,Variable,June,2026,,,Income,,,
 0307202601,Ecobank,,400,,Hair,Monthly,,,June,2026,Expense,,,
 0307202601,,Auntie Happy (Hair Dresser),,400,Hair,Monthly,,,June,2026,Expense,,,
-0307202602,Ecobank,,270,,Hair,Monthly,,,February,2026,Expense,,,
-0307202602,,Auntie Happy (Hair Dresser),,270,Hair,Monthly,,,February,2026,Expense,,,
 0307202603,Ecobank,,100,,Hair,Monthly,,,June,2026,Expense,,,
 0307202603,,Others,,100,Hair,Monthly,,,June,2026,Expense,,,
 0307202604,Ecobank,,120,,Hair,Monthly,,,May,2026,Expense,,,
@@ -438,3 +436,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202604,,Adoma (ShopAdomzy),,80,Clothes,Monthly,,,July,2026,Expense,,,0507202602
 0507202604,Ecobank,,3.82,,Charges,Monthly,,,July,2026,Expense,,,0507202602
 0507202604,,Charges,,3.82,Charges,Monthly,,,July,2026,Expense,,,0507202602
+0507202605,Ecobank,,100,,Hair,Monthly,,,January,2026,Expense,,,0507202605
+0507202605,,Auntie Happy (Hair Dresser),,100,Hair,Monthly,,,January,2026,Expense,,,0507202605
+0507202606,Ecobank,,170,,Hair,Monthly,,,April,2026,Expense,,,0507202605
+0507202606,,Auntie Happy (Hair Dresser),,170,Hair,Monthly,,,April,2026,Expense,,,0507202605
