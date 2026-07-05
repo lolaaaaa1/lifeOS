@@ -5878,6 +5878,7 @@ function onAcctTxnToChange() {
   const isInvestment = (def?.Type || '').toLowerCase() === 'investment';
   const forRow = $('acctMonthForRow');
   if (forRow) forRow.style.display = isInvestment ? 'grid' : 'none';
+  renderAllocInfo($('acctTxnItem')?.value || '');
 }
 
 function setAccountType(type) {
@@ -5918,7 +5919,9 @@ function renderAllocInfo(val) {
   const info = $('acctItemAllocInfo');
   if (!info) return;
 
-  if (!val || (AC.txnType !== 'expense' && AC.txnType !== 'transfer')) {
+  const isInvestmentTransfer = AC.txnType === 'transfer' &&
+    (AC.defs.find(d => d.AccountName === ($('acctTxnTo')?.value || ''))?.Type || '').toLowerCase() === 'investment';
+  if (!val || (AC.txnType !== 'expense' && !isInvestmentTransfer)) {
     info.innerHTML = '';
     AC.txnSplit = null;
     return;
