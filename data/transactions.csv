@@ -512,3 +512,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202645,,MTN Mobile Money,,26.59,,Monthly,,,July,2026,Transfer,,,0507202645
 0507202646,Cash,,15,,Food,Monthly,,,July,2026,Expense,,BB Cocktail,0507202646
 0507202646,,Others,,15,Food,Monthly,,,July,2026,Expense,,BB Cocktail,0507202646
+0507202647,Cash,,3.01,,,Monthly,,,July,2026,Transfer,,,0507202647
+0507202647,,Telecel Cash,,3.01,,Monthly,,,July,2026,Transfer,,,0507202647
