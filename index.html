@@ -6175,8 +6175,8 @@ async function saveAccountTxn() {
         method: 'PUT',
         body: JSON.stringify({ ...payload, transactionId: AC.editingTxn.transactionId }),
       });
-    } else if (type === 'expense' && AC.txnSplit && AC.txnSplit.length > 1) {
-      // Multi-month split: one transaction per month, GroupTransactionID = first transaction's ID
+    } else if (type === 'expense' && AC.txnSplit && AC.txnSplit.length > 0) {
+      // One transaction per split month; GroupTransactionID = first transaction's ID (same as its own if only one)
       const groupId = _genTxnId(TXNS().rows);
       for (const s of AC.txnSplit) {
         await apiFetch('/accounts/transaction', {
@@ -6185,9 +6185,10 @@ async function saveAccountTxn() {
         });
       }
     } else {
-      // Single transaction
+      // Single transaction — GroupTransactionID = own ID
+      const singleId = _genTxnId(TXNS().rows);
       const payload = { ...basePayload, monthFor: $('acctTxnMonthFor').value, yearFor: $('acctTxnYearFor').value, amount: totalAmount };
-      await apiFetch('/accounts/transaction', { method: 'POST', body: JSON.stringify(payload) });
+      await apiFetch('/accounts/transaction', { method: 'POST', body: JSON.stringify({ ...payload, groupTransactionId: singleId }) });
     }
     [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
     // If opened from home daily section, update today's expense column in days.csv
