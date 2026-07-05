@@ -508,3 +508,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202643,,Ecobank,,49.56,,Monthly,,,July,2026,Transfer,,,0507202643
 0507202644,Telecel Cash,,74.17,,,Monthly,,,July,2026,Transfer,,,0507202644
 0507202644,,MTN Mobile Money,,74.17,,Monthly,,,July,2026,Transfer,,,0507202644
+0507202645,Cash,,26.59,,,Monthly,,,July,2026,Transfer,,,0507202645
+0507202645,,MTN Mobile Money,,26.59,,Monthly,,,July,2026,Transfer,,,0507202645
