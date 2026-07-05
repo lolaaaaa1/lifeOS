@@ -500,3 +500,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202639,,Others,,150,Food,Monthly,,,July,2026,Expense,,,0507202639
 0507202640,Ecobank,,150,,Transport,Monthly,,,July,2026,Expense,,,0507202640
 0507202640,,Others,,150,Transport,Monthly,,,July,2026,Expense,,,0507202640
+0507202641,Ecobank,,22,,Transport,Monthly,,,July,2026,Expense,,To Church,0507202641
+0507202641,,Ride Hailing Apps,,22,Transport,Monthly,,,July,2026,Expense,,To Church,0507202641
