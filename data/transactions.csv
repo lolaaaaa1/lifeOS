@@ -482,3 +482,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202633,,Others,,100,Utilities,Monthly,,,June,2026,Expense,,,0507202631
 0507202634,Ecobank,,32.1,,Utilities,Monthly,,,July,2026,Expense,,,0507202631
 0507202634,,Others,,32.1,Utilities,Monthly,,,July,2026,Expense,,,0507202631
+0507202628,Ecobank,,111.9,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,0507202628
+0507202628,,Others,,111.9,Utilities,Monthly,,,July,2026,Expense,,I don’t know,0507202628
