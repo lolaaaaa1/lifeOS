@@ -179,14 +179,14 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2811202503,,Achieve Trust Fund,,200,Trust Fund,Monthly,,,December,2025,Transfer,,,
 0207202602,,,900,,Company Bonus,Variable,June,2026,,,Income,,,
 0207202602,,Ecobank,,900,Company Bonus,Variable,June,2026,,,Income,,,
-0307202601,Ecobank,,400,,Hair,Monthly,,,June,2026,Expense,,,
-0307202601,,Auntie Happy (Hair Dresser),,400,Hair,Monthly,,,June,2026,Expense,,,
-0307202603,Ecobank,,100,,Hair,Monthly,,,June,2026,Expense,,,
-0307202603,,Others,,100,Hair,Monthly,,,June,2026,Expense,,,
-0307202604,Ecobank,,120,,Hair,Monthly,,,May,2026,Expense,,,
-0307202604,,Esthetiq Beauty Salon,,120,Hair,Monthly,,,May,2026,Expense,,,
-0307202605,Ecobank,,10,,Hair,Monthly,,,March,2026,Expense,,,
-0307202605,,Others,,10,Hair,Monthly,,,March,2026,Expense,,,
+0307202601,Ecobank,,400,,Hair,Monthly,,,July,2026,Expense,,,0307202601
+0307202601,,Auntie Happy (Hair Dresser),,400,Hair,Monthly,,,July,2026,Expense,,,0307202601
+0307202603,Ecobank,,100,,Hair,Monthly,,,July,2026,Expense,,,0307202603
+0307202603,,Others,,100,Hair,Monthly,,,July,2026,Expense,,,0307202603
+0307202604,Ecobank,,120,,Hair,Monthly,,,April,2026,Expense,,,0307202604
+0307202604,,Esthetiq Beauty Salon,,120,Hair,Monthly,,,April,2026,Expense,,,0307202604
+0307202605,Ecobank,,10,,Hair,Monthly,,,April,2026,Expense,,,0307202605
+0307202605,,Others,,10,Hair,Monthly,,,April,2026,Expense,,,0307202605
 0307202607,Ecobank,,100,,Utilities,Monthly,,,March,2026,Expense,,,
 0307202607,,Others,,100,Utilities,Monthly,,,March,2026,Expense,,,
 0307202608,Ecobank,,332.1,,Utilities,Monthly,,,February,2026,Expense,,,
