@@ -5,15 +5,15 @@ December,2025,Budget,SOA Exams,,488,488,Actual,488,,Transferred,488,,,
 January,2026,Budget,Rent,,1000,1000,Actual,1000,,1000,1000,,,
 January,2026,Budget,Rent Charges,,120,120,Actual,120,,120,120,,,
 January,2026,Budget,Bundle,,100,100,Actual,100,,,100,,,
-January,2026,Budget,Shoes,,50,50,Actual,50,,,50,,,
-January,2026,Budget,Hair,,100,100,Actual,100,,,100,,,
+January,2026,Budget,Shoes,,50,50,Actual,50,,50,50,,,
+January,2026,Budget,Hair,,100,100,Actual,100,,100,100,,,
 January,2026,Budget,Tithe,,500,500,Actual,500,,500,500,,,
 January,2026,Budget,Electricity,,200,200,Actual,200,,200,200,,,
 January,2026,Budget,Rental Utilities,,140,140,Actual,140,,140,140,,,
 January,2026,Budget,MSc. Actuarial Science,,,,Actual,0,,,,,,
 January,2026,Budget,SOA Exams,,1000,1000,Actual,1000,,1000,1000,,,
 January,2026,Budget,Clothes,,,,Actual,,,,,,,
-January,2026,Budget,Skincare,,100,100,Actual,100,,,100,,,
+January,2026,Budget,Skincare,,100,100,Actual,100,,100,100,,,
 January,2026,Budget,Trust Fund,,100,100,Actual,100,,Transferred,100,,,
 January,2026,Budget,Department Dues,,100,100,Actual,100,,100,100,,,
 January,2026,Budget,Gifting,,,,Actual,,,,,,,
@@ -28,7 +28,7 @@ February,2026,Budget,Rent,,1000,1000,Actual,1000,,1000,1000,,,
 February,2026,Budget,Rent Charges,,120,120,Actual,120,,120,120,,,
 February,2026,Budget,Bundle,,,,Actual,,,,,,,
 February,2026,Budget,Shoes,,,,Actual,,,,,,,
-February,2026,Budget,Hair,,,,Actual,,,270,,,,
+February,2026,Budget,Hair,,,,Actual,,,,,,,
 February,2026,Budget,Tithe,,500,500,Actual,500,,500,500,,,
 February,2026,Budget,Electricity,,200,200,Actual,200,,200,200,,,
 February,2026,Budget,Rental Utilities,,140,140,Actual,140,,140,140,,,
@@ -50,7 +50,7 @@ March,2026,Budget,Rent,,1000,1000,Actual,1000,,1000,1000,,,
 March,2026,Budget,Rent Charges,,120,120,Actual,120,,120,120,,,
 March,2026,Budget,Bundle,,,,Actual,,,,,,,
 March,2026,Budget,Shoes,,,,Actual,,,,,,,
-March,2026,Budget,Hair,,,,Actual,,,10,,,,
+March,2026,Budget,Hair,,,,Actual,,,,,,,
 March,2026,Budget,Tithe,,500,500,Actual,500,,500,500,,,
 March,2026,Budget,Electricity,,200,200,Actual,200,,200,200,,,
 March,2026,Budget,Rental Utilities,,140,140,Actual,140,,140,140,,,
@@ -71,15 +71,15 @@ March,2026,Budget,Charges,,18.5,18.5,Actual,18.5,,18.5,18.5,,,
 April,2026,Budget,Rent,,1000,1000,Actual,1000,,1000,1000,,,
 April,2026,Budget,Rent Charges,,120,120,Actual,120,,120,120,,,
 April,2026,Budget,Bundle,,300,100,Actual,300,,,300,,,
-April,2026,Budget,Shoes,,200,200,Actual,200,,,200,,,
-April,2026,Budget,Hair,,300,300,Actual,300,,,300,,,
+April,2026,Budget,Shoes,,200,200,Actual,200,,200,200,,,
+April,2026,Budget,Hair,,300,300,Actual,300,,300,300,,,
 April,2026,Budget,Tithe,,700,700,Actual,700,,700,700,,,
 April,2026,Budget,Electricity,,200,200,Actual,200,,200,200,,,
 April,2026,Budget,Rental Utilities,,140,140,Actual,140,,140,140,,,
 April,2026,Budget,MSc. Actuarial Science,,1500,1500,Actual,1500,,Paid,1500,,,
 April,2026,Budget,SOA Exams,,340,340,Actual,340,,Transferred,340,,,
 April,2026,Budget,Clothes,,0,0,Actual,0,,,,,,
-April,2026,Budget,Skincare,,300,300,Actual,300,,,300,,,
+April,2026,Budget,Skincare,,300,300,Actual,300,,300,300,,,
 April,2026,Budget,Trust Fund,,100,100,Actual,100,,Transferred,100,,,
 April,2026,Budget,Department Dues,,100,100,Actual,100,,100,100,,,
 April,2026,Budget,Gifting,,100,100,Actual,100,,,100,,,
@@ -94,14 +94,14 @@ May,2026,Budget,Rent,,1000,1000,Actual,1000,,1000,1000,,,
 May,2026,Budget,Rent Charges,,120,120,Actual,120,,120,120,,,
 May,2026,Budget,Bundle,,,,Actual,,,400,,,,
 May,2026,Budget,Shoes,,,,Actual,,,,,,,
-May,2026,Budget,Hair,,,,Actual,,,120,,,,
+May,2026,Budget,Hair,,,,Actual,,,,,,,
 May,2026,Budget,Tithe,,700,700,Actual,700,,700,700,,,
 May,2026,Budget,Electricity,,200,200,Actual,200,,200,200,,,
 May,2026,Budget,Rental Utilities,,140,140,Actual,140,,140,140,,,
 May,2026,Budget,MSc. Actuarial Science,,1500,1500,Actual,1500,,Paid,1500,,,
 May,2026,Budget,SOA Exams,,340,340,Actual,340,,Transferred,340,,,
 May,2026,Budget,Clothes,,100,100,Actual,100,,,100,,,
-May,2026,Budget,Skincare,,100,100,Actual,100,,,100,,,
+May,2026,Budget,Skincare,,100,100,Actual,100,,100,100,,,
 May,2026,Budget,Trust Fund,,100,100,Actual,100,,Transferred,100,,,
 May,2026,Budget,Department Dues,,100,100,Actual,100,,100,100,,,
 May,2026,Budget,Gifting,,100,100,Actual,100,,,100,,,
@@ -116,14 +116,14 @@ June,2026,Budget,Rent,,1000,1000,Actual,1000,,1000,1000,,,
 June,2026,Budget,Rent Charges,,120,120,Actual,120,,120,120,,,
 June,2026,Budget,Bundle,,,,Actual,,,,,,,
 June,2026,Budget,Shoes,,,,Actual,,,,,,,
-June,2026,Budget,Hair,,,,Actual,,,100,,,,
+June,2026,Budget,Hair,,,,Actual,,,,,,,
 June,2026,Budget,Tithe,,700,700,Actual,700,,700,700,,,
 June,2026,Budget,Electricity,,200,200,Actual,200,,200,200,,,
 June,2026,Budget,Rental Utilities,,140,140,Actual,140,,140,140,,,
 June,2026,Budget,MSc. Actuarial Science,,0,0,Actual,0,,Paid,,,,
 June,2026,Budget,SOA Exams,,340,340,Actual,340,,Transferred,340,,,
 June,2026,Budget,Clothes,,100,100,Actual,100,,,100,,,
-June,2026,Budget,Skincare,,100,100,Actual,100,,,100,,,
+June,2026,Budget,Skincare,,100,100,Actual,100,,30,100,,,
 June,2026,Budget,Trust Fund,,100,100,Actual,100,,Transferred,100,,,
 June,2026,Budget,Department Dues,,100,100,Actual,100,,100,100,,,
 June,2026,Budget,Gifting,,100,100,Actual,100,,,100,,,
@@ -137,15 +137,15 @@ June,2026,Budget,Charges,,0.5,0.5,Actual,0.5,,0.5,0.5,,,
 July,2026,Budget,Rent,,1000,1000,Actual,1000,,1000,1000,,,
 July,2026,Budget,Rent Charges,,120,120,Actual,120,,120,120,,,
 July,2026,Budget,Bundle,,400,400,Salary,400,,,400,,,
-July,2026,Budget,Shoes,,200,200,Actual,200,,250,200,,,
-July,2026,Budget,Hair,,100,100,Actual,100,400,,500,,,
+July,2026,Budget,Shoes,,200,200,Actual,200,,,200,,,
+July,2026,Budget,Hair,,100,100,Actual,100,400,500,500,,,
 July,2026,Budget,Tithe,,700,700,Actual,700,,700,700,,,
 July,2026,Budget,Electricity,,200,200,Actual,200,,200,200,,,
 July,2026,Budget,Rental Utilities,,140,140,Actual,140,,140,140,,,
 July,2026,Budget,MSc. Actuarial Science,,1500,1500,Actual,1500,,Paid,1500,,,
 July,2026,Budget,SOA Exams,,340,340,Actual,340,,Transferred,340,,,
 July,2026,Budget,Clothes,,100,100,Actual,100,,283.82,100,,,
-July,2026,Budget,Skincare,,200,200,Actual,200,,533.98,200,,,
+July,2026,Budget,Skincare,,200,200,Actual,200,,,200,,,
 July,2026,Budget,Trust Fund,,100,100,Actual,100,,Transferred,100,,,
 July,2026,Budget,Department Dues,,100,100,Actual,100,,100,100,,,
 July,2026,Budget,Gifting,,100,100,Actual,100,100,,200,,,
@@ -155,7 +155,7 @@ July,2026,Budget,Food,,961,1085,Calculated,1085.0,,,1085,,,
 July,2026,Budget,Utilities,,100,100,Actual,100,400,,500,,,
 July,2026,Budget,Travel,,100,100,Actual,100,,,100,,,
 July,2026,Budget,Outing,,100,100,Actual,100,,,100,,,
-July,2026,Budget,Charges,,40,40,Actual,40,,,40,,,
+July,2026,Budget,Charges,,40,40,Actual,40,,3.98,40,,,
 January,2026,Budget,Nails,,,,,,,,,,,
 February,2026,Budget,Nails,,,,,,,,,,,
 March,2026,Budget,Nails,,,,,,,,,,,
@@ -186,10 +186,10 @@ January,2026,Budget,Rent Charges,,,,Salary,,,,,Opening,0.0,0
 January,2026,Budget,Rent Charges,,,,Salary,,,,,Closing,120.0,0
 January,2026,Budget,Bundle,,,,Salary,,,,,Opening,0.0,0
 January,2026,Budget,Bundle,,,,Salary,,,,,Closing,100.0,0
-January,2026,Budget,Shoes,,,,Salary,,,,,Opening,0.0,0
-January,2026,Budget,Shoes,,,,Salary,,,,,Closing,50.0,0
-January,2026,Budget,Hair,,,,Salary,,,,,Opening,0.0,0
-January,2026,Budget,Hair,,,,Salary,,,,,Closing,100.0,0
+January,2026,Budget,Shoes,,,,Salary,,,50,,Opening,0.0,0
+January,2026,Budget,Shoes,,,,Salary,,,50,,Closing,50.0,0
+January,2026,Budget,Hair,,,,Salary,,,100,,Opening,0.0,0
+January,2026,Budget,Hair,,,,Salary,,,100,,Closing,100.0,0
 January,2026,Budget,Tithe,,,,Salary,,,,,Opening,0.0,0
 January,2026,Budget,Tithe,,,,Salary,,,,,Closing,500.0,0
 January,2026,Budget,Electricity,,,,Salary,,,,,Opening,0.0,0
@@ -200,8 +200,8 @@ January,2026,Budget,MSc. Actuarial Science,,,,,,,,,Opening,0.0,0
 January,2026,Budget,MSc. Actuarial Science,,,,,,,,,Closing,0.0,0
 January,2026,Budget,Clothes,,,,,,,,,Opening,0.0,0
 January,2026,Budget,Clothes,,,,,,,,,Closing,0.0,0
-January,2026,Budget,Skincare,,,,Salary,,,,,Opening,0.0,0
-January,2026,Budget,Skincare,,,,Salary,,,,,Closing,100.0,0
+January,2026,Budget,Skincare,,,,Salary,,,100,,Opening,0.0,0
+January,2026,Budget,Skincare,,,,Salary,,,100,,Closing,100.0,0
 January,2026,Budget,Department Dues,,,,Salary,,,,,Opening,0.0,0
 January,2026,Budget,Department Dues,,,,Salary,,,,,Closing,100.0,0
 January,2026,Budget,Gifting,,,,,,,,,Opening,0.0,0
@@ -330,10 +330,10 @@ April,2026,Budget,Rent Charges,,,,Salary,,,,,Opening,360.0,0
 April,2026,Budget,Rent Charges,,,,Salary,,,,,Closing,480.0,0
 April,2026,Budget,Bundle,,,,Salary,,,,,Opening,100.0,0
 April,2026,Budget,Bundle,,,,Salary,,,,,Closing,400.0,0
-April,2026,Budget,Shoes,,,,Salary,,,,,Opening,50.0,0
-April,2026,Budget,Shoes,,,,Salary,,,,,Closing,250.0,0
-April,2026,Budget,Hair,,,,Salary,,,,,Opening,100.0,0
-April,2026,Budget,Hair,,,,Salary,,,,,Closing,400.0,0
+April,2026,Budget,Shoes,,,,Salary,,,200,,Opening,50.0,0
+April,2026,Budget,Shoes,,,,Salary,,,200,,Closing,250.0,0
+April,2026,Budget,Hair,,,,Salary,,,300,,Opening,100.0,0
+April,2026,Budget,Hair,,,,Salary,,,300,,Closing,400.0,0
 April,2026,Budget,Tithe,,,,Salary,,,,,Opening,1500.0,0
 April,2026,Budget,Tithe,,,,Salary,,,,,Closing,2200.0,0
 April,2026,Budget,Electricity,,,,Salary,,,,,Opening,600.0,0
@@ -344,8 +344,8 @@ April,2026,Budget,MSc. Actuarial Science,,,,Salary,,,,,Opening,0.0,0
 April,2026,Budget,MSc. Actuarial Science,,,,Salary,,,,,Closing,1500.0,0
 April,2026,Budget,Clothes,,,,,,,,,Opening,0.0,0
 April,2026,Budget,Clothes,,,,,,,,,Closing,0.0,0
-April,2026,Budget,Skincare,,,,Salary,,,,,Opening,100.0,0
-April,2026,Budget,Skincare,,,,Salary,,,,,Closing,400.0,0
+April,2026,Budget,Skincare,,,,Salary,,,300,,Opening,100.0,0
+April,2026,Budget,Skincare,,,,Salary,,,300,,Closing,400.0,0
 April,2026,Budget,Department Dues,,,,Salary,,,,,Opening,300.0,0
 April,2026,Budget,Department Dues,,,,Salary,,,,,Closing,400.0,0
 April,2026,Budget,Gifting,,,,Salary,,,,,Opening,0.0,0
@@ -392,8 +392,8 @@ May,2026,Budget,MSc. Actuarial Science,,,,Salary,,,,,Opening,1500.0,0
 May,2026,Budget,MSc. Actuarial Science,,,,Salary,,,,,Closing,3000.0,0
 May,2026,Budget,Clothes,,,,Salary,,,,,Opening,0.0,0
 May,2026,Budget,Clothes,,,,Salary,,,,,Closing,100.0,0
-May,2026,Budget,Skincare,,,,Salary,,,,,Opening,400.0,0
-May,2026,Budget,Skincare,,,,Salary,,,,,Closing,500.0,0
+May,2026,Budget,Skincare,,,,Salary,,,100,,Opening,400.0,0
+May,2026,Budget,Skincare,,,,Salary,,,100,,Closing,500.0,0
 May,2026,Budget,Department Dues,,,,Salary,,,,,Opening,400.0,0
 May,2026,Budget,Department Dues,,,,Salary,,,,,Closing,500.0,0
 May,2026,Budget,Gifting,,,,Salary,,,,,Opening,100.0,0
@@ -440,8 +440,8 @@ June,2026,Budget,MSc. Actuarial Science,,,,,,,,,Opening,3000.0,0
 June,2026,Budget,MSc. Actuarial Science,,,,,,,,,Closing,3000.0,0
 June,2026,Budget,Clothes,,,,Salary,,,,,Opening,100.0,0
 June,2026,Budget,Clothes,,,,Salary,,,,,Closing,200.0,0
-June,2026,Budget,Skincare,,,,Salary,,,,,Opening,500.0,0
-June,2026,Budget,Skincare,,,,Salary,,,,,Closing,600.0,0
+June,2026,Budget,Skincare,,,,Salary,,,30,,Opening,500.0,0
+June,2026,Budget,Skincare,,,,Salary,,,30,,Closing,600.0,0
 June,2026,Budget,Department Dues,,,,Salary,,,,,Opening,500.0,0
 June,2026,Budget,Department Dues,,,,Salary,,,,,Closing,600.0,0
 June,2026,Budget,Gifting,,,,Salary,,,,,Opening,200.0,0
@@ -470,7 +470,7 @@ July,2026,Budget,Rent,,,,Salary,,,,,Opening,6000.0,0
 July,2026,Budget,Rent Charges,,,,Salary,,,,,Opening,720.0,0
 July,2026,Budget,Bundle,,,,Salary,,,,,Opening,400.0,0
 July,2026,Budget,Shoes,,,,Salary,,,,,Opening,250.0,0
-July,2026,Budget,Hair,,,,"Salary,CompanyBonus",,,,,Opening,400.0,0
+July,2026,Budget,Hair,,,,"Salary,CompanyBonus",,500,,,Opening,400.0,0
 July,2026,Budget,Tithe,,,,Salary,,,,,Opening,3600.0,0
 July,2026,Budget,Electricity,,,,Salary,,,,,Opening,1200.0,0
 July,2026,Budget,Rental Utilities,,,,Salary,,,,,Opening,840.0,0

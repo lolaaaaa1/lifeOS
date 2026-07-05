@@ -197,16 +197,10 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0307202610,,Others,,256,Utilities,Monthly,,,April,2026,Expense,,,
 0307202611,Ecobank,,35,,Nails,Monthly,,,July,2026,Expense,,,
 0307202611,,Others,,35,Nails,Monthly,,,July,2026,Expense,,,
-0307202612,Ecobank,,530,,Skincare,Monthly,,,July,2026,Expense,,,
-0307202612,Ecobank,,3.98,,Charges,Monthly,,,July,2026,Expense,,,
-0307202612,,Charges,,3.98,Charges,Monthly,,,July,2026,Expense,,,
-0307202612,,Others,,530,Skincare,Monthly,,,July,2026,Expense,,,
 0307202613,Ecobank,,350.6,,Transfer,Monthly,,,July,2026,Transfer,,,
 0307202613,,Cash,,350.6,Transfer,Monthly,,,July,2026,Transfer,,,
 0307202614,Ecobank,,133.96,,Transfer,Monthly,,,July,2026,Transfer,,,
 0307202614,,Telecel Cash,,133.96,Transfer,Monthly,,,July,2026,Transfer,,,
-0307202615,Ecobank,,250,,Shoes,Monthly,,,July,2026,Expense,,,
-0307202615,,Gadolsoles,,250,Shoes,Monthly,,,July,2026,Expense,,,
 0207202601,Ecobank,,488,,SOA Exams,Monthly,,,December,2025,Transfer,,,
 0207202601,,Achieve SOA Exams,,488,SOA Exams,Monthly,,,December,2025,Transfer,,,
 0112202501,,Ecobank,,918.00,,Monthly,,,December,2025,Opening Balance,Monthly,,
@@ -440,3 +434,17 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202605,,Auntie Happy (Hair Dresser),,100,Hair,Monthly,,,January,2026,Expense,,,0507202605
 0507202606,Ecobank,,170,,Hair,Monthly,,,April,2026,Expense,,,0507202605
 0507202606,,Auntie Happy (Hair Dresser),,170,Hair,Monthly,,,April,2026,Expense,,,0507202605
+0507202607,Ecobank,,100,,Skincare,Monthly,,,January,2026,Expense,,,0507202607
+0507202607,,Others,,100,Skincare,Monthly,,,January,2026,Expense,,,0507202607
+0507202608,Ecobank,,300,,Skincare,Monthly,,,April,2026,Expense,,,0507202607
+0507202608,,Others,,300,Skincare,Monthly,,,April,2026,Expense,,,0507202607
+0507202609,Ecobank,,100,,Skincare,Monthly,,,May,2026,Expense,,,0507202607
+0507202609,,Others,,100,Skincare,Monthly,,,May,2026,Expense,,,0507202607
+0507202610,Ecobank,,30,,Skincare,Monthly,,,June,2026,Expense,,,0507202607
+0507202610,,Others,,30,Skincare,Monthly,,,June,2026,Expense,,,0507202607
+0507202611,Ecobank,,3.98,,Charges,Monthly,,,July,2026,Expense,,,0507202607
+0507202611,,Charges,,3.98,Charges,Monthly,,,July,2026,Expense,,,0507202607
+0507202612,Ecobank,,50,,Shoes,Monthly,,,January,2026,Expense,,,0507202612
+0507202612,,Gadolsoles,,50,Shoes,Monthly,,,January,2026,Expense,,,0507202612
+0507202613,Ecobank,,200,,Shoes,Monthly,,,April,2026,Expense,,,0507202612
+0507202613,,Gadolsoles,,200,Shoes,Monthly,,,April,2026,Expense,,,0507202612
