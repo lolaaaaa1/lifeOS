@@ -474,3 +474,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202625,,Valerie Emefa Aseye Akli-Nartey,,280,Gifting,Monthly,,,July,2026,Expense,,Red Flats,0507202625
 0507202626,Ecobank,,155,,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,0507202626
 0507202626,,Doreen Gidi,,155,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,0507202626
+0507202627,Ecobank,,300,,Claude Subscription,Monthly,,,July,2026,Expense,,,0507202627
+0507202627,,Claude,,300,Claude Subscription,Monthly,,,July,2026,Expense,,,0507202627
