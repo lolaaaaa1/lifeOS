@@ -408,7 +408,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0106202629,,Charges,,118.7,,Monthly,,,June,2026,Opening Balance,Monthly,,
 3006202620,,Charges,,119.2,,Monthly,,,June,2026,Closing Balance,Monthly,,
 0107202627,,Charges,,119.2,,Monthly,,,July,2026,Opening Balance,Monthly,,
-2811202501,,,1032.52,,Salary,Monthly,,,December,2025,Income,,,
+2811202501,Nationwide Medical Insurance,,1032.52,,Salary,Monthly,,,December,2025,Income,,,
 2811202501,,Ecobank,,1032.52,Salary,Monthly,,,December,2025,Income,,,
 0101202601,Ecobank,,1000,,Rent,Monthly,,,January,2026,Expense,,,
 0101202601,Ecobank,,20.1,,Charges,Monthly,,,January,2026,Expense,,,
