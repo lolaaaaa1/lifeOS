@@ -486,3 +486,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202628,,Others,,111.9,Utilities,Monthly,,,July,2026,Expense,,I don’t know,0507202628
 0507202629,Ecobank,,100,,Outing,Monthly,,,April,2026,Expense,,To some restaurant with my church friends,0507202629
 0507202629,,Others,,100,Outing,Monthly,,,April,2026,Expense,,To some restaurant with my church friends,0507202629
+0507202630,Ecobank,,100,,Outing,Monthly,,,July,2026,Expense,,To some restaurant with my church friends,0507202629
+0507202630,,Others,,100,Outing,Monthly,,,July,2026,Expense,,To some restaurant with my church friends,0507202629
