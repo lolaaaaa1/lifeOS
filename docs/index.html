@@ -842,6 +842,8 @@
       padding: 32px;
       width: 100%;
       max-width: 420px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
       box-shadow: 0 20px 60px rgba(26,31,22,0.2);
       transform: translateY(12px) scale(0.98);
       transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
@@ -5916,7 +5918,7 @@ function renderAllocInfo(val) {
   const info = $('acctItemAllocInfo');
   if (!info) return;
 
-  if (!val || AC.txnType !== 'expense') {
+  if (!val || (AC.txnType !== 'expense' && AC.txnType !== 'transfer')) {
     info.innerHTML = '';
     AC.txnSplit = null;
     return;
