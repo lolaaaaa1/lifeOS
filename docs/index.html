@@ -2145,7 +2145,7 @@ function _syncTxnToIncome(item, monthRcv, yearRcv, credit, period) {
 async function _migrateTxns() {
   const txns = TXNS();
   let changed = false;
-  const TARGET = ['TransactionID', 'AccountFrom', 'AccountTo', 'Debit', 'Credit', 'Item', 'IncomePeriod', 'MonthReceived', 'YearReceived', 'MonthFor', 'YearFor', 'TransactionType', 'BalancingPeriod'];
+  const TARGET = ['TransactionID', 'AccountFrom', 'AccountTo', 'Debit', 'Credit', 'Item', 'IncomePeriod', 'MonthReceived', 'YearReceived', 'MonthFor', 'YearFor', 'TransactionType', 'BalancingPeriod', 'Note', 'GroupTransactionID'];
 
   // ── 1. Patch old AccountName → AccountTo ─────────────────────────────────────
   for (const row of txns.rows) {
@@ -5983,11 +5983,24 @@ function renderAllocInfo(val) {
 
   if (!Object.keys(allocMap).length) { info.innerHTML = ''; AC.txnSplit = null; return; }
 
-  // Sum expense debits already recorded for this item per month
+  // Sum expense debits already recorded for this item per month.
+  // Also count charges from the same GroupTransactionID (charges always come from current month).
+  const itemGroupKeys = {}; // groupTransactionId -> monthFor|yearFor key
   txnRows.forEach(t => {
     if (t.TransactionType !== 'Expense' || t.Item !== val) return;
     const key = `${t.MonthFor}|${t.YearFor}`;
-    if (allocMap[key]) allocMap[key].spent += (parseFloat(t.Debit) || 0);
+    if (allocMap[key]) {
+      allocMap[key].spent += (parseFloat(t.Debit) || 0);
+      if (t.GroupTransactionID) itemGroupKeys[t.GroupTransactionID] = key;
+    }
+  });
+  txnRows.forEach(t => {
+    if (t.TransactionType !== 'Expense' || t.Item !== 'Charges') return;
+    const gid = t.GroupTransactionID;
+    const key = `${t.MonthFor}|${t.YearFor}`;
+    if (gid && itemGroupKeys[gid] && allocMap[key]) {
+      allocMap[key].spent += (parseFloat(t.Debit) || 0);
+    }
   });
 
   // Sort chronologically (oldest first — split draws from earliest available)
