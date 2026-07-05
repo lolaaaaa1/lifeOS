@@ -4662,11 +4662,7 @@ function _getBudgetItemStatus() {
         if (r.AllocationBalancing === 'Opening') { openRow = r; }
         else if (!r.AllocationBalancing) { allocRow = r; }
       }
-      var allocAmt = 0;
-      if (allocRow) {
-        allocAmt = (parseFloat(allocRow.SalaryPortion) || 0) + (parseFloat(allocRow.CompanyBonusPortion) || 0);
-        if (!allocAmt) allocAmt = parseFloat(allocRow.PortionsTotal) || 0;
-      }
+      var allocAmt = allocRow ? (parseFloat(allocRow.PortionsTotal) || 0) : 0;
       budgeted = (parseFloat(openRow ? openRow.Credit : 0) || 0) + allocAmt;
     } else {
       // Monthly: BP.monthAmounts is already PortionsTotal for the current scope
@@ -5931,13 +5927,11 @@ function renderAllocInfo(val) {
   const incRows = INC().rows;
   const txnRows = TXNS().rows;
 
-  // All months where this item exists in income.csv
+  // Only months where PortionsTotal > 0 for this item
   const allocMap = {};
   incRows.filter(r => r.Type === 'Budget' && r.Items === val && !r.AllocationBalancing).forEach(r => {
-    const sal = parseFloat(r.SalaryPortion) || 0;
-    const bon = parseFloat(r.CompanyBonusPortion) || 0;
-    const amt = sal + bon || parseFloat(r.PortionsTotal) || 0;
-    allocMap[`${r.Month}|${r.Year}`] = { month: r.Month, year: String(r.Year), alloc: amt, spent: 0 };
+    const amt = parseFloat(r.PortionsTotal) || 0;
+    if (amt > 0) allocMap[`${r.Month}|${r.Year}`] = { month: r.Month, year: String(r.Year), alloc: amt, spent: 0 };
   });
 
   if (!Object.keys(allocMap).length) { info.innerHTML = ''; AC.txnSplit = null; return; }
