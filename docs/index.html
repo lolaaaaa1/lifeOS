@@ -5981,19 +5981,17 @@ function renderAllocInfo(val) {
     </div>
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
       ${rows.map(r => {
-        const rem       = r.alloc - r.spent;
-        const noAlloc   = r.alloc <= 0;
-        const zero      = rem <= 0;
-        const isSel     = r.month === curM && r.year === curY;
-        const splitAmt  = splitMap[`${r.month}|${r.year}`] || 0;
-        const remColor  = rem < 0 ? '#a8533f' : zero ? 'var(--muted)' : '#3a6b4a';
+        const rem        = r.alloc - r.spent;
+        const available  = rem > 0;
+        const isSel      = r.month === curM && r.year === curY;
+        const splitAmt   = splitMap[`${r.month}|${r.year}`] || 0;
+        const remColor   = rem < 0 ? '#a8533f' : !available ? 'var(--muted)' : '#3a6b4a';
         const splitColor = splitAmt > 0 ? '#5a4a3a' : 'var(--muted)';
-        const dimmed    = noAlloc || (zero && splitAmt === 0);
-        return `<div class="alloc-row${isSel ? ' selected' : ''}" onclick="setMonthFor('${r.month}','${r.year}')"
-          style="display:grid;grid-template-columns:${cols};align-items:center;padding:8px 10px;cursor:${noAlloc ? 'default' : 'pointer'};border-bottom:1px solid var(--border);opacity:${dimmed ? '0.4' : '1'};">
+        return `<div class="alloc-row${isSel ? ' selected' : ''}" ${available ? `onclick="setMonthFor('${r.month}','${r.year}')"` : ''}
+          style="display:grid;grid-template-columns:${cols};align-items:center;padding:8px 10px;cursor:${available ? 'pointer' : 'default'};border-bottom:1px solid var(--border);opacity:${!available && splitAmt === 0 ? '0.4' : '1'};">
           <span style="font-size:13px;">${r.month} ${r.year}</span>
-          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${noAlloc ? '—' : fmtGHS(r.alloc)}</span>
-          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${noAlloc ? '—' : (rem < 0 ? '−' : '') + fmtGHS(Math.abs(rem))}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${fmtGHS(r.alloc)}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${(rem < 0 ? '−' : '') + fmtGHS(Math.abs(rem))}</span>
           ${showSplit ? `<span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${splitColor};font-weight:${splitAmt > 0 ? '600' : '400'};">${splitAmt > 0 ? fmtGHS(splitAmt) : '—'}</span>` : ''}
         </div>`;
       }).join('')}
