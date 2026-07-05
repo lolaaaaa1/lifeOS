@@ -187,14 +187,12 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0307202604,,Esthetiq Beauty Salon,,120,Hair,Monthly,,,April,2026,Expense,,,
 0307202605,Ecobank,,10,,Hair,Monthly,,,April,2026,Expense,,,
 0307202605,,Others,,10,Hair,Monthly,,,April,2026,Expense,,,
-0307202607,Ecobank,,100,,Utilities,Monthly,,,March,2026,Expense,,,
-0307202607,,Others,,100,Utilities,Monthly,,,March,2026,Expense,,,
-0307202608,Ecobank,,332.1,,Utilities,Monthly,,,February,2026,Expense,,,
-0307202608,,Others,,332.1,Utilities,Monthly,,,February,2026,Expense,,,
-0307202609,Ecobank,,100,,Utilities,Monthly,,,April,2026,Expense,,,
-0307202609,,Philip Twum,,100,Utilities,Monthly,,,April,2026,Expense,,,
-0307202610,Ecobank,,256,,Utilities,Monthly,,,April,2026,Expense,,,
-0307202610,,Others,,256,Utilities,Monthly,,,April,2026,Expense,,,
+0307202607,Ecobank,,100,,Utilities,Monthly,,,July,2026,Expense,,,0307202607
+0307202607,,Others,,100,Utilities,Monthly,,,July,2026,Expense,,,0307202607
+0307202609,Ecobank,,100,,Utilities,Monthly,,,July,2026,Expense,,,0307202609
+0307202609,,Philip Twum,,100,Utilities,Monthly,,,July,2026,Expense,,,0307202609
+0307202610,Ecobank,,256,,Utilities,Monthly,,,July,2026,Expense,,,0307202610
+0307202610,,Others,,256,Utilities,Monthly,,,July,2026,Expense,,,0307202610
 0307202611,Ecobank,,35,,Nails,Monthly,,,July,2026,Expense,,,
 0307202611,,Others,,35,Nails,Monthly,,,July,2026,Expense,,,
 0307202613,Ecobank,,350.6,,Transfer,Monthly,,,July,2026,Transfer,,,
@@ -476,3 +474,11 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202626,,Doreen Gidi,,155,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,0507202626
 0507202627,Ecobank,,300,,Claude Subscription,Monthly,,,July,2026,Expense,,,0507202627
 0507202627,,Claude,,300,Claude Subscription,Monthly,,,July,2026,Expense,,,0507202627
+0507202631,Ecobank,,100,,Utilities,Monthly,,,April,2026,Expense,,,0507202631
+0507202631,,Others,,100,Utilities,Monthly,,,April,2026,Expense,,,0507202631
+0507202632,Ecobank,,100,,Utilities,Monthly,,,May,2026,Expense,,,0507202631
+0507202632,,Others,,100,Utilities,Monthly,,,May,2026,Expense,,,0507202631
+0507202633,Ecobank,,100,,Utilities,Monthly,,,June,2026,Expense,,,0507202631
+0507202633,,Others,,100,Utilities,Monthly,,,June,2026,Expense,,,0507202631
+0507202634,Ecobank,,32.1,,Utilities,Monthly,,,July,2026,Expense,,,0507202631
+0507202634,,Others,,32.1,Utilities,Monthly,,,July,2026,Expense,,,0507202631
