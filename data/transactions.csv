@@ -500,5 +500,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202641,,Ride Hailing Apps,,22,Transport,Monthly,,,July,2026,Expense,,To Church,0507202641
 0507202642,Cash,,20,,Food,Monthly,,,July,2026,Expense,,Pork 2,0507202642
 0507202642,,Uncle Steven (HGT Khebab),,20,Food,Monthly,,,July,2026,Expense,,Pork 2,0507202642
-0507202636,Ecobank,,0,,Hair,Monthly,,,June,2026,Expense,,I don’t know,0507202636
-0507202636,,Others,,0,Hair,Monthly,,,June,2026,Expense,,I don’t know,0507202636
+0507202636,Ecobank,,600,,Hair,Monthly,,,June,2026,Expense,,I don’t know,
+0507202636,,Others,,600,Hair,Monthly,,,June,2026,Expense,,I don’t know,
