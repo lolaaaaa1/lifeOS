@@ -494,3 +494,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202636,,Others,,900,Utilities,Monthly,,,June,2026,Expense,,I don’t know,0507202636
 0507202637,Ecobank,,600,,Hair,Monthly,,,June,2026,Expense,,I don’t know,0507202637
 0507202637,,Others,,600,Hair,Monthly,,,June,2026,Expense,,I don’t know,0507202637
+0507202638,Ecobank,,500,,Hair,Monthly,,,July,2026,Expense,,I don’t know,0507202638
+0507202638,,Others,,500,Hair,Monthly,,,July,2026,Expense,,I don’t know,0507202638
