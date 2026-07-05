@@ -4123,7 +4123,7 @@ async function openSalaryHistory() {
     const allRows = await apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}`);
     SB.salary = getTotalIncome();
     SB.items  = allRows
-      .filter(r => r.Type === 'Budget')
+      .filter(r => r.Type === 'Budget' && !r.AllocationBalancing)
       .map(r => ({
         name:   r.Items,
         amount: (r.CalculatedType || '') === 'Calculated'
