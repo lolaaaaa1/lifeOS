@@ -448,3 +448,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202612,,Gadolsoles,,50,Shoes,Monthly,,,January,2026,Expense,,,
 0507202613,Ecobank,,200,,Shoes,Monthly,,,April,2026,Expense,,,
 0507202613,,Gadolsoles,,200,Shoes,Monthly,,,April,2026,Expense,,,
+0507202614,Ecobank,,220,,Shoes,Monthly,,,July,2026,Expense,,Brown Flats,0507202614
+0507202614,,Others,,220,Shoes,Monthly,,,July,2026,Expense,,Brown Flats,0507202614
