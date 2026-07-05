@@ -490,8 +490,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202630,,Others,,100,Outing,Monthly,,,July,2026,Expense,,To some restaurant with my church friends,0507202629
 0507202635,Ecobank,,200,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,0507202635
 0507202635,,Others,,200,Utilities,Monthly,,,July,2026,Expense,,I don’t know,0507202635
-0507202637,Ecobank,,600,,Hair,Monthly,,,June,2026,Expense,,I don’t know,0507202637
-0507202637,,Others,,600,Hair,Monthly,,,June,2026,Expense,,I don’t know,0507202637
 0507202638,Ecobank,,500,,Hair,Monthly,,,July,2026,Expense,,I don’t know,0507202638
 0507202638,,Others,,500,Hair,Monthly,,,July,2026,Expense,,I don’t know,0507202638
 0507202639,Ecobank,,150,,Food,Monthly,,,July,2026,Expense,,,0507202639
