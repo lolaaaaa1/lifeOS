@@ -470,7 +470,7 @@ July,2026,Budget,Rent,,,,Salary,,,,,Opening,6000.0,0
 July,2026,Budget,Rent Charges,,,,Salary,,,,,Opening,720.0,0
 July,2026,Budget,Bundle,,,,Salary,,,,,Opening,400.0,0
 July,2026,Budget,Shoes,,,,Salary,,,,,Opening,250.0,0
-July,2026,Budget,Hair,,,,"Salary,CompanyBonus",,500,,,Opening,400.0,0
+July,2026,Budget,Hair,,,,"Salary,CompanyBonus",,500,,500,Opening,400.0,0
 July,2026,Budget,Tithe,,,,Salary,,,,,Opening,3600.0,0
 July,2026,Budget,Electricity,,,,Salary,,,,,Opening,1200.0,0
 July,2026,Budget,Rental Utilities,,,,Salary,,,,,Opening,840.0,0
