@@ -502,3 +502,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202642,,Uncle Steven (HGT Khebab),,20,Food,Monthly,,,July,2026,Expense,,Pork 2,0507202642
 0507202636,Ecobank,,600,,Hair,Monthly,,,June,2026,Expense,,I don’t know,
 0507202636,,Others,,600,Hair,Monthly,,,June,2026,Expense,,I don’t know,
+0507202637,Ecobank,,900,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,0507202637
+0507202637,,Others,,900,Utilities,Monthly,,,June,2026,Expense,,I don’t know,0507202637
+0507202643,Ecobank,,900,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,0507202643
+0507202643,,Others,,900,Utilities,Monthly,,,June,2026,Expense,,I don’t know,0507202643
