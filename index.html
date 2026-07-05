@@ -5985,9 +5985,11 @@ function renderAllocInfo(val) {
 
   // Sum expense debits already recorded for this item per month.
   // Also count charges from the same GroupTransactionID (charges always come from current month).
-  const itemGroupKeys = {}; // groupTransactionId -> monthFor|yearFor key
+  const itemGroupKeys = {};
+  const editingGid = AC.editingTxn?.groupTransactionId || null;
   txnRows.forEach(t => {
     if ((t.TransactionType !== 'Expense' && t.TransactionType !== 'Transfer') || t.Item !== val) return;
+    if (editingGid && (t.GroupTransactionID === editingGid || (!t.GroupTransactionID && t.TransactionID === editingGid))) return;
     const key = `${t.MonthFor}|${t.YearFor}`;
     if (allocMap[key]) {
       allocMap[key].spent += (parseFloat(t.Debit) || 0);
@@ -5996,6 +5998,7 @@ function renderAllocInfo(val) {
   });
   txnRows.forEach(t => {
     if (t.TransactionType !== 'Expense' || t.Item !== 'Charges') return;
+    if (editingGid && (t.GroupTransactionID === editingGid || (!t.GroupTransactionID && t.TransactionID === editingGid))) return;
     const gid = t.GroupTransactionID;
     const key = `${t.MonthFor}|${t.YearFor}`;
     if (gid && itemGroupKeys[gid] && allocMap[key]) {
@@ -6173,7 +6176,7 @@ async function openEditTxnModal(txnId) {
     if (!t.accountFrom && t.accountTo) type = 'income';
     else if (t.accountFrom && t.accountTo && acctSet.has(t.accountFrom) && acctSet.has(t.accountTo)) type = 'transfer';
   }
-  AC.editingTxn = { transactionId: txnId };
+  AC.editingTxn = { transactionId: txnId, groupTransactionId: t.groupTransactionId };
   $('accountModalTitle').textContent = 'Edit Transaction';
   $('acctTxnMonthFor').value  = t.monthFor  || '';
   $('acctTxnYearFor').value   = t.yearFor   || '';
