@@ -524,3 +524,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202649,,Others,,70,Utilities,Monthly,,,July,2026,Expense,,I don’t know,
 0607202601,Cash,,10,,Food,Monthly,,,July,2026,Expense,,Bofrot (2),0607202601
 0607202601,,Others,,10,Food,Monthly,,,July,2026,Expense,,Bofrot (2),0607202601
+0607202602,Cash,,12.5,,Transport,Monthly,,,July,2026,Expense,,To UGMC,0607202602
+0607202602,,Others,,12.5,Transport,Monthly,,,July,2026,Expense,,To UGMC,0607202602
