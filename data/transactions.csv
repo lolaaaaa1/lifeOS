@@ -522,3 +522,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0507202648,,Others,,70,Utilities,Monthly,,,June,2026,Expense,,I don’t know,0507202648
 0507202649,Ecobank,,70,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,
 0507202649,,Others,,70,Utilities,Monthly,,,July,2026,Expense,,I don’t know,
+0607202601,Cash,,10,,Food,Monthly,,,July,2026,Expense,,Bofrot (2),0607202601
+0607202601,,Others,,10,Food,Monthly,,,July,2026,Expense,,Bofrot (2),0607202601
