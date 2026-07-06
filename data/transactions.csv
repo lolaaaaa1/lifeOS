@@ -526,3 +526,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0607202601,,Others,,10,Food,Monthly,,,July,2026,Expense,,Bofrot (2),0607202601
 0607202602,Cash,,12.5,,Transport,Monthly,,,July,2026,Expense,,To UGMC,0607202602
 0607202602,,Others,,12.5,Transport,Monthly,,,July,2026,Expense,,To UGMC,0607202602
+0607202603,Telecel Cash,,9.5,,Transport,Monthly,,,July,2026,Expense,,From UGMC,0607202603
+0607202603,,Others,,9.5,Transport,Monthly,,,July,2026,Expense,,From UGMC,0607202603
