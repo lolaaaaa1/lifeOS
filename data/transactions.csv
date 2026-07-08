@@ -534,3 +534,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0807202601,,Auntie Gloria (NMI),,30,Food,Monthly,,,July,2026,Expense,,Plantain Chips,0807202601
 0807202602,Cash,,18,,Transport,Monthly,,,July,2026,Expense,,Trotro,0807202602
 0807202602,,Others,,18,Transport,Monthly,,,July,2026,Expense,,Trotro,0807202602
+0807202603,Cash,,5,,Transport,Monthly,,,July,2026,Expense,,,0807202603
+0807202603,,Others,,5,Transport,Monthly,,,July,2026,Expense,,,0807202603
