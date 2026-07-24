@@ -3302,7 +3302,7 @@ async function renderDashboardCalc() {
     if (!yearItemSalary.hasOwnProperty(t.Item)) { yearItemSalary[t.Item] = 0; yearItemBonus[t.Item] = 0; }
   });
 
-  const yearlyItems = [...new Set([...Object.keys(yearItemSalary), ...Object.keys(yearItemBonus)])].sort();
+  const yearlyItemKeys = [...new Set([...Object.keys(yearItemSalary), ...Object.keys(yearItemBonus)])].sort();
 
   // YTD total salary from constraints; net bonus all-time
   const ytdTotalSalary = CONS().rows
@@ -3312,7 +3312,7 @@ async function renderDashboardCalc() {
     .filter(r => r.Item === 'Company Bonus')
     .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
 
-  if (yearlyItems.length) {
+  if (yearlyItemKeys.length) {
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
     const periodEl = document.createElement('div');
@@ -3325,7 +3325,7 @@ async function renderDashboardCalc() {
     slide.appendChild(hdr);
     const list = document.createElement('div');
     list.className = 'dash-items';
-    yearlyItems.forEach(item => {
+    yearlyItemKeys.forEach(item => {
       const salary = yearItemSalary[item] || 0;
       const bonus  = yearItemBonus[item]  || 0;
       const left   = _itemAllTimeLeft(item);
