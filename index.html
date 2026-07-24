@@ -2506,19 +2506,29 @@ const LocalAPI = {
           if (amt > 0) amounts[r.Item] = (amounts[r.Item]||0) + amt;
         }
       });
-      // expenses: transactions for daily items on this specific date (date encoded in TransactionID as DDMMYYYYnn)
+      // expenses: sum ALL expense debits for daily items regardless of date
+      // remaining = total all-time allocation - total all-time spending
       const dailyItems = new Set(ITMS().rows.filter(r => r.Section==='Budget' && r.BudgetMode==='Daily').map(r => r.ItemName));
-      const ddStr = String(td).padStart(2,'0'), mmStr = String(t.getMonth()+1).padStart(2,'0');
-      const datePrefix = `${ddStr}${mmStr}${ty}`;
       const expenses = {};
       TXNS().rows.forEach(r => {
         if (r.TransactionType !== 'Expense' || !dailyItems.has(r.Item) || !(parseFloat(r.Debit)>0)) return;
-        if ((r.TransactionID || '').startsWith(datePrefix))
-          expenses[r.Item] = (expenses[r.Item]||0) + (parseFloat(r.Debit)||0);
+        expenses[r.Item] = (expenses[r.Item]||0) + (parseFloat(r.Debit)||0);
+      });
+      // budget for remaining = total all-time allocation (override amounts for remaining calculation)
+      const totalAlloc = {};
+      BALLOC().rows.forEach(r => {
+        if (!r.Item || !dailyItems.has(r.Item) || r.AppliesToDay === 'FALSE') return;
+        const a = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        if (a > 0) totalAlloc[r.Item] = (totalAlloc[r.Item]||0) + a;
+      });
+      // remaining = total all-time allocation - total all-time expenses (no date filter)
+      const remaining = {};
+      dailyItems.forEach(item => {
+        remaining[item] = (totalAlloc[item]||0) - (expenses[item]||0);
       });
       const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][t.getDay()];
       const iso = `${ty}-${String(t.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
-      return { date: iso, dayName, amounts, expenses };
+      return { date: iso, dayName, amounts, remaining };
     }
 
     // GET /days/today/summary
@@ -3079,10 +3089,12 @@ async function renderDashboardCalc() {
     }};
   }
 
-  function makeSlide(periodLabel, amtsMap, expenses) {
+  // remainderMap: if provided, overrides the per-item remaining calculation (used for daily items
+  // where remaining = total allocation - total spending, not today's allocation - today's spending)
+  function makeSlide(periodLabel, amtsMap, expenses, remainderMap) {
     const keys = Object.keys(amtsMap).filter(k => amtsMap[k] > 0);
     const total = keys.reduce((s, k) => s + (amtsMap[k] || 0), 0);
-    const showTable = expenses != null;
+    const showTable = expenses != null || remainderMap != null;
 
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
@@ -3104,7 +3116,7 @@ async function renderDashboardCalc() {
     keys.forEach(item => {
       const row = document.createElement('div');
       const exp = (expenses || {})[item] || 0;
-      const rem = (amtsMap[item] || 0) - exp;
+      const rem = remainderMap ? (remainderMap[item] ?? (amtsMap[item] || 0) - exp) : (amtsMap[item] || 0) - exp;
       const over = rem < 0;
       const remColor = over ? '#a8533f' : '#3a6b4a';
       if (showTable) {
@@ -3141,9 +3153,9 @@ async function renderDashboardCalc() {
   const { sec: dailySec, body: dailyBody } = makeDashSection('Daily', true);
 
   const daySlides = dayDates.map((dateStr, i) => {
-    const amounts  = dayDataArr[i]?.amounts   || {};
-    const expenses = dayDataArr[i]?.expenses  || {};
-    return makeSlide(fmtDayLabel(dateStr), amounts, expenses);
+    const amounts   = dayDataArr[i]?.amounts   || {};
+    const remaining = dayDataArr[i]?.remaining || null;
+    return makeSlide(fmtDayLabel(dateStr), amounts, {}, remaining);
   });
 
   const { wrap: dailyWrap, dots: dailyDots, scrollTo: dailyScrollTo } = makeSwiper(daySlides, 1);
@@ -3160,23 +3172,23 @@ async function renderDashboardCalc() {
   const txnRows = TXNS().rows;
 
   const monthSlideEls = monthSlides.map((m, i) => {
-    const [, incRows] = monthDataArr[i];
     const mStr = m.Month, yStr = String(m.Year);
+    const period = mStr + ' ' + yStr;
 
-    // Budgeted = SalaryPortion + CompanyBonusPortion (all items, including Calculated)
+    // Budgeted = salary + bonus from BALLOC, Once items only (Daily shown in daily section)
     const periodBudget = {};
-    (incRows || []).filter(r => r.Type === 'Budget' && !r.AllocationBalancing).forEach(r => {
-      const sal = parseFloat(r.SalaryPortion) || 0;
-      const bon = parseFloat(r.CompanyBonusPortion) || 0;
-      const total = sal + bon || parseFloat(r.PortionsTotal) || 0;
-      if (total > 0) periodBudget[r.Items] = total;
+    Object.entries(_ballocGrouped(period)).forEach(([item, g]) => {
+      if (_budgetMode(item) === 'Daily') return;
+      const total = g.salary + g.bonus;
+      if (total > 0) periodBudget[item] = total;
     });
 
-    // Spent = expense debits from transactions for this month
+    // Spent = expense debits from transactions for this month, Once items only
     const monthSpent = {};
     txnRows.forEach(t => {
       if (t.TransactionType !== 'Expense') return;
       if (t.MonthFor !== mStr || String(t.YearFor) !== yStr) return;
+      if (_budgetMode(t.Item) === 'Daily') return;
       const dbt = parseFloat(t.Debit) || 0;
       if (dbt > 0) monthSpent[t.Item] = (monthSpent[t.Item] || 0) + dbt;
     });
@@ -3202,6 +3214,7 @@ async function renderDashboardCalc() {
   const yearlyBudget = {};
   const curPeriod = curMonthStr + ' ' + curYear;
   Object.entries(_ballocGrouped(curPeriod)).forEach(([item, g]) => {
+    if (_budgetMode(item) === 'Daily') return;
     const budget = g.salary + g.bonus;
     if (budget > 0) yearlyBudget[item] = budget;
   });
@@ -3211,6 +3224,7 @@ async function renderDashboardCalc() {
     if (t.TransactionType !== 'Expense') return;
     if (String(t.YearFor) !== String(curYear)) return;
     if (MONTHS.indexOf(t.MonthFor) > curMonthIdx) return;
+    if (_budgetMode(t.Item) === 'Daily') return;
     const dbt = parseFloat(t.Debit) || 0;
     if (dbt > 0) yearlySpent[t.Item] = (yearlySpent[t.Item] || 0) + dbt;
   });
