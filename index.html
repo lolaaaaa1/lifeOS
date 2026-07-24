@@ -3533,7 +3533,8 @@ function renderIncomeSections() {
   });
 
   const slides = periods.map(period => {
-    // Total allocated for this period via MonthYearToUse (includes ISO-week boundary rows)
+    // Sum all BALLOC rows for this period via MonthYearToUse.
+    // This automatically includes boundary daily rows from adjacent calendar months.
     let totalSalary = 0, totalBonus = 0;
     BALLOC().rows.forEach(r => {
       if (r.MonthYearToUse !== period || !r.Item) return;
@@ -3541,17 +3542,7 @@ function renderIncomeSections() {
       totalSalary += parseFloat(r.AllocatedSalaryPortion) || 0;
       totalBonus  += parseFloat(r.AllocatedCompanyBonusPortion) || 0;
     });
-    const [mStr, yStr] = period.split(' ');
-    const consRow = CONS().rows.find(r => r.Month === mStr && String(r.Year) === yStr);
-    const salaryBudget = parseFloat(consRow?.SalaryConstraints) || 0;
-    const netBonus     = TXNS().rows
-      .filter(r => r.Item === 'Company Bonus')
-      .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
-
-    const remSalary = salaryBudget - totalSalary;
-    const remBonus  = netBonus - totalBonus;
-    const overSal   = remSalary < 0;
-    const overBon   = remBonus  < 0;
+    const grandTotal = totalSalary + totalBonus;
 
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
@@ -3565,19 +3556,13 @@ function renderIncomeSections() {
         <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Bonus</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
-        <span style="font-size:14px;">Budget</span>
-        <span style="font-size:14px;font-weight:500;text-align:right;">${salaryBudget > 0 ? fmtGHS(salaryBudget) : '—'}</span>
-        <span style="font-size:14px;font-weight:500;text-align:right;">${netBonus > 0 ? fmtGHS(netBonus) : '—'}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
         <span style="font-size:14px;">Allocated</span>
         <span style="font-size:14px;font-weight:500;text-align:right;">${totalSalary > 0 ? fmtGHS(totalSalary) : '—'}</span>
-        <span style="font-size:14px;font-weight:500;text-align:right;">${totalBonus > 0 ? fmtGHS(totalBonus) : '—'}</span>
+        <span style="font-size:14px;font-weight:500;text-align:right;">${totalBonus  > 0 ? fmtGHS(totalBonus)  : '—'}</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;font-weight:600;">
-        <span style="font-size:14px;">Remaining</span>
-        <span style="font-size:14px;text-align:right;color:${salaryBudget > 0 ? (overSal ? '#a8533f' : '#3a6b4a') : 'inherit'};">${salaryBudget > 0 ? `${overSal ? '−' : ''}${fmtGHS(Math.abs(remSalary))}` : '—'}</span>
-        <span style="font-size:14px;text-align:right;color:${netBonus > 0 ? (overBon ? '#a8533f' : '#3a6b4a') : 'inherit'};">${netBonus > 0 ? `${overBon ? '−' : ''}${fmtGHS(Math.abs(remBonus))}` : '—'}</span>
+      <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;font-weight:600;border-top:2px solid rgba(0,0,0,0.08);margin-top:4px;">
+        <span style="font-size:14px;">Total</span>
+        <span style="font-size:14px;text-align:right;grid-column:2/4;">${grandTotal > 0 ? fmtGHS(grandTotal) : '—'}</span>
       </div>`;
     return slide;
   });
