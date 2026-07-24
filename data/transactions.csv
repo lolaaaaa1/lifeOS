@@ -538,8 +538,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0807202603,,Others,,5,Transport,Monthly,,,July,2026,Expense,,,0807202603
 2407202601,Ecobank,,798,,Food,Monthly,,,July,2026,Expense,,,2407202601
 2407202601,,Others,,798,Food,Monthly,,,July,2026,Expense,,,2407202601
-2407202603,MTN Mobile Money,,30,,Apple Music Subscription,Monthly,,,July,2026,Expense,,,2407202603
-2407202603,,Apple Music,,30,Apple Music Subscription,Monthly,,,July,2026,Expense,,,2407202603
 2407202604,Cash,,139,,Transport,Monthly,,,July,2026,Expense,,,2407202604
 2407202604,,Others,,139,Transport,Monthly,,,July,2026,Expense,,,2407202604
 2407202602,Ecobank,,0,,Food,Monthly,,,July,2026,Expense,,,
@@ -550,3 +548,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202606,,Others,,100,Travel,Monthly,,,July,2026,Expense,,For food,
 2407202607,Ecobank,,29.12,,Charges,Monthly,,,July,2026,Expense,,,2407202607
 2407202607,,Charges,,29.12,Charges,Monthly,,,July,2026,Expense,,,2407202607
+2407202603,MTN Mobile Money,,30,,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
+2407202603,,Others,,30,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
