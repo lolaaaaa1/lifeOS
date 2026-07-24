@@ -550,5 +550,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202607,,Charges,,29.12,Charges,Monthly,,,July,2026,Expense,,,2407202607
 2407202603,MTN Mobile Money,,30,,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
 2407202603,,Others,,30,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
-2407202608,Telecel Cash,,10,,Charges,Monthly,,,July,2026,Expense,,,2407202608
-2407202608,,Charges,,10,Charges,Monthly,,,July,2026,Expense,,,2407202608
+2407202608,Telecel Cash,,10.23,,Charges,Monthly,,,July,2026,Expense,,,
+2407202608,Telecel Cash,,10,,Charges,Monthly,,,July,2026,Expense,,,
+2407202608,,Charges,,10,Charges,Monthly,,,July,2026,Expense,,,
+2407202608,,Charges,,10.23,Charges,Monthly,,,July,2026,Expense,,,
