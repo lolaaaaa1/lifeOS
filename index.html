@@ -2203,94 +2203,6 @@ async function _migrateTxns() {
   if (changed) await DATA.save('data/transactions.csv', 'Migrate to double-entry Debit/Credit');
 }
 
-// ── Automated period-end closing / opening balances ────────────────────────
-const _BALANCEABLE_TYPES = new Set(['Bank', 'Mobile Money', 'Cash', 'Investment']);
-const _PERIOD_CLOSE_KEY  = 'lifeOS_lastPeriodClose';
-const _ALL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-function _genTxnIdForDate(idSet, date) {
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yy = date.getFullYear();
-  const prefix = `${dd}${mm}${yy}`;
-  for (let i = 1; i < 1000; i++) {
-    const tid = `${prefix}${String(i).padStart(2, '0')}`;
-    if (!idSet.has(tid)) { idSet.add(tid); return tid; }
-  }
-  const fallback = `${prefix}99`; idSet.add(fallback); return fallback;
-}
-
-async function autoCloseAccounts() {
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-
-  const stored = localStorage.getItem(_PERIOD_CLOSE_KEY);
-  if (!stored) {
-    // First run — mark today, no backfill of historical data
-    localStorage.setItem(_PERIOD_CLOSE_KEY, todayStr);
-    return;
-  }
-  if (stored >= todayStr) return; // already processed today
-
-  const accts = (AC.defs || []);
-  if (!accts.length) { localStorage.setItem(_PERIOD_CLOSE_KEY, todayStr); return; }
-
-  // Snapshot balances ONCE before adding any rows (debits/credits would shift them)
-  const snapBal = {};
-  for (const { AccountName } of accts) snapBal[AccountName] = _acctBalance(AccountName);
-
-  const txns = TXNS();
-  _ensureCol(txns, 'BalancingPeriod');
-  const idSet = new Set(txns.rows.map(r => r.TransactionID || ''));
-
-  const addEntry = (type, period, month, year, date, acctName) => {
-    const id  = _genTxnIdForDate(idSet, date);
-    const rawBal = parseFloat(snapBal[acctName]) || 0;
-    const amt = String(Math.abs(rawBal));
-    const base = {
-      TransactionID: id, IncomePeriod: 'Monthly', MonthReceived: '', YearReceived: '',
-      MonthFor: month, YearFor: String(year), TransactionType: type,
-      BalancingPeriod: period, Note: '', Item: '',
-    };
-    // positive balance → Credit; negative balance → Debit (same direction for both close and open)
-    if (rawBal >= 0) {
-      txns.rows.push({ ...base, AccountFrom: '', AccountTo: acctName, Debit: '', Credit: amt });
-    } else {
-      txns.rows.push({ ...base, AccountFrom: acctName, AccountTo: '', Debit: amt, Credit: '' });
-    }
-  };
-
-  // Walk from day after stored up to today; close prevD, open curD each step
-  const parseDateStr = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
-  let prevD = parseDateStr(stored);
-  let curD  = new Date(prevD); curD.setDate(curD.getDate() + 1);
-  const todayD = parseDateStr(todayStr);
-
-  while (curD <= todayD) {
-    const pMo = _ALL_MONTHS[prevD.getMonth()], pYr = prevD.getFullYear();
-    const cMo = _ALL_MONTHS[curD.getMonth()],  cYr = curD.getFullYear();
-
-    for (const { AccountName } of accts) {
-      // Year boundary
-      if (cYr !== pYr) {
-        addEntry('Closing Balance', 'Yearly',  pMo, pYr, prevD, AccountName);
-        addEntry('Opening Balance', 'Yearly',  cMo, cYr, curD,  AccountName);
-      }
-      // Month boundary
-      if (cMo !== pMo || cYr !== pYr) {
-        addEntry('Closing Balance', 'Monthly', pMo, pYr, prevD, AccountName);
-        addEntry('Opening Balance', 'Monthly', cMo, cYr, curD,  AccountName);
-      }
-    }
-
-    prevD = new Date(curD);
-    curD.setDate(curD.getDate() + 1);
-  }
-
-  await DATA.save('data/transactions.csv', 'Auto period-end closing/opening balances');
-  AC.rows = TXNS().rows;
-  localStorage.setItem(_PERIOD_CLOSE_KEY, todayStr);
-}
 
 // ── LocalAPI router ────────────────────────────────────────────────────────
 
@@ -2893,7 +2805,6 @@ async function retryConnection() {
     navigate(startPage);
     loadBudgetItems();
     try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
-    try { await autoCloseAccounts(); } catch {}
     await fetchMonths();
     if (S.currentPage === 'budget')      renderBudgetPage();
     if (S.currentPage === 'budget-plan') renderBpPage();
@@ -2931,7 +2842,6 @@ async function saveGHToken() {
     navigate(startPage);
     loadBudgetItems();
     try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
-    try { await autoCloseAccounts(); } catch {}
     await fetchMonths();
     if (S.currentPage === 'budget')      renderBudgetPage();
     if (S.currentPage === 'budget-plan') renderBpPage();
@@ -4701,36 +4611,6 @@ function renderBpByIncome(container) {
     container.innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Add income on the Income page first.</div>';
   }
 
-  // Variable income cards (Company Bonus etc.) — show month-allocated amount
-  const nonSalarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.ItemName !== 'Salary').map(r => r.ItemName);
-  const curM = S.currentMonth && !isAllMonths() ? S.currentMonth.Month : null;
-  const curY = curM ? String(S.currentMonth.Year) : null;
-  nonSalarySrcs.forEach(src => {
-    const ballocRows = BALLOC().rows;
-    const allocatedAll = ballocRows.reduce((s, r) => s + (parseFloat(r.AllocatedCompanyBonusPortion) || 0), 0);
-    const allocatedMonth = curM
-      ? ballocRows.filter(r => {
-          const ls = (r.MonthYearToUse||'').lastIndexOf(' ');
-          return r.MonthYearToUse.slice(0,ls) === curM && r.MonthYearToUse.slice(ls+1) === curY;
-        }).reduce((s, r) => s + (parseFloat(r.AllocatedCompanyBonusPortion) || 0), 0)
-      : allocatedAll;
-    const received = TXNS().rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
-      .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
-    if (received === 0 && allocatedAll === 0) return;
-    const displayAmt = allocatedMonth;
-    const card = document.createElement('div');
-    card.className = 'salary-card';
-    card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
-    card.onclick = (e) => { if (!e.target.closest('button')) openVariableIncomeDetail(src); };
-    card.innerHTML = `
-      <div class="salary-card-top">
-        <span class="salary-card-label">${escHtml(src.toUpperCase())} · ${periodLabel}</span>
-        <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:3px 8px;"
-          onclick="event.stopPropagation();openAllocateModal('${escHtml(src)}')">Allocate</button>
-      </div>
-      <div class="salary-card-amount${displayAmt > 0 ? '' : ' empty'}">${displayAmt > 0 ? fmtGHS(displayAmt) : '—'}</div>`;
-    container.appendChild(card);
-  });
 }
 
 function isCalc(itemId) {
