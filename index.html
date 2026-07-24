@@ -4082,7 +4082,10 @@ async function openSalaryHistory() {
 
   try {
     const period = `${S.currentMonth.Month} ${S.currentMonth.Year}`;
-    SB.salary = getTotalIncome();
+    SB.salary   = getBudgetForCurrentMonth() ?? getTotalIncome();
+    SB.netBonus = TXNS().rows
+      .filter(r => r.Item === 'Company Bonus')
+      .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
     const grouped = _ballocGrouped(period);
     SB.items = Object.entries(grouped).map(([name, g]) => ({
       name,
@@ -4090,7 +4093,6 @@ async function openSalaryHistory() {
       bonus:  g.bonus,
       paid:   g.paid > 0 ? String(g.paid) : ''
     }));
-    SB.bonusByItem = Object.fromEntries(Object.entries(grouped).map(([name, g]) => [name, g.bonus]));
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
@@ -4101,55 +4103,61 @@ async function openSalaryHistory() {
 
 
 function sbItemRow(it) {
-  const { salary } = SB;
-  const pct = salary > 0 && it.amount > 0 ? ` · ${((it.amount / salary) * 100).toFixed(1)}%` : '';
-  const noAmt = it.amount === 0;
-  const unset = isCalcUnset(it.name);
-  const paidAmt = parseFloat(it.paid) || 0;
+  const noSalary = it.amount === 0;
+  const noBonus  = (it.bonus || 0) === 0;
+  const unset    = isCalcUnset(it.name);
+  const paidAmt  = parseFloat(it.paid) || 0;
   const isTransferredItem = it.paid === 'Transferred';
   const paidBadge = isTransferredItem
     ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#4a6b8a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">TRANSFERRED</span>`
     : paidAmt > 0
     ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
     : '';
-
-  const bonusBySource = SB.bonusByItem?.[it.name] || {};
-  const bonusTotal = Object.values(bonusBySource).reduce((s, v) => s + v, 0);
-  const bonusLines = Object.entries(bonusBySource)
-    .map(([src, amt]) => `<div style="font-size:11px;opacity:.55;display:flex;justify-content:space-between;padding:1px 0;"><span>+ ${escHtml(src)}</span><span>${fmtGHS(amt)}</span></div>`)
-    .join('');
-
   const row = document.createElement('div');
-  row.style = `padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
+  row.style = `display:grid;grid-template-columns:1fr 100px 84px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
   row.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:14px;${noAmt ? 'opacity:.5;' : ''}${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}<span style="opacity:.45;font-size:12px;">${pct}</span></span>
-      <span style="font-size:14px;font-weight:${noAmt ? '400' : '500'};${noAmt ? 'opacity:.35;' : ''}">${noAmt ? 'tap to set' : fmtGHS(it.amount)}</span>
-    </div>
-    ${bonusTotal > 0 ? `<div style="margin-top:3px;">${bonusLines}</div>` : ''}`;
+    <span style="font-size:14px;${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}</span>
+    <span style="font-size:14px;font-weight:${noSalary ? '400' : '500'};${noSalary ? 'opacity:.35;' : ''}text-align:right;">${noSalary ? '—' : fmtGHS(it.amount)}</span>
+    <span style="font-size:14px;font-weight:${noBonus ? '400' : '500'};${noBonus ? 'opacity:.35;' : ''}text-align:right;">${noBonus ? '—' : fmtGHS(it.bonus || 0)}</span>`;
   row.onclick = () => openSbAmountEdit(it.name);
   return row;
 }
 
 function sbTotalsRow(items) {
-  const allocated = items.reduce((s, it) => s + it.amount, 0);
-  const budget    = getBudgetForCurrentMonth() ?? SB.salary;
-  const remaining = budget - allocated;
-  const over      = remaining < 0;
-  const balanced  = budget && Math.abs(allocated - budget) <= 0.05;
-  const color     = balanced ? '#3a6b4a' : over ? '#a8533f' : 'inherit';
-  const label     = balanced ? 'Balanced ✓' : over ? 'Over budget' : 'Remaining';
+  const allocSalary = items.reduce((s, it) => s + (it.amount || 0), 0);
+  const allocBonus  = items.reduce((s, it) => s + (it.bonus  || 0), 0);
+  const salary      = SB.salary   || 0;
+  const netBonus    = SB.netBonus || 0;
+  const remSalary   = salary   - allocSalary;
+  const remBonus    = netBonus - allocBonus;
+  const overSal     = remSalary < 0;
+  const overBon     = remBonus  < 0;
   const foot = document.createElement('div');
-  foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;flex-direction:column;gap:6px;';
+  foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:grid;grid-template-columns:1fr 100px 84px;font-size:14px;font-weight:600;';
   foot.innerHTML = `
-    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;color:${color};"><span>${label}</span><span>${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span></div>`;
+    <span>Remaining</span>
+    <span style="text-align:right;color:${overSal ? '#a8533f' : '#3a6b4a'};">${overSal ? '−' : ''}${fmtGHS(Math.abs(remSalary))}</span>
+    <span style="text-align:right;color:${netBonus > 0 ? (overBon ? '#a8533f' : '#3a6b4a') : 'inherit'};">${netBonus > 0 ? `${overBon ? '−' : ''}${fmtGHS(Math.abs(remBonus))}` : '—'}</span>`;
   return foot;
 }
 
 function sbSalaryHdr() {
   const hdr = document.createElement('div');
-  hdr.style = 'display:flex;justify-content:space-between;align-items:center;padding:4px 0 12px;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:4px;';
-  hdr.innerHTML = `<span style="font-size:13px;letter-spacing:.06em;opacity:.5;">SALARY</span><strong style="font-size:17px;">${SB.salary > 0 ? fmtGHS(SB.salary) : '—'}</strong>`;
+  hdr.style = 'display:grid;grid-template-columns:1fr 100px 84px;align-items:center;padding:4px 0 10px;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:4px;';
+  hdr.innerHTML = `
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;">Total</span>
+    <strong style="font-size:15px;text-align:right;">${SB.salary > 0 ? fmtGHS(SB.salary) : '—'}</strong>
+    <strong style="font-size:15px;text-align:right;">${(SB.netBonus || 0) > 0 ? fmtGHS(SB.netBonus) : '—'}</strong>`;
+  return hdr;
+}
+
+function sbColHdr() {
+  const hdr = document.createElement('div');
+  hdr.style = 'display:grid;grid-template-columns:1fr 100px 84px;padding:4px 0 6px;border-bottom:1px solid rgba(0,0,0,0.08);margin-bottom:2px;';
+  hdr.innerHTML = `
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;">Item</span>
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Salary</span>
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Bonus</span>`;
   return hdr;
 }
 
@@ -4165,7 +4173,8 @@ function setSbTab(tab) {
 function renderSbUsed() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  const items = [...SB.items.filter(it => it.amount > 0)].sort((a, b) => isCalc(a.name) ? -1 : isCalc(b.name) ? 1 : 0);
+  const items = [...SB.items.filter(it => it.amount > 0 || (it.bonus || 0) > 0)]
+    .sort((a, b) => isCalc(a.name) ? -1 : isCalc(b.name) ? 1 : 0);
   if (!items.length) {
     const e = document.createElement('div');
     e.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
@@ -4173,6 +4182,8 @@ function renderSbUsed() {
     list.appendChild(e);
     return;
   }
+  list.appendChild(sbSalaryHdr());
+  list.appendChild(sbColHdr());
   items.forEach(it => list.appendChild(sbItemRow(it)));
   list.appendChild(sbTotalsRow(items));
 }
@@ -4180,7 +4191,7 @@ function renderSbUsed() {
 function renderSbUnused() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  const items = SB.items.filter(it => it.amount === 0);
+  const items = SB.items.filter(it => it.amount === 0 && (it.bonus || 0) === 0);
   if (!items.length) {
     const e = document.createElement('div');
     e.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
