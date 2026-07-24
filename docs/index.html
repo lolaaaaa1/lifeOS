@@ -2506,9 +2506,19 @@ const LocalAPI = {
           if (amt > 0) amounts[r.Item] = (amounts[r.Item]||0) + amt;
         }
       });
+      // expenses: transactions for daily items on this specific date (date encoded in TransactionID as DDMMYYYYnn)
+      const dailyItems = new Set(ITMS().rows.filter(r => r.Section==='Budget' && r.BudgetMode==='Daily').map(r => r.ItemName));
+      const ddStr = String(td).padStart(2,'0'), mmStr = String(t.getMonth()+1).padStart(2,'0');
+      const datePrefix = `${ddStr}${mmStr}${ty}`;
+      const expenses = {};
+      TXNS().rows.forEach(r => {
+        if (r.TransactionType !== 'Expense' || !dailyItems.has(r.Item) || !(parseFloat(r.Debit)>0)) return;
+        if ((r.TransactionID || '').startsWith(datePrefix))
+          expenses[r.Item] = (expenses[r.Item]||0) + (parseFloat(r.Debit)||0);
+      });
       const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][t.getDay()];
       const iso = `${ty}-${String(t.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
-      return { date: iso, dayName, amounts };
+      return { date: iso, dayName, amounts, expenses };
     }
 
     // GET /days/today/summary
@@ -2538,13 +2548,14 @@ const LocalAPI = {
         const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
         yearlyTotals[r.Item] = (yearlyTotals[r.Item]||0) + amt;
       });
-      // Daily expenses from transactions (Food/Transport by TransactionID date)
+      // Daily expenses: transactions for daily items on today's date (TransactionID = DDMMYYYYnn)
       const dailyItems = new Set(ITMS().rows.filter(r => r.Section==='Budget' && r.BudgetMode==='Daily').map(r => r.ItemName));
+      const ddStr = String(td).padStart(2,'0'), mmStr = String(today.getMonth()+1).padStart(2,'0');
+      const datePrefix = `${ddStr}${mmStr}${ty}`;
       const dailyExpenses = {};
       TXNS().rows.forEach(r => {
         if (r.TransactionType !== 'Expense' || !dailyItems.has(r.Item) || !(parseFloat(r.Debit)>0)) return;
-        const tid = r.TransactionID || '';
-        if (parseInt(tid.slice(0,2))===td && parseInt(tid.slice(2,4))===(today.getMonth()+1) && parseInt(tid.slice(4,8))===parseInt(ty))
+        if ((r.TransactionID || '').startsWith(datePrefix))
           dailyExpenses[r.Item] = (dailyExpenses[r.Item]||0) + (parseFloat(r.Debit)||0);
       });
       return { date: iso, period: periodName, daily, periodBudget, yearlyTotals, dailyExpenses };
@@ -3129,10 +3140,10 @@ async function renderDashboardCalc() {
   // ── Daily section (always open, swipeable) ───────────────────────────────
   const { sec: dailySec, body: dailyBody } = makeDashSection('Daily', true);
 
-  const todayExpenses = todaySummary.dailyExpenses || {};
   const daySlides = dayDates.map((dateStr, i) => {
-    const amounts = dayDataArr[i]?.amounts || {};
-    return makeSlide(fmtDayLabel(dateStr), amounts, i === 1 ? todayExpenses : {});
+    const amounts  = dayDataArr[i]?.amounts   || {};
+    const expenses = dayDataArr[i]?.expenses  || {};
+    return makeSlide(fmtDayLabel(dateStr), amounts, expenses);
   });
 
   const { wrap: dailyWrap, dots: dailyDots, scrollTo: dailyScrollTo } = makeSwiper(daySlides, 1);
