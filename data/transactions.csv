@@ -542,3 +542,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202602,,Others,,1080,Food,Monthly,,,July,2026,Expense,,,
 2407202603,MTN Mobile Money,,30,,Apple Music Subscription,Monthly,,,July,2026,Expense,,,2407202603
 2407202603,,Apple Music,,30,Apple Music Subscription,Monthly,,,July,2026,Expense,,,2407202603
+2407202604,Cash,,139,,Transport,Monthly,,,July,2026,Expense,,,2407202604
+2407202604,,Others,,139,Transport,Monthly,,,July,2026,Expense,,,2407202604
