@@ -2995,9 +2995,9 @@ async function renderDashboardCalc() {
     return d.toISOString().slice(0, 10);
   });
 
-  // Month context
-  const curYear     = S.currentMonth ? S.currentMonth.Year  : todayDate.getFullYear();
-  const curMonthStr = S.currentMonth ? S.currentMonth.Month : MONTHS[todayDate.getMonth()];
+  // Month context — always based on today, not the budget-page month selector
+  const curYear     = todayDate.getFullYear();
+  const curMonthStr = MONTHS[todayDate.getMonth()];
   const curMonthIdx = MONTHS.indexOf(curMonthStr);
 
   // Month slides: prev, current, next
@@ -3092,7 +3092,10 @@ async function renderDashboardCalc() {
   // remainderMap: if provided, overrides the per-item remaining calculation (used for daily items
   // where remaining = total allocation - total spending, not today's allocation - today's spending)
   function makeSlide(periodLabel, amtsMap, expenses, remainderMap) {
-    const keys = Object.keys(amtsMap).filter(k => amtsMap[k] > 0);
+    const keys = [...new Set([
+      ...Object.keys(amtsMap).filter(k => (amtsMap[k] || 0) > 0),
+      ...Object.keys(expenses || {}).filter(k => (expenses[k] || 0) > 0),
+    ])].sort();
     const total = keys.reduce((s, k) => s + (amtsMap[k] || 0), 0);
     const showTable = expenses != null || remainderMap != null;
 
@@ -3229,7 +3232,10 @@ async function renderDashboardCalc() {
     if (dbt > 0) yearlySpent[t.Item] = (yearlySpent[t.Item] || 0) + dbt;
   });
 
-  const yearlyKeys = Object.keys(yearlyBudget).filter(k => yearlyBudget[k] > 0);
+  const yearlyKeys = [...new Set([
+    ...Object.keys(yearlyBudget).filter(k => (yearlyBudget[k] || 0) > 0),
+    ...Object.keys(yearlySpent).filter(k => (yearlySpent[k] || 0) > 0),
+  ])].sort();
   if (yearlyKeys.length) {
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
