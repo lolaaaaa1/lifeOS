@@ -554,3 +554,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202609,,Others,,40,Transport,Monthly,,,July,2026,Expense,,,2407202609
 2407202610,Ecobank,,100,,Travel,Monthly,,,April,2026,Expense,,,2407202610
 2407202610,,Others,,100,Travel,Monthly,,,April,2026,Expense,,,2407202610
+2407202611,Ecobank,,107.29,,Hair,Monthly,,,July,2026,Expense,,,2407202611
+2407202611,,Others,,107.29,Hair,Monthly,,,July,2026,Expense,,,2407202611
