@@ -2046,9 +2046,7 @@ const DATA = {
 
   async loadAll() {
     await Promise.all([
-      this.load('data/financeOS.csv'),
-      this.load('data/income.csv'),
-      this.load('data/days.csv'),
+      this.load('data/budgetAllocations.csv'),
       this.load('data/items.csv'),
       this.load('data/transactions.csv'),
       this.load('data/constraints.csv'),
@@ -2057,16 +2055,14 @@ const DATA = {
 };
 
 // Shorthand accessors to cached data
-function FIN()    { return DATA.get('data/financeOS.csv')      || { headers: [], rows: [] }; }
-function INC()    { return DATA.get('data/income.csv')          || { headers: [], rows: [] }; }
-function DAYS_D() { return DATA.get('data/days.csv')            || { headers: [], rows: [] }; }
-function ITMS()   { return DATA.get('data/items.csv')           || { headers: [], rows: [] }; }
-function TXNS()   { return DATA.get('data/transactions.csv')    || { headers: [], rows: [] }; }
-function CONS()   { return DATA.get('data/constraints.csv')     || { headers: [], rows: [] }; }
+function BALLOC() { return DATA.get('data/budgetAllocations.csv') || { headers: [], rows: [] }; }
+function ITMS()   { return DATA.get('data/items.csv')              || { headers: [], rows: [] }; }
+function TXNS()   { return DATA.get('data/transactions.csv')       || { headers: [], rows: [] }; }
+function CONS()   { return DATA.get('data/constraints.csv')        || { headers: [], rows: [] }; }
 
 function getCurrentSalary() {
   if (!S.currentMonth) return null;
-  const row = FIN().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+  const row = CONS().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
   const v = parseFloat(row && row.Salary);
   return v > 0 ? v : null;
 }
@@ -2080,28 +2076,14 @@ function getConstraintAmount(salaryAmount, numberOfWeeks) {
 
 function getBudgetForCurrentMonth() {
   if (!S.currentMonth) return null;
-  const row = FIN().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+  const row = CONS().rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
   const v = parseFloat(row && row.SalaryConstraints);
   return v > 0 ? v : null;
 }
 
 // ── Calculation helpers ────────────────────────────────────────────────────
 
-const _DAYS_META = new Set(['Day','Month','Year','DayName','FoodDayApply','TransportDayApply','MonthYearToUse']);
-const _WEEKDAYS  = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-
-function _portionCol(name)   { return name.replace(/ /g, '') + 'Portion'; }
-function _daysItemCols(hdrs) { return hdrs.filter(h => !_DAYS_META.has(h)); }
-
-function _incPrefixes() {
-  const ps = ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName.replace(/ /g, ''));
-  return ps.sort((a, b) => b.length - a.length);
-}
-
-function _colToItem(col, prefixes) {
-  for (const p of prefixes) { if (col.startsWith(p)) return col.slice(p.length); }
-  return null;
-}
+const _WEEKDAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 function _ensureCol(entry, col) {
   if (!entry.headers.includes(col)) {
@@ -2110,11 +2092,36 @@ function _ensureCol(entry, col) {
   }
 }
 
-function _updatePortionsTotal(row, incData) {
-  _ensureCol(incData, 'PortionsTotal');
-  const portionCols = incData.headers.filter(h => h !== 'PortionsTotal' && h.endsWith('Portion'));
-  const total = portionCols.reduce((s, h) => s + (parseFloat(row[h]) || 0), 0);
-  row['PortionsTotal'] = total > 0 ? String(total) : '';
+function _budgetMode(name) {
+  const row = ITMS().rows.find(r => r.ItemName === name && r.Section === 'Budget');
+  return row ? (row.BudgetMode || 'Once') : 'Once';
+}
+
+// Group BALLOC rows by item for a given MonthYearToUse, summing salary+bonus allocations.
+// "paid" = sum of Debit from expense transactions for that item + period.
+function _ballocGrouped(monthYearToUse) {
+  const grouped = {};
+  BALLOC().rows.forEach(r => {
+    if (r.MonthYearToUse !== monthYearToUse || !r.Item) return;
+    if (_budgetMode(r.Item) === 'Daily' && r.AppliesToDay === 'FALSE') return;
+    if (!grouped[r.Item]) grouped[r.Item] = { salary: 0, bonus: 0, paid: 0 };
+    grouped[r.Item].salary += parseFloat(r.AllocatedSalaryPortion) || 0;
+    grouped[r.Item].bonus  += parseFloat(r.AllocatedCompanyBonusPortion) || 0;
+  });
+  // paid = expense transactions for the same period (MonthFor + ' ' + YearFor)
+  TXNS().rows.forEach(r => {
+    if (r.TransactionType !== 'Expense' || !r.Item || !(parseFloat(r.Debit) > 0)) return;
+    if ((r.MonthFor + ' ' + r.YearFor) !== monthYearToUse) return;
+    if (!grouped[r.Item]) grouped[r.Item] = { salary: 0, bonus: 0, paid: 0 };
+    grouped[r.Item].paid += parseFloat(r.Debit) || 0;
+  });
+  return grouped;
+}
+
+// Get MonthYearToUse for a once item in a given month/year
+function _monthYearToUse(itemName, mo, yr) {
+  const row = BALLOC().rows.find(r => r.Item === itemName && r.Month === mo && r.Year === yr && !r.Day);
+  return row ? (row.MonthYearToUse || (mo + ' ' + yr)) : (mo + ' ' + yr);
 }
 
 function _genTxnId(rows) {
@@ -2131,16 +2138,6 @@ function _genTxnId(rows) {
   return `${prefix}99`;
 }
 
-function _syncTxnToIncome(item, monthRcv, yearRcv, credit, period) {
-  if (!monthRcv || !yearRcv || !item) return;
-  for (const r of INC().rows) {
-    if (r.Month === monthRcv && r.Year === String(yearRcv) && r.Type === 'Income' && r.Items === item) {
-      r.Amount = String(credit);
-      if (period) r.IncomePeriod = period;
-      return;
-    }
-  }
-}
 
 async function _migrateTxns() {
   const txns = TXNS();
@@ -2286,102 +2283,55 @@ const LocalAPI = {
     let m;
 
     // GET /finance/months
-    if (method === 'GET' && rawPath === '/finance/months') return FIN().rows;
+    if (method === 'GET' && rawPath === '/finance/months') return CONS().rows;
 
     // GET /finance/months/{month}/{year}
     if ((m = rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)$/)) && method === 'GET') {
-      return FIN().rows.find(r => r.Month === m[1] && r.Year === m[2]) || {};
+      return CONS().rows.find(r => r.Month === m[1] && r.Year === m[2]) || {};
     }
 
-    // PUT /finance/months/{month}/{year}/budget
-    if ((m = rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/budget$/)) && method === 'PUT') {
-      const [, mo, yr] = m; const inc = INC();
-      for (const [name, amount] of Object.entries(body)) {
-        const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-        if (found) { found.SalaryPortion = String(amount); found.ActualAmount = String(amount); found.CalculatedAmount = String(amount); found.Amount = ''; _updatePortionsTotal(found, inc); }
-        else {
-          const row = {}; inc.headers.forEach(h => row[h] = '');
-          Object.assign(row, { Month: mo, Year: yr, Type: 'Budget', Items: name, SalaryPortion: String(amount) });
-          inc.rows.push(row);
-          _updatePortionsTotal(row, inc);
-        }
-      }
-      await DATA.save('data/income.csv', `Budget ${mo} ${yr}`);
-      return { ok: true };
-    }
-
-    // PUT /finance/months/{month}/{year}/salary (legacy — no-op)
-    if (rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/salary$/) && method === 'PUT')
+    // PUT /finance/months/{month}/{year}/salary (no-op)
+    if (rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/(?:budget|salary)$/) && method === 'PUT')
       return { ok: true };
 
     // GET /budget/items
     if (method === 'GET' && rawPath === '/budget/items') {
-      const seen = new Set(), out = [];
-      INC().rows.forEach(r => { if (r.Type === 'Budget' && r.Items && !seen.has(r.Items)) { seen.add(r.Items); out.push({ name: r.Items }); } });
-      return out;
+      return ITMS().rows.filter(r => r.Section === 'Budget' && r.ItemName).map(r => ({ name: r.ItemName, budgetMode: r.BudgetMode || 'Once' }));
     }
 
     // POST /budget/items
     if (method === 'POST' && rawPath === '/budget/items') {
-      const { name } = body;
+      const { name, budgetMode = 'Once' } = body;
       if (!name) throw new Error('name required');
-      const inc = INC();
-      if (inc.rows.some(r => r.Type === 'Budget' && r.Items === name)) throw new Error('item already exists');
-      FIN().rows.forEach(fin => {
-        if (!inc.rows.some(r => r.Type === 'Budget' && r.Items === name && r.Month === fin.Month && r.Year === fin.Year)) {
-          const row = {}; inc.headers.forEach(h => row[h] = '');
-          Object.assign(row, { Month: fin.Month, Year: fin.Year, Type: 'Budget', Items: name });
-          inc.rows.push(row);
-        }
-      });
-      await DATA.save('data/income.csv', `Add budget item ${name}`);
       const itms = ITMS();
-      if (!itms.rows.some(r => r.ItemName === name)) {
-        itms.rows.push({ ItemName: name, Section: 'Budget', AccountType: '' });
-        await DATA.save('data/items.csv', `Add item ${name}`);
-      }
+      if (itms.rows.some(r => r.ItemName === name && r.Section === 'Budget')) throw new Error('item already exists');
+      itms.rows.push({ ItemName: name, Section: 'Budget', AccountType: '', Display: '', MinimumAmount: '', BudgetMode: budgetMode });
+      await DATA.save('data/items.csv', `Add budget item ${name}`);
       return { ok: true };
     }
 
     // PUT /budget/items/{name}
     if ((m = rawPath.match(/^\/budget\/items\/(.+)$/)) && method === 'PUT') {
-      const oldName = decodeURIComponent(m[1]); const inc = INC();
-      inc.rows.forEach(r => { if (r.Type === 'Budget' && r.Items === oldName) r.Items = body.name; });
-      await DATA.save('data/income.csv', `Rename budget item ${oldName}`);
+      const oldName = decodeURIComponent(m[1]); const itms = ITMS(); const balloc = BALLOC();
+      const found = itms.rows.find(r => r.ItemName === oldName && r.Section === 'Budget');
+      if (found) { found.ItemName = body.name || oldName; if (body.budgetMode) found.BudgetMode = body.budgetMode; }
+      balloc.rows.forEach(r => { if (r.Item === oldName) r.Item = body.name || oldName; });
+      await Promise.all([DATA.save('data/items.csv', `Rename budget item ${oldName}`), DATA.save('data/budgetAllocations.csv', `Rename item ${oldName}`)]);
       return { ok: true };
     }
 
     // DELETE /budget/items/{name}
     if ((m = rawPath.match(/^\/budget\/items\/(.+)$/)) && method === 'DELETE') {
-      const name = decodeURIComponent(m[1]); const inc = INC();
-      inc.rows = inc.rows.filter(r => !(r.Type === 'Budget' && r.Items === name));
-      await DATA.save('data/income.csv', `Delete budget item ${name}`);
+      const name = decodeURIComponent(m[1]); const itms = ITMS(); const balloc = BALLOC();
+      itms.rows = itms.rows.filter(r => !(r.ItemName === name && r.Section === 'Budget'));
+      balloc.rows = balloc.rows.filter(r => r.Item !== name);
+      await Promise.all([DATA.save('data/items.csv', `Delete budget item ${name}`), DATA.save('data/budgetAllocations.csv', `Delete item ${name}`)]);
       return { ok: true };
     }
 
-    // GET /budget-meta/{month}/{year}
-    if ((m = rawPath.match(/^\/budget-meta\/([^/]+)\/(\d+)$/)) && method === 'GET') {
-      const [, mo, yr] = m; const out = {};
-      INC().rows.filter(r => r.Month === mo && r.Year === yr && r.Type === 'Budget')
-        .forEach(r => { out[r.Items] = r.CalculatedType || ''; });
-      return out;
-    }
-
-    // PUT /budget-meta/{month}/{year}/{name}
-    if ((m = rawPath.match(/^\/budget-meta\/([^/]+)\/(\d+)\/(.+)$/)) && method === 'PUT') {
-      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      const calcType = body.calculatedType || '';
-      const inc = INC();
-      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-      if (found) { found.CalculatedType = calcType; }
-      else {
-        const row = {}; inc.headers.forEach(h => row[h] = '');
-        Object.assign(row, { Month: mo, Year: yr, Type: 'Budget', Items: name, CalculatedType: calcType });
-        inc.rows.push(row);
-      }
-      await DATA.save('data/income.csv', `Budget meta ${name}`);
-      return { ok: true };
-    }
+    // GET /budget-meta — no-op, daily mode now lives in items.csv BudgetMode
+    if (rawPath.match(/^\/budget-meta\//) && method === 'GET') return {};
+    if (rawPath.match(/^\/budget-meta\//) && method === 'PUT') return { ok: true };
 
     // GET /items
     if (method === 'GET' && rawPath === '/items') return ITMS().rows;
@@ -2417,173 +2367,131 @@ const LocalAPI = {
       return { ok: true };
     }
 
-    // GET /income/sources  ← before /income/{month}/{year}
+    // GET /income/sources
     if (method === 'GET' && rawPath === '/income/sources')
       return ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName);
 
-    // GET /income/year/{year}/totals[/{upToMonth}]  ← before /income/{month}/{year}
+    // GET /income/year/{year}/totals[/{upToMonth}]
     if ((m = rawPath.match(/^\/income\/year\/(\d+)\/totals(?:\/([^/]+))?$/)) && method === 'GET') {
       const yr = m[1]; const upTo = m[2] || null;
-      const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      const upToIdx = upTo ? MONTHS.indexOf(upTo) : 11;
-      const totals = {};
-      INC().rows.forEach(r => {
-        if (r.Year === yr && r.Type === 'Budget' && r.Items) {
-          if (MONTHS.indexOf(r.Month) <= upToIdx) {
-            const isCalc = (r.CalculatedType || '') === 'Calculated';
-            const amt = isCalc
-              ? parseFloat(r.CalculatedAmount) || 0
-              : parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
-            totals[r.Items] = (totals[r.Items] || 0) + amt;
-          }
-        }
+      const MONTHS_LIST = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const upToIdx = upTo ? MONTHS_LIST.indexOf(upTo) : 11;
+      // Group BALLOC by item, filter by year in MonthYearToUse and month index <= upToIdx
+      const totals = {}, paidMap = {};
+      BALLOC().rows.forEach(r => {
+        if (!r.Item || !r.MonthYearToUse) return;
+        const lastSpace = r.MonthYearToUse.lastIndexOf(' ');
+        const pyear = r.MonthYearToUse.slice(lastSpace+1);
+        const pmonth = r.MonthYearToUse.slice(0, lastSpace);
+        if (pyear !== yr) return;
+        if (MONTHS_LIST.indexOf(pmonth) > upToIdx) return;
+        if (r.AppliesToDay === 'FALSE') return;
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        totals[r.Item] = (totals[r.Item]||0) + amt;
       });
-      // paidMap: Transferred months use budget total from income.csv; others sum expense transactions
-      const paidMap = {};
-      const transferredYtd = new Set();
-      const transferredYtdMonths = new Set(); // 'Item|Month|Year'
-      INC().rows.forEach(r => {
-        if (r.Year === yr && r.Type === 'Budget' && r.Items && r.Paid === 'Transferred' && MONTHS.indexOf(r.Month) <= upToIdx) {
-          transferredYtd.add(r.Items);
-          transferredYtdMonths.add(`${r.Items}|${r.Month}|${r.Year}`);
-          const amt = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
-          paidMap[r.Items] = (paidMap[r.Items] || 0) + amt;
-        }
-      });
+      // paid = expense transactions: filter YearFor = yr, group by item, sum Debit
       TXNS().rows.forEach(r => {
-        if (r.TransactionType === 'Expense' && r.Item && (parseFloat(r.Debit) || 0) > 0
-            && String(r.YearFor) === yr && MONTHS.indexOf(r.MonthFor) <= upToIdx
-            && !transferredYtdMonths.has(`${r.Item}|${r.MonthFor}|${r.YearFor}`)) {
-          paidMap[r.Item] = (paidMap[r.Item] || 0) + (parseFloat(r.Debit) || 0);
-        }
+        if (r.TransactionType !== 'Expense' || !r.Item || !(parseFloat(r.Debit) > 0)) return;
+        if (String(r.YearFor) !== yr) return;
+        if (upTo && MONTHS_LIST.indexOf(r.MonthFor) > upToIdx) return;
+        paidMap[r.Item] = (paidMap[r.Item]||0) + (parseFloat(r.Debit)||0);
       });
-      const paidTotal = Object.values(paidMap).reduce((s, v) => s + v, 0);
-      const ytdSalary = FIN().rows
-        .filter(r => r.Year === yr && MONTHS.indexOf(r.Month) <= upToIdx)
-        .reduce((s, r) => s + (parseFloat(r.SalaryConstraints) || 0), 0);
+      const paidTotal = Object.values(paidMap).reduce((s,v)=>s+v,0);
+      const ytdSalary = CONS().rows
+        .filter(r => r.Year === yr && MONTHS_LIST.indexOf(r.Month) <= upToIdx)
+        .reduce((s,r) => s + (parseFloat(r.SalaryConstraints)||0), 0);
       return { items: totals, paidMap, paidTotal, ytdSalary };
     }
 
     // GET/POST /income/{month}/{year}
     if (m = rawPath.match(/^\/income\/([^/]+)\/(\d+)$/)) {
       const [, mo, yr] = m;
-      if (method === 'GET') return INC().rows.filter(r => r.Month === mo && r.Year === yr);
+      if (method === 'GET') {
+        // Return budget items with their allocations for this MonthYearToUse
+        const period = mo + ' ' + yr;
+        const grouped = _ballocGrouped(period);
+        return Object.entries(grouped).map(([item, g]) => ({
+          Item: item, Month: mo, Year: yr, Type: 'Budget',
+          AllocatedSalaryPortion: String(g.salary), AllocatedCompanyBonusPortion: String(g.bonus),
+          TotalAllocation: String(g.salary + g.bonus), PaidAmount: String(g.paid)
+        }));
+      }
       if (method === 'POST') {
         const { name, period = 'Monthly' } = body;
         if (!name) throw new Error('name required');
-        const inc = INC();
-        if (inc.rows.some(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name))
-          throw new Error('already exists for this month');
-        const col = _portionCol(name); _ensureCol(inc, col);
-        const row = {}; inc.headers.forEach(h => row[h] = '');
-        Object.assign(row, { Month: mo, Year: yr, Type: 'Income', Items: name, IncomePeriod: period });
-        inc.rows.push(row);
-        await DATA.save('data/income.csv', `Add income ${name} ${mo} ${yr}`);
         const itms = ITMS();
-        if (!itms.rows.some(r => r.ItemName === name)) {
-          itms.rows.push({ ItemName: name, Section: 'Income', AccountType: '' });
+        if (!itms.rows.some(r => r.ItemName === name && r.Section === 'Income')) {
+          itms.rows.push({ ItemName: name, Section: 'Income', AccountType: '', Display: '', MinimumAmount: '', BudgetMode: '' });
           await DATA.save('data/items.csv', `Add income item ${name}`);
         }
         return { ok: true };
       }
     }
 
-    // PUT /income/{month}/{year}/{name}/portion
-    if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/(.+)\/portion$/)) && method === 'PUT') {
-      const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      const col = _portionCol(name); const inc = INC(); _ensureCol(inc, col);
-      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name);
-      if (!found) throw new Error('income source not found');
-      found[col] = String(body.amount || '');
-      await DATA.save('data/income.csv', `Income portion ${name} ${mo} ${yr}`);
-      return { ok: true };
-    }
+    // PUT /income/{month}/{year}/{name}/portion — no-op (income amounts tracked via transactions)
+    if (rawPath.match(/^\/income\/([^/]+)\/(\d+)\/.+\/portion$/) && method === 'PUT') return { ok: true };
 
     // PUT /income/{month}/{year}/{name}/meta
     if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/(.+)\/meta$/)) && method === 'PUT') {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      const inc = INC();
-      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name);
-      if (!found) throw new Error('income source not found');
-      found.Items = body.name || name;
-      if (body.period) found.IncomePeriod = body.period;
-      await DATA.save('data/income.csv', `Income meta ${name} ${mo} ${yr}`);
+      const itms = ITMS();
+      const found = itms.rows.find(r => r.ItemName === name && r.Section === 'Income');
+      if (found && body.name) found.ItemName = body.name;
+      await DATA.save('data/items.csv', `Income meta ${name}`);
       return { ok: true };
     }
 
     // PUT /income/{month}/{year}/budget/{name}/paid
     if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/budget\/(.+)\/paid$/)) && method === 'PUT') {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      const inc = INC(); _ensureCol(inc, 'Paid');
-      const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-      if (!found) throw new Error('budget item not found');
-      found.Paid = body.amount !== undefined ? String(body.amount) : '';
-      await DATA.save('data/income.csv', `Mark paid ${name} ${mo} ${yr}`);
+      const period = mo + ' ' + yr; const balloc = BALLOC();
+      // For once items: update PaidAmount on the single monthly row
+      // For daily items: distribute across rows (just update the first matching row for now)
+      const rows = balloc.rows.filter(r => r.Item === name && r.MonthYearToUse === period);
+      if (!rows.length) throw new Error('budget item not found for period');
+      if (_budgetMode(name) === 'Once') {
+        rows[0].PaidAmount = body.amount !== undefined ? String(body.amount) : '';
+        if (body.paidTo !== undefined) rows[0].PaidTo = body.paidTo;
+      } else {
+        // Daily: spread paid amount across applicable rows proportionally
+        const applicableRows = rows.filter(r => r.AppliesToDay !== 'FALSE');
+        if (applicableRows.length) {
+          const perDay = (parseFloat(body.amount)||0) / applicableRows.length;
+          applicableRows.forEach(r => { r.PaidAmount = String(perDay); });
+        }
+      }
+      await DATA.save('data/budgetAllocations.csv', `Mark paid ${name} ${mo} ${yr}`);
       return { ok: true };
     }
 
-    // PUT /income/{month}/{year}/budget/{name}/daily  ← before generic /{name}
+    // PUT /income/{month}/{year}/budget/{name}/daily — update per-weekday amounts in BALLOC
     if ((m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/budget\/(.+)\/daily$/)) && method === 'PUT') {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      // 1. per-day amounts + applies in days.csv
-      const daysData = DAYS_D(); const prefixes = _incPrefixes();
-      let colName = _daysItemCols(daysData.headers).find(c => _colToItem(c, prefixes) === name);
-      if (!colName) {
-        const primary = (INC().rows.find(r => r.Type === 'Income' && r.IncomePeriod === 'Monthly') || {}).Items || '';
-        colName = primary.replace(/ /g, '') + name || name;
+      const period = mo + ' ' + yr; const balloc = BALLOC();
+      for (const row of balloc.rows) {
+        if (row.Item !== name || row.MonthYearToUse !== period || !row.DayName) continue;
+        const dn = row.DayName.toLowerCase();
+        const applies = body[`${dn}_applies`] !== false;
+        const amt = applies ? (body[dn] !== undefined ? String(body[dn]) : row.AllocatedSalaryPortion) : '0';
+        row.AllocatedSalaryPortion = applies ? String(body[dn] || 0) : '0';
+        row.AppliesToDay = applies ? 'TRUE' : 'FALSE';
       }
-      _ensureCol(daysData, colName);
-      const applyCol = name === 'Food' ? 'FoodDayApply' : name === 'Transport' ? 'TransportDayApply' : null;
-      if (applyCol) _ensureCol(daysData, applyCol);
-      for (const row of daysData.rows) {
-        if (row.MonthYearToUse === period) {
-          const dn = row.DayName;
-          const applies = body[`${dn.toLowerCase()}_applies`] !== false;
-          const amt = applies ? body[dn.toLowerCase()] : '';
-          row[colName] = (amt !== undefined && amt !== '') ? String(amt) : '';
-          if (applyCol) row[applyCol] = applies ? 'TRUE' : 'FALSE';
-        }
-      }
-      await DATA.save('data/days.csv', `Daily amounts ${name} ${mo} ${yr}`);
-      // 3. period totals: ActualAmount (calendar month) and CalculatedAmount (budget period)
-      const newPrefixes = _incPrefixes();
-      const newCols = _daysItemCols(daysData.headers);
-      const _ABBR = {January:'Jan',February:'Feb',March:'Mar',April:'Apr',May:'May',June:'Jun',July:'Jul',August:'Aug',September:'Sep',October:'Oct',November:'Nov',December:'Dec'};
-      const period = `${_ABBR[mo]}-${String(yr).slice(2)}`;
-      let actualTotal = 0, calcTotal = 0;
-      daysData.rows.forEach(r => {
-        newCols.forEach(c => {
-          if (_colToItem(c, newPrefixes) === name) {
-            if (r.Month === mo && r.Year === yr) actualTotal += parseFloat(r[c]) || 0;
-            if (r.MonthYearToUse === period) calcTotal += parseFloat(r[c]) || 0;
-          }
-        });
-      });
-      const incData = INC();
-      _ensureCol(incData, 'ActualAmount'); _ensureCol(incData, 'CalculatedAmount');
-      const incRow = incData.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Budget' && r.Items === name);
-      if (incRow) { incRow.ActualAmount = String(actualTotal); incRow.CalculatedAmount = String(calcTotal); }
-      await DATA.save('data/income.csv', `Calculated amount ${name} ${mo} ${yr}`);
-      return { ok: true, total: calcTotal };
+      await DATA.save('data/budgetAllocations.csv', `Daily amounts ${name} ${mo} ${yr}`);
+      const total = balloc.rows.filter(r => r.Item===name && r.MonthYearToUse===period && r.AppliesToDay!=='FALSE')
+        .reduce((s,r) => s + (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0), 0);
+      return { ok: true, total };
     }
 
     // PUT/DELETE /income/{month}/{year}/{name}
     if (m = rawPath.match(/^\/income\/([^/]+)\/(\d+)\/(.+)$/)) {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      if (method === 'PUT') {
-        const inc = INC();
-        const found = inc.rows.find(r => r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name);
-        if (!found) throw new Error('income source not found');
-        found.Amount = String(body.amount || '');
-        await DATA.save('data/income.csv', `Income amount ${name} ${mo} ${yr}`);
-        return { ok: true };
-      }
       if (method === 'DELETE') {
-        const inc = INC();
-        inc.rows = inc.rows.filter(r => !(r.Month === mo && r.Year === yr && r.Type === 'Income' && r.Items === name));
-        await DATA.save('data/income.csv', `Delete income ${name} ${mo} ${yr}`);
+        const itms = ITMS();
+        itms.rows = itms.rows.filter(r => !(r.ItemName === name && r.Section === 'Income'));
+        await DATA.save('data/items.csv', `Delete income ${name}`);
         return { ok: true };
       }
+      return { ok: true };
     }
 
     // GET /days/on/{date_str}
@@ -2591,14 +2499,13 @@ const LocalAPI = {
       const dateStr = m[1];
       const t = dateStr === 'today' ? new Date() : new Date(dateStr + 'T00:00:00');
       const td = t.getDate(), tm = MONTH_NAMES[t.getMonth()], ty = String(t.getFullYear());
-      const daysData = DAYS_D(); const prefixes = _incPrefixes();
-      const itemCols = _daysItemCols(daysData.headers); const amounts = {};
-      for (const row of daysData.rows) {
-        if (String(row.Day) === String(td) && row.Month === tm && row.Year === ty) {
-          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) amounts[item] = (amounts[item] || 0) + (parseFloat(row[c]) || 0); });
-          break;
+      const amounts = {};
+      BALLOC().rows.forEach(r => {
+        if (r.Day && parseInt(r.Day) === td && r.Month === tm && r.Year === ty && r.AppliesToDay !== 'FALSE') {
+          const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+          if (amt > 0) amounts[r.Item] = (amounts[r.Item]||0) + amt;
         }
-      }
+      });
       const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][t.getDay()];
       const iso = `${ty}-${String(t.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
       return { date: iso, dayName, amounts };
@@ -2608,93 +2515,64 @@ const LocalAPI = {
     if (method === 'GET' && rawPath === '/days/today/summary') {
       const today = new Date();
       const td = today.getDate(), tm = MONTH_NAMES[today.getMonth()], ty = String(today.getFullYear());
-      const daysData = DAYS_D(); const prefixes = _incPrefixes();
-      const itemCols = _daysItemCols(daysData.headers);
-      const daily = {}, yearlyTotals = {}; let periodName = '';
-      for (const row of daysData.rows) {
-        if (String(row.Day) === String(td) && row.Month === tm && row.Year === ty) {
-          periodName = row.MonthYearToUse || '';
-          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) daily[item] = (daily[item] || 0) + (parseFloat(row[c]) || 0); });
-        }
-        if (row.Year === ty) {
-          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) yearlyTotals[item] = (yearlyTotals[item] || 0) + (parseFloat(row[c]) || 0); });
-        }
-      }
-      const periodTotals = {};
-      if (periodName) {
-        daysData.rows.filter(r => r.MonthYearToUse === periodName).forEach(row =>
-          itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) periodTotals[item] = (periodTotals[item] || 0) + (parseFloat(row[c]) || 0); })
-        );
-      }
-      const periodBudget = { ...periodTotals };
-      if (periodName) {
-        const lastSpace = periodName.lastIndexOf(' ');
-        const pMonth = periodName.slice(0, lastSpace), pYear = periodName.slice(lastSpace + 1);
-        INC().rows.forEach(r => {
-          if (r.Month === pMonth && r.Year === pYear && r.Type === 'Budget' && r.CalculatedType !== 'Calculated')
-            periodBudget[r.Items] = parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0;
-        });
-      }
       const iso = `${ty}-${String(today.getMonth()+1).padStart(2,'0')}-${String(td).padStart(2,'0')}`;
-      const todayRow = daysData.rows.find(r => String(r.Day) === String(td) && r.Month === tm && r.Year === ty);
-      const dailyExpenses = {
-        Food:      parseFloat((todayRow || {}).ExpenseFood)      || 0,
-        Transport: parseFloat((todayRow || {}).ExpenseTransport) || 0,
-      };
+      // Today's daily budget
+      const daily = {};
+      let periodName = '';
+      BALLOC().rows.forEach(r => {
+        if (!r.Day || parseInt(r.Day) !== td || r.Month !== tm || r.Year !== ty) return;
+        if (!periodName && r.MonthYearToUse) periodName = r.MonthYearToUse;
+        if (r.AppliesToDay === 'FALSE') return;
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        if (amt > 0) daily[r.Item] = (daily[r.Item]||0) + amt;
+      });
+      if (!periodName) periodName = tm + ' ' + ty;
+      // Period budget: all items for this MonthYearToUse, grouped by item
+      const periodBudget = {};
+      Object.entries(_ballocGrouped(periodName)).forEach(([item, g]) => { periodBudget[item] = g.salary + g.bonus; });
+      // Yearly totals: use year from MonthYearToUse
+      const yearlyTotals = {};
+      BALLOC().rows.forEach(r => {
+        if (!r.MonthYearToUse || !r.Item || r.AppliesToDay === 'FALSE') return;
+        if (r.MonthYearToUse.slice(r.MonthYearToUse.lastIndexOf(' ')+1) !== ty) return;
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        yearlyTotals[r.Item] = (yearlyTotals[r.Item]||0) + amt;
+      });
+      // Daily expenses from transactions (Food/Transport by TransactionID date)
+      const dailyItems = new Set(ITMS().rows.filter(r => r.Section==='Budget' && r.BudgetMode==='Daily').map(r => r.ItemName));
+      const dailyExpenses = {};
+      TXNS().rows.forEach(r => {
+        if (r.TransactionType !== 'Expense' || !dailyItems.has(r.Item) || !(parseFloat(r.Debit)>0)) return;
+        const tid = r.TransactionID || '';
+        if (parseInt(tid.slice(0,2))===td && parseInt(tid.slice(2,4))===(today.getMonth()+1) && parseInt(tid.slice(4,8))===parseInt(ty))
+          dailyExpenses[r.Item] = (dailyExpenses[r.Item]||0) + (parseFloat(r.Debit)||0);
+      });
       return { date: iso, period: periodName, daily, periodBudget, yearlyTotals, dailyExpenses };
     }
 
-    // PATCH /days/today/expense
-    if (method === 'PATCH' && rawPath === '/days/today/expense') {
-      const { item, amount } = body;
-      if (!item || !amount) throw new Error('item and amount required');
-      const colMap = { Food: 'ExpenseFood', Transport: 'ExpenseTransport' };
-      const col = colMap[item];
-      if (!col) throw new Error('unsupported expense item');
-      const today2 = new Date();
-      const td2 = today2.getDate(), tm2 = MONTH_NAMES[today2.getMonth()], ty2 = String(today2.getFullYear());
-      const daysData2 = DAYS_D();
-      _ensureCol(daysData2, col);
-      const row = daysData2.rows.find(r => String(r.Day) === String(td2) && r.Month === tm2 && r.Year === ty2);
-      if (row) { row[col] = String((parseFloat(row[col]) || 0) + parseFloat(amount)); }
-      await DATA.save('data/days.csv', `Record ${item} expense ${amount}`);
-      return { ok: true };
-    }
+    // PATCH /days/today/expense — now a no-op; expenses are tracked via transactions
+    if (method === 'PATCH' && rawPath === '/days/today/expense') return { ok: true };
 
     // GET /days/{month}/{year}/totals
     if ((m = rawPath.match(/^\/days\/([^/]+)\/(\d+)\/totals$/)) && method === 'GET') {
-      const [, mo, yr] = m; const period = `${mo} ${yr}`;
-      const daysData = DAYS_D(); const prefixes = _incPrefixes();
-      const itemCols = _daysItemCols(daysData.headers); const totals = {};
-      daysData.rows.filter(r => r.MonthYearToUse === period).forEach(row =>
-        itemCols.forEach(c => { const item = _colToItem(c, prefixes); if (item) totals[item] = (totals[item] || 0) + (parseFloat(row[c]) || 0); })
-      );
+      const [, mo, yr] = m; const period = mo + ' ' + yr;
+      const totals = {};
+      Object.entries(_ballocGrouped(period)).forEach(([item, g]) => { totals[item] = g.salary + g.bonus; });
       return totals;
     }
 
     // GET /days/{month}/{year}/{name}/amounts
     if ((m = rawPath.match(/^\/days\/([^/]+)\/(\d+)\/(.+)\/amounts$/)) && method === 'GET') {
       const [, mo, yr, raw] = m; const name = decodeURIComponent(raw);
-      const daysData = DAYS_D(); const prefixes = _incPrefixes();
-      const itemCols = _daysItemCols(daysData.headers);
-      const colName  = itemCols.find(c => _colToItem(c, prefixes) === name) || name;
-      const amounts  = {};
-      for (const row of daysData.rows) {
-        if (row.Month === mo && row.Year === yr && !(row.DayName in amounts))
-          amounts[row.DayName] = parseFloat(row[colName]) || 0;
-      }
-      const applies = {};
-      _WEEKDAYS.forEach(d => applies[d] = true);
-      const applyColG = name === 'Food' ? 'FoodDayApply' : name === 'Transport' ? 'TransportDayApply' : null;
-      if (applyColG) {
-        const mDays = DAYS_D().rows.filter(r => r.Month === mo && r.Year === yr);
-        _WEEKDAYS.forEach(d => {
-          const dayRows = mDays.filter(r => r.DayName === d);
-          if (dayRows.length && dayRows.some(r => String(r[applyColG]).toUpperCase() === 'FALSE')) applies[d] = false;
-        });
-      }
       const result = {};
-      _WEEKDAYS.forEach(d => result[d] = { amount: amounts[d] || 0, applies: applies[d] });
+      _WEEKDAYS.forEach(d => result[d] = { amount: 0, applies: true });
+      BALLOC().rows.forEach(r => {
+        if (r.Item !== name || r.Month !== mo || r.Year !== yr || !r.DayName) return;
+        if (!(r.DayName in result)) return;
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        result[r.DayName].amount = amt;
+        result[r.DayName].applies = r.AppliesToDay !== 'FALSE';
+      });
       return result;
     }
 
@@ -2794,11 +2672,6 @@ const LocalAPI = {
       // Credit leg (money arriving at AccountTo)
       txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount, Item: body.item || '' });
       await DATA.save('data/transactions.csv', `Add txn ${id}`);
-      const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
-      if (incomeSet.has(base.Item)) {
-        _syncTxnToIncome(base.Item, base.MonthReceived, base.YearReceived, parseFloat(amount), base.IncomePeriod);
-        await DATA.save('data/income.csv', `Sync income ${base.Item}`);
-      }
       return { ok: true };
     }
 
@@ -2829,11 +2702,6 @@ const LocalAPI = {
       }
       txns.rows.push({ ...base, AccountFrom: '', AccountTo: body.accountTo || '', Debit: '', Credit: amount, Item: body.item || '' });
       await DATA.save('data/transactions.csv', `Update txn ${tid}`);
-      const incomeSet = new Set(ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName));
-      if (incomeSet.has(base.Item)) {
-        _syncTxnToIncome(base.Item, base.MonthReceived, base.YearReceived, parseFloat(amount), base.IncomePeriod);
-        await DATA.save('data/income.csv', `Sync income ${base.Item}`);
-      }
       return { ok: true };
     }
 
@@ -2847,35 +2715,27 @@ const LocalAPI = {
       return { ok: true };
     }
 
-    // POST /bonus-allocation — store in income.csv as {Source}Portion column (e.g. CompanyBonusPortion)
+    // POST /bonus-allocation — store in BALLOC as AllocatedCompanyBonusPortion on the monthly row
     if (method === 'POST' && rawPath === '/bonus-allocation') {
       const { source, item, month, year, amount } = body;
       if (!source || !item || !month || !year || !amount) throw new Error('Missing allocation fields');
-      const col = source.replace(/\s+/g, '') + 'Portion'; // e.g. "CompanyBonusPortion"
-      const incData = INC();
-      _ensureCol(incData, col);
-      const yr = String(year);
-      let row = incData.rows.find(r => r.Type === 'Budget' && r.Items === item
-        && r.Month === month && String(r.Year) === yr);
-      if (!row) {
-        row = { Month: month, Year: yr, Items: item, Type: 'Budget' };
-        incData.rows.push(row);
-      }
-      row[col] = String(amount);
-      _updatePortionsTotal(row, incData);
-      await DATA.save('data/income.csv', `Allocate ${amount} from ${source} to ${item} ${month} ${yr}`);
+      const period = month + ' ' + String(year);
+      const balloc = BALLOC();
+      // Find the "once" row for this item+period (no Day value)
+      const row = balloc.rows.find(r => r.Item === item && r.MonthYearToUse === period && !r.Day);
+      if (!row) throw new Error(`Budget row not found for ${item} ${period}`);
+      row.AllocatedCompanyBonusPortion = String(parseFloat(amount) || 0);
+      await DATA.save('data/budgetAllocations.csv', `Allocate ${amount} from ${source} to ${item} ${period}`);
       return { ok: true };
     }
 
-    // DELETE /bonus-allocation/:source/:item/:month/:year — clear that column value
+    // DELETE /bonus-allocation/:source/:item/:month/:year — clear AllocatedCompanyBonusPortion
     if ((m = rawPath.match(/^\/bonus-allocation\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/)) && method === 'DELETE') {
       const [, src, itm, mon, yr] = m.map(decodeURIComponent);
-      const col = src.replace(/\s+/g, '') + 'Portion';
-      const incData = INC();
-      const row = incData.rows.find(r => r.Type === 'Budget' && r.Items === itm
-        && r.Month === mon && String(r.Year) === yr);
-      if (row) { row[col] = ''; _updatePortionsTotal(row, incData); }
-      await DATA.save('data/income.csv', `Remove bonus allocation ${src} ${itm} ${mon} ${yr}`);
+      const period = mon + ' ' + yr; const balloc = BALLOC();
+      const row = balloc.rows.find(r => r.Item === itm && r.MonthYearToUse === period && !r.Day);
+      if (row) row.AllocatedCompanyBonusPortion = '';
+      await DATA.save('data/budgetAllocations.csv', `Remove bonus allocation ${src} ${itm} ${period}`);
       return { ok: true };
     }
 
@@ -3326,24 +3186,13 @@ async function renderDashboardCalc() {
   // ── Yearly section (collapsed, static) ───────────────────────────────────
   const { sec: yearlySec, body: yearlyBody } = makeDashSection('Yearly', false);
 
-  // Budgeted = Opening Credit (current month) + PortionsTotal (current month)
+  // Budgeted = sum of AllocatedSalaryPortion + AllocatedCompanyBonusPortion for current period
   // Spent    = YTD expense debits from transactions up to current month
-  const incRows_yr = INC().rows;
   const yearlyBudget = {};
-  incRows_yr.filter(r =>
-    r.Type === 'Budget' && String(r.Year) === String(curYear) &&
-    r.Month === curMonthStr && !r.AllocationBalancing
-  ).forEach(r => {
-    const openRow = incRows_yr.find(o =>
-      o.Type === 'Budget' && o.Items === r.Items &&
-      o.Month === curMonthStr && String(o.Year) === String(curYear) &&
-      o.AllocationBalancing === 'Opening'
-    );
-    const sal = parseFloat(r.SalaryPortion) || 0;
-    const bon = parseFloat(r.CompanyBonusPortion) || 0;
-    const alloc = sal + bon || parseFloat(r.PortionsTotal) || 0;
-    const budget = (parseFloat(openRow && openRow.Credit) || 0) + alloc;
-    if (budget > 0) yearlyBudget[r.Items] = budget;
+  const curPeriod = curMonthStr + ' ' + curYear;
+  Object.entries(_ballocGrouped(curPeriod)).forEach(([item, g]) => {
+    const budget = g.salary + g.bonus;
+    if (budget > 0) yearlyBudget[item] = budget;
   });
 
   const yearlySpent = {};
@@ -3698,13 +3547,10 @@ function renderIncomeSections() {
     .map(r => r.ItemName);
 
   if (nonSalarySources.length) {
-    const budgetIncRows = INC().rows.filter(r => r.Type === 'Budget');
-
     nonSalarySources.forEach(src => {
-      const col = src.replace(/\s+/g, '') + 'Portion';
-      const received = AC.rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
+      const received = TXNS().rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
         .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
-      const allocated = budgetIncRows.reduce((s, r) => s + (parseFloat(r[col]) || 0), 0);
+      const allocated = BALLOC().rows.reduce((s, r) => s + (parseFloat(r.AllocatedCompanyBonusPortion) || 0), 0);
 
       if (received === 0 && allocated === 0) return;
 
@@ -4053,13 +3899,19 @@ function setVidTab(tab) {
   list.innerHTML = '';
   const allBudgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
   const source = VID.source;
-  const col = source.replace(/\s+/g, '') + 'Portion'; // e.g. CompanyBonusPortion
   const filterMonth = S.currentMonth && !isAllMonths() ? S.currentMonth.Month : null;
   const filterYear  = filterMonth ? String(S.currentMonth.Year) : null;
   const amtByItem = {};
-  INC().rows.filter(r => r.Type === 'Budget' && (!filterMonth || (r.Month === filterMonth && String(r.Year) === filterYear))).forEach(r => {
-    const v = parseFloat(r[col]) || 0;
-    if (v > 0) amtByItem[r.Items] = (amtByItem[r.Items] || 0) + v;
+  BALLOC().rows.forEach(r => {
+    if (!r.Item || r.AppliesToDay === 'FALSE') return;
+    if (filterMonth) {
+      const ls = (r.MonthYearToUse || '').lastIndexOf(' ');
+      if (r.MonthYearToUse.slice(0, ls) !== filterMonth || r.MonthYearToUse.slice(ls + 1) !== filterYear) return;
+    }
+    const v = source === 'Company Bonus'
+      ? (parseFloat(r.AllocatedCompanyBonusPortion) || 0)
+      : (parseFloat(r.AllocatedSalaryPortion) || 0);
+    if (v > 0) amtByItem[r.Item] = (amtByItem[r.Item] || 0) + v;
   });
 
   const items = tab === 'used'
@@ -4120,18 +3972,16 @@ async function openSalaryHistory() {
   $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Loading…</div>';
 
   try {
-    const allRows = await apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}`);
+    const period = `${S.currentMonth.Month} ${S.currentMonth.Year}`;
     SB.salary = getTotalIncome();
-    SB.items  = allRows
-      .filter(r => r.Type === 'Budget' && !r.AllocationBalancing)
-      .map(r => ({
-        name:   r.Items,
-        amount: (r.CalculatedType || '') === 'Calculated'
-          ? parseFloat(r.CalculatedAmount || '0') || 0
-          : parseFloat(r.SalaryPortion || '0') || 0,
-        paid: r.Paid || ''
-      }));
-    SB.bonusByItem = {};
+    const grouped = _ballocGrouped(period);
+    SB.items = Object.entries(grouped).map(([name, g]) => ({
+      name,
+      amount: g.salary,
+      bonus:  g.bonus,
+      paid:   g.paid > 0 ? String(g.paid) : ''
+    }));
+    SB.bonusByItem = Object.fromEntries(Object.entries(grouped).map(([name, g]) => [name, g.bonus]));
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
     return;
@@ -4476,81 +4326,33 @@ async function loadBpData() {
   const scope = monthsInScope();
   if (!scope.length) return;
 
-  // Auto-copy previous month's budget if current specific month has no entries
-  if (S.currentMonth && !isAllMonths()) {
-    const curM = S.currentMonth.Month, curY = String(S.currentMonth.Year);
-    const incData = INC();
-    const hasEntries = incData.rows.some(r =>
-      r.Type === 'Budget' && r.Month === curM && String(r.Year) === curY && !r.AllocationBalancing
-    );
-    if (!hasEntries && BP.items.length > 0) {
-      const MOS = ['January','February','March','April','May','June','July','August',
-                   'September','October','November','December'];
-      const idx = MOS.indexOf(curM);
-      const prevM = idx === 0 ? 'December' : MOS[idx - 1];
-      const prevY = String(idx === 0 ? parseInt(curY) - 1 : parseInt(curY));
-      const prevRows = incData.rows.filter(r =>
-        r.Type === 'Budget' && r.Month === prevM && String(r.Year) === prevY && !r.AllocationBalancing
-      );
-      if (prevRows.length) {
-        prevRows.forEach(r => {
-          const newRow = { ...r, Month: curM, Year: curY, Paid: '' };
-          incData.rows.push(newRow);
-        });
-        await DATA.save('data/income.csv', `Auto-copy budget from ${prevM} ${prevY} to ${curM} ${curY}`);
-      }
-    }
-  }
-
   const DAYS_LC = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
   const amounts = {}, salaryAmts = {}, calcTypes = {}, dailyApp = {}, hasAmt = new Set();
   const isCurrentMonth = (m) => S.currentMonth && m.Month === S.currentMonth.Month && String(m.Year) === String(S.currentMonth.Year);
 
   for (const m of scope) {
-    let allRows = [];
-    try { allRows = await apiFetch(`/income/${m.Month}/${m.Year}`); } catch {}
-
-    // Calculated items: totals come from days.csv summed by MonthYearToUse period
-    let daysTotals = {};
-    try { daysTotals = await apiFetch(`/days/${m.Month}/${m.Year}/totals`); } catch {}
-
-    allRows.filter(r => r.Type === 'Budget').forEach(r => {
-      calcTypes[r.Items] = r.CalculatedType || calcTypes[r.Items] || '';
-
-      // applies booleans from days.csv
-      const app = {};
-      DAYS_LC.forEach(d => { app[d] = true; });
-      if ((r.CalculatedType || '') === 'Calculated') {
-        const applyColBP = r.Items === 'Food' ? 'FoodDayApply' : r.Items === 'Transport' ? 'TransportDayApply' : null;
-        if (applyColBP) {
-          const mDays = DAYS_D().rows.filter(dr => dr.Month === m.Month && dr.Year === m.Year);
-          DAYS_LC.forEach(d => {
-            const cap = d.charAt(0).toUpperCase() + d.slice(1);
-            const dayRows = mDays.filter(dr => dr.DayName === cap);
-            if (dayRows.length && dayRows.some(dr => String(dr[applyColBP]).toUpperCase() === 'FALSE')) app[d] = false;
-          });
-        }
-      }
-      if (scope.length === 1 || isCurrentMonth(m)) {
-        dailyApp[r.Items] = app;
-      }
-
-      let v, vSalary;
-      if ((r.CalculatedType || '') === 'Calculated') {
-        const raw = r.CalculatedAmount;
-        v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
-        vSalary = v;
-        if (v > 0) hasAmt.add(r.Items);
-      } else {
-        const raw = r.PortionsTotal || r.ActualAmount || r.SalaryPortion;
-        v = (raw !== '' && raw !== null && raw !== undefined) ? parseFloat(raw) : 0;
-        if (raw !== '' && raw !== null && raw !== undefined) hasAmt.add(r.Items);
-        const rawSal = r.SalaryPortion || r.ActualAmount;
-        vSalary = (rawSal !== '' && rawSal !== null && rawSal !== undefined) ? parseFloat(rawSal) : 0;
-      }
-      amounts[r.Items]     = (amounts[r.Items] || 0) + v;
-      salaryAmts[r.Items]  = (salaryAmts[r.Items] || 0) + vSalary;
+    const period = m.Month + ' ' + m.Year;
+    const grouped = _ballocGrouped(period);
+    Object.entries(grouped).forEach(([item, g]) => {
+      const v = g.salary + g.bonus;
+      if (v > 0) hasAmt.add(item);
+      amounts[item]   = (amounts[item]   || 0) + v;
+      salaryAmts[item]= (salaryAmts[item]|| 0) + g.salary;
+      calcTypes[item] = _budgetMode(item) === 'Daily' ? 'Calculated' : '';
     });
+
+    if (scope.length === 1 || isCurrentMonth(m)) {
+      BALLOC().rows.forEach(r => {
+        if (!r.Item || !r.DayName || r.Month !== m.Month || r.Year !== m.Year) return;
+        if (_budgetMode(r.Item) !== 'Daily') return;
+        if (!dailyApp[r.Item]) {
+          dailyApp[r.Item] = {};
+          DAYS_LC.forEach(d => { dailyApp[r.Item][d] = true; });
+        }
+        const dn = r.DayName.toLowerCase();
+        if (r.AppliesToDay === 'FALSE') dailyApp[r.Item][dn] = false;
+      });
+    }
   }
 
   BP.monthAmounts    = amounts;
@@ -4562,8 +4364,8 @@ async function loadBpData() {
   // IC.sources: build from transactions with MonthFor = current period scope
   const icTotals = {};
   for (const m of scope) {
-    AC.rows
-      .filter(r => IC.incomeSources.has(r.Item) && r.MonthFor === m.Month && String(r.YearFor || '') === String(m.Year))
+    TXNS().rows
+      .filter(r => IC.incomeSources.has(r.Item) && r.MonthFor === m.Month && String(r.YearFor || '') === String(m.Year) && (parseFloat(r.Credit)||0) > 0)
       .forEach(r => {
         if (!icTotals[r.Item]) icTotals[r.Item] = { Items: r.Item, Amount: 0, IncomePeriod: r.IncomePeriod || '' };
         icTotals[r.Item].Amount += parseFloat(r.Credit) || 0;
@@ -4571,27 +4373,15 @@ async function loadBpData() {
   }
   IC.sources = Object.values(icTotals);
 
-  // BP.paidAmounts: Transferred months use budget total from income.csv; others sum expense transactions
+  // BP.paidAmounts: sum expense transaction debits for items in scope
   const paid = {};
-  const transferred = new Set();
-  const transferredMonths = new Set(); // 'Item|Month|Year'
-  for (const m of scope) {
-    let rows = [];
-    try { rows = await apiFetch(`/income/${m.Month}/${m.Year}`); } catch {}
-    rows.filter(r => r.Type === 'Budget' && r.Paid === 'Transferred').forEach(r => {
-      transferred.add(r.Items);
-      transferredMonths.add(`${r.Items}|${m.Month}|${String(m.Year)}`);
-      paid[r.Items] = (paid[r.Items] || 0) + (parseFloat(r.PortionsTotal || r.ActualAmount || r.SalaryPortion) || 0);
-    });
-  }
   const scopeSet = new Set(scope.map(m => `${m.Month}_${String(m.Year)}`));
   const allTxns = await apiFetch('/accounts');
   allTxns.filter(r => r.TransactionType === 'Expense' && r.Item && (parseFloat(r.Debit) || 0) > 0
-      && scopeSet.has(`${r.MonthFor}_${String(r.YearFor)}`)
-      && !transferredMonths.has(`${r.Item}|${r.MonthFor}|${String(r.YearFor)}`))
+      && scopeSet.has(`${r.MonthFor}_${String(r.YearFor)}`))
     .forEach(r => { paid[r.Item] = (paid[r.Item] || 0) + (parseFloat(r.Debit) || 0); });
   BP.paidAmounts = paid;
-  BP.transferredItems = transferred;
+  BP.transferredItems = new Set();
 }
 
 function getSalaryAmount() {
@@ -4655,17 +4445,9 @@ function _getBudgetItemStatus() {
     var budgeted = 0;
 
     if (yearly) {
-      var incRows = INC().rows;
-      var openRow = null, allocRow = null;
-      for (var j = 0; j < incRows.length; j++) {
-        var r = incRows[j];
-        if (r.Type !== 'Budget' || r.Items !== itemName) continue;
-        if (r.Month !== targetMonth || String(r.Year) !== targetYear) continue;
-        if (r.AllocationBalancing === 'Opening') { openRow = r; }
-        else if (!r.AllocationBalancing) { allocRow = r; }
-      }
-      var allocAmt = allocRow ? (parseFloat(allocRow.PortionsTotal) || 0) : 0;
-      budgeted = (parseFloat(openRow ? openRow.Credit : 0) || 0) + allocAmt;
+      var targetPeriod = targetMonth + ' ' + targetYear;
+      var grpY = _ballocGrouped(targetPeriod);
+      budgeted = grpY[itemName] ? grpY[itemName].salary + grpY[itemName].bonus : 0;
     } else {
       // Monthly: BP.monthAmounts is already PortionsTotal for the current scope
       budgeted = BP.monthAmounts[itemName] || 0;
@@ -4721,13 +4503,12 @@ function computeMonthContributions() {
   const prevYr = curIdx === 0 ? String(parseInt(curYr) - 1) : curYr;
   const nextYr = curIdx === 11 ? String(parseInt(curYr) + 1) : curYr;
   let prev = 0, curr = 0, next = 0;
-  const daysRows = DAYS_D().rows;
   BP.items.forEach(item => {
     const total = BP.monthAmounts[item.Id] || 0;
-    if ((BP.calculatedTypes[item.Id] || '') === 'Calculated') {
-      const col = 'Salary' + item.Id.replace(/\s+/g, '');
-      daysRows.filter(r => r.MonthYearToUse === period).forEach(r => {
-        const v = parseFloat(r[col]) || 0;
+    if (_budgetMode(item.Id) === 'Daily') {
+      BALLOC().rows.forEach(r => {
+        if (r.Item !== item.Id || r.MonthYearToUse !== period || r.AppliesToDay === 'FALSE' || !r.Day) return;
+        const v = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
         if (r.Month === prevMo && String(r.Year) === prevYr) prev += v;
         else if (r.Month === curMo && String(r.Year) === curYr) curr += v;
         else if (r.Month === nextMo && String(r.Year) === nextYr) next += v;
@@ -4802,16 +4583,18 @@ function renderBpByIncome(container) {
 
   // Variable income cards (Company Bonus etc.) — show month-allocated amount
   const nonSalarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.ItemName !== 'Salary').map(r => r.ItemName);
-  const budgetIncRows = INC().rows.filter(r => r.Type === 'Budget');
   const curM = S.currentMonth && !isAllMonths() ? S.currentMonth.Month : null;
   const curY = curM ? String(S.currentMonth.Year) : null;
   nonSalarySrcs.forEach(src => {
-    const col = src.replace(/\s+/g, '') + 'Portion';
-    const allocatedAll = budgetIncRows.reduce((s, r) => s + (parseFloat(r[col]) || 0), 0);
+    const ballocRows = BALLOC().rows;
+    const allocatedAll = ballocRows.reduce((s, r) => s + (parseFloat(r.AllocatedCompanyBonusPortion) || 0), 0);
     const allocatedMonth = curM
-      ? budgetIncRows.filter(r => r.Month === curM && String(r.Year) === curY).reduce((s, r) => s + (parseFloat(r[col]) || 0), 0)
+      ? ballocRows.filter(r => {
+          const ls = (r.MonthYearToUse||'').lastIndexOf(' ');
+          return r.MonthYearToUse.slice(0,ls) === curM && r.MonthYearToUse.slice(ls+1) === curY;
+        }).reduce((s, r) => s + (parseFloat(r.AllocatedCompanyBonusPortion) || 0), 0)
       : allocatedAll;
-    const received = AC.rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
+    const received = TXNS().rows.filter(r => r.Item === src && (parseFloat(r.Credit) || 0) > 0)
       .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
     if (received === 0 && allocatedAll === 0) return;
     const displayAmt = allocatedMonth;
@@ -5845,16 +5628,16 @@ async function acctPopulateItemSelect(selected, section) {
   if (!sel) return;
 
   if (section === 'Budget') {
-    // Load all unique budget items from in-memory income data (all months, all types)
-    const seenItems = new Set(), hasAlloc = new Set();
-    INC().rows.filter(r => r.Type === 'Budget' && !r.AllocationBalancing).forEach(r => {
-      seenItems.add(r.Items);
-      const sal = parseFloat(r.SalaryPortion) || 0;
-      const bon = parseFloat(r.CompanyBonusPortion) || 0;
-      if (sal + bon > 0 || (parseFloat(r.PortionsTotal) || 0) > 0) hasAlloc.add(r.Items);
+    const allBudgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
+    const allocMap = {};
+    BALLOC().rows.forEach(r => {
+      if (!r.Item) return;
+      const sal = parseFloat(r.AllocatedSalaryPortion) || 0;
+      const bon = parseFloat(r.AllocatedCompanyBonusPortion) || 0;
+      if (sal + bon > 0) allocMap[r.Item] = true;
     });
-    const budgeted   = [...seenItems].filter(k => hasAlloc.has(k));
-    const unbudgeted = [...seenItems].filter(k => !hasAlloc.has(k));
+    const budgeted   = allBudgetItems.filter(n => allocMap[n]);
+    const unbudgeted = allBudgetItems.filter(n => !allocMap[n]);
     sel.innerHTML = `<option value="">— Select Item —</option>` +
       [...budgeted, ...unbudgeted].map(name => {
         const isSel = name === selected;
@@ -5971,15 +5754,20 @@ function renderAllocInfo(val) {
 
   const MONTHS_AC = ['January','February','March','April','May','June','July','August',
                      'September','October','November','December'];
-  const incRows = INC().rows;
   const txnRows = TXNS().rows;
 
-  // Only months where PortionsTotal > 0 for this item
+  // Build per-period allocation map for this item from BALLOC
   const allocMap = {};
-  incRows.filter(r => r.Type === 'Budget' && r.Items === val && !r.AllocationBalancing).forEach(r => {
-    const amt = parseFloat(r.PortionsTotal) || 0;
-    if (amt > 0) allocMap[`${r.Month}|${r.Year}`] = { month: r.Month, year: String(r.Year), alloc: amt, spent: 0 };
+  BALLOC().rows.forEach(r => {
+    if (r.Item !== val || !r.MonthYearToUse || r.AppliesToDay === 'FALSE') return;
+    const ls = r.MonthYearToUse.lastIndexOf(' ');
+    const pmo = r.MonthYearToUse.slice(0, ls), pyr = r.MonthYearToUse.slice(ls + 1);
+    const key = `${pmo}|${pyr}`;
+    if (!allocMap[key]) allocMap[key] = { month: pmo, year: pyr, alloc: 0, spent: 0 };
+    allocMap[key].alloc += (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
   });
+  // Remove periods with zero allocation
+  Object.keys(allocMap).forEach(k => { if (allocMap[k].alloc <= 0) delete allocMap[k]; });
 
   if (!Object.keys(allocMap).length) { info.innerHTML = ''; AC.txnSplit = null; return; }
 
@@ -6327,18 +6115,8 @@ async function init() {
   try {
     await DATA.loadAll();
     _ensureCol(ITMS(), 'Display');
+    _ensureCol(ITMS(), 'BudgetMode');
     await _migrateTxns();
-    // backfill PortionsTotal for all existing Budget rows
-    const _incM = INC();
-    _ensureCol(_incM, 'PortionsTotal');
-    let _ptDirty = false;
-    _incM.rows.filter(r => r.Type === 'Budget').forEach(r => {
-      const portionCols = _incM.headers.filter(h => h !== 'PortionsTotal' && h.endsWith('Portion'));
-      const total = portionCols.reduce((s, h) => s + (parseFloat(r[h]) || 0), 0);
-      const expected = total > 0 ? String(total) : '';
-      if (r['PortionsTotal'] !== expected) { r['PortionsTotal'] = expected; _ptDirty = true; }
-    });
-    if (_ptDirty) await DATA.save('data/income.csv', 'Backfill PortionsTotal');
   } catch (err) {
     showOfflineBanner(true);
     if ($('monthTriggerValue')) $('monthTriggerValue').textContent = 'Error';
