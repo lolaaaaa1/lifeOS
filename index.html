@@ -2901,7 +2901,7 @@ async function saveGHToken() {
 const PAGE_TITLES = { dashboard: 'lifeOS', budget: 'Income', 'budget-plan': 'Budget', transactions: 'Transactions', accounts: 'Accounts', goals: 'Goals', loans: 'Loans' };
 const VALID_PAGES = Object.keys(PAGE_TITLES);
 
-function navigate(page) {
+async function navigate(page) {
   if (!VALID_PAGES.includes(page)) page = 'dashboard';
   S.currentPage = page;
 
@@ -2939,6 +2939,9 @@ function navigate(page) {
   document.querySelectorAll('.month-selector').forEach(el => {
     el.style.display = showMonth ? '' : 'none';
   });
+
+  // Always reload CSVs from GitHub so any external change is reflected
+  try { await DATA.loadAll(); } catch {}
 
   if (page === 'dashboard')    renderDashboardCalc();
   if (page === 'budget')       renderBudgetPage();
@@ -5292,7 +5295,6 @@ function renderTxnPageList() {
 
 async function renderAccountsPage() {
   try {
-    await DATA.loadAll();
     [AC.defs, AC.rows] = await Promise.all([
       apiFetch('/account-defs'),
       apiFetch('/accounts'),
