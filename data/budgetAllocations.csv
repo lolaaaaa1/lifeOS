@@ -340,7 +340,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2025,December,,,,Shoes,December 2025,,,
 2026,April,,,,Shoes,April 2026,,,
 2026,February,,,,Shoes,February 2026,,,
-2026,January,,,,Shoes,January 2026,,,
+2026,January,,,,Shoes,January 2026,,50,
 2026,July,,,,Shoes,July 2026,,,
 2026,June,,,,Shoes,June 2026,,,
 2026,March,,,,Shoes,March 2026,,,
