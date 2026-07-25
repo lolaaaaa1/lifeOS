@@ -582,7 +582,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,August,,,,MSc. Actuarial Science,August 2026,,,
 2026,August,,,,Nails,August 2026,,,
 2026,August,,,,Outing,August 2026,,,
-2026,August,,,,Rent,August 2026,,,
+2026,August,,,,Rent,August 2026,,1000,
 2026,August,,,,Rent Charges,August 2026,,,
 2026,August,,,,Rental Utilities,August 2026,,,
 2026,August,,,,Shoes,August 2026,,,
