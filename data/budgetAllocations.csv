@@ -315,7 +315,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,May,,,,Outing,May 2026,,,
 2025,December,,,,Rent,December 2025,,,
 2026,April,,,,Rent,April 2026,,,
-2026,February,,,,Rent,February 2026,,,
+2026,February,,,,Rent,February 2026,,1000,
 2026,January,,,,Rent,January 2026,,1000,
 2026,July,,,,Rent,July 2026,,,
 2026,June,,,,Rent,June 2026,,,
