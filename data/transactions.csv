@@ -339,3 +339,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 307202614,,Telecel Cash,,100,,Monthly,,,July,2026,Transfer,,,
 2507202605,MTN Mobile Money,,0.76,,,Monthly,,,June,2026,Transfer,,,2507202605
 2507202605,,Telecel Cash,,0.76,,Monthly,,,June,2026,Transfer,,,2507202605
+2507202606,Cash,,27,,,Monthly,,,June,2026,Transfer,,,2507202606
+2507202606,,Telecel Company,,27,,Monthly,,,June,2026,Transfer,,,2507202606
