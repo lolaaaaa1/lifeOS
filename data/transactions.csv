@@ -197,8 +197,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2811202501,,Ecobank,,1032.52,Salary,Monthly,,,December,2025,Income,,,
 507202616,Ecobank,,220,,Shoes,Monthly,,,July,2026,Expense,,Black Flats (like the Brown),507202616
 507202616,,Others,,220,Shoes,Monthly,,,July,2026,Expense,,Black Flats (like the Brown),507202616
-507202617,Ecobank,,120,,Shoes,Monthly,,,July,2026,Expense,,Delivery,507202617
-507202617,,Others,,120,Shoes,Monthly,,,July,2026,Expense,,Delivery,507202617
 507202612,Ecobank,,50,,Shoes,Monthly,,,January,2026,Expense,,,
 507202612,,Gadolsoles,,50,Shoes,Monthly,,,January,2026,Expense,,,
 507202613,Ecobank,,200,,Shoes,Monthly,,,April,2026,Expense,,,
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202615,,Others,,200,Shoes,Monthly,,,June,2026,Expense,,Blue Silver Charm Flats,
 507202614,Ecobank,,220,,Shoes,Monthly,,,June,2026,Expense,,Brown Flats,
 507202614,,Others,,220,Shoes,Monthly,,,June,2026,Expense,,Brown Flats,
+507202617,Ecobank,,120,,Shoes,Monthly,,,June,2026,Expense,,Delivery,
+507202617,,Others,,120,Shoes,Monthly,,,June,2026,Expense,,Delivery,
