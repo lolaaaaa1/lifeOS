@@ -436,7 +436,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,June,,,,Utilities,June 2026,,0,1750
 2026,June,,,,Charges,June 2026,,28.5,
 2026,June,,,,Apple Music Subscription,June 2026,,30,
-2026,June,,,,Clothes,June 2026,,50,
+2026,June,,,,Clothes,June 2026,,550,
 2026,June,,,,Department Dues,June 2026,,100,
 2026,June,,,,Gifting,June 2026,,100,
 2026,June,,,,Skincare,June 2026,,100,
@@ -447,7 +447,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,June,,,,Electricity,June 2026,,200,
 2026,June,,,,Tithe,June 2026,,700,
 2026,June,,,,Rent,June 2026,,1000,
-2026,June,,,,MSc. Actuarial Science,June 2026,,1500,
+2026,June,,,,MSc. Actuarial Science,June 2026,,1000,
 2026,June,,,,Shoes,June 2026,,,760
 2026,June,,,,SOA Exams,June 2026,,340,
 2026,June,6,29,Monday,Food,July 2026,TRUE,30,
