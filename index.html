@@ -4206,6 +4206,45 @@ function setSalaryType(type) {
   $('saveSalaryBtn').disabled = type === 'pct';
 }
 
+async function ensureBallocRows(month, year) {
+  const balloc  = BALLOC();
+  const period  = `${month} ${year}`;
+  const yearStr = String(year);
+  if (balloc.rows.some(r => r.MonthYearToUse === period)) return; // already has rows
+  const items = ITMS().rows.filter(r => r.Section === 'Budget' && r.ItemName);
+  if (!items.length) return;
+  const MONTH_NAMES = ['January','February','March','April','May','June','July',
+                       'August','September','October','November','December'];
+  const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthIdx    = MONTH_NAMES.indexOf(month);
+  if (monthIdx < 0) return;
+  const yr         = parseInt(yearStr);
+  const daysInMonth = new Date(yr, monthIdx + 1, 0).getDate();
+  for (const itm of items) {
+    const mode = itm.BudgetMode || 'Once';
+    if (mode === 'Daily') {
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayName = DAY_NAMES[new Date(yr, monthIdx, d).getDay()];
+        balloc.rows.push({
+          Year: yearStr, Month: month, MonthNumber: String(monthIdx + 1),
+          Day: String(d), DayName: dayName,
+          Item: itm.ItemName, MonthYearToUse: period,
+          AppliesToDay: 'TRUE',
+          AllocatedSalaryPortion: '', AllocatedCompanyBonusPortion: ''
+        });
+      }
+    } else {
+      balloc.rows.push({
+        Year: yearStr, Month: month, MonthNumber: '', Day: '', DayName: '',
+        Item: itm.ItemName, MonthYearToUse: period,
+        AppliesToDay: '',
+        AllocatedSalaryPortion: '', AllocatedCompanyBonusPortion: ''
+      });
+    }
+  }
+  await DATA.save('data/budgetAllocations.csv', `Create budget rows for ${period}`);
+}
+
 async function saveSalary() {
   if (!S.currentMonth) return;
   const amount = parseFloat($('salaryAmountInput').value) || 0;
@@ -4218,6 +4257,7 @@ async function saveSalary() {
       method: 'PUT',
       body: JSON.stringify({ salaryType: 'fixed', salaryAmount: amount }),
     });
+    await ensureBallocRows(S.currentMonth.Month, parseInt(S.currentMonth.Year));
     showOfflineBanner(false);
     // refresh
     await fetchMonthData();
@@ -4398,6 +4438,15 @@ async function loadBpData() {
     BP.items = rawBp.map(it => ({ Id: it.name, Name: it.name, Type: '' }));
     IC.incomeSources = new Set(rawSrc || []);
   } catch { BP.items = []; IC.incomeSources = new Set(); }
+
+  // Auto-create budget rows when a month has income but no BALLOC rows yet
+  if (S.currentMonth && !isAllMonths()) {
+    const cm = S.currentMonth;
+    const consRow = CONS().rows.find(r => r.Month === cm.Month && String(r.Year) === String(cm.Year));
+    if (consRow && (parseFloat(consRow.Salary) || parseFloat(consRow.SalaryConstraints))) {
+      await ensureBallocRows(cm.Month, parseInt(cm.Year));
+    }
+  }
 
   const scope = monthsInScope();
   if (!scope.length) return;
