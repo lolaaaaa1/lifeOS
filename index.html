@@ -5699,12 +5699,20 @@ function setTxnType(type) {
   const fromField = $('acctFromField');
   const toField   = $('acctToField');
   const grid      = $('acctFromToGrid');
+  // Always reset both dropdowns to full account list first
+  acctPopulateFromToSelects();
   if (type === 'transfer' || type === 'opening balance' || type === 'closing balance') {
     grid.style.gridTemplateColumns = '1fr 1fr';
     fromField.style.display = '';
     toField.style.display   = '';
     $('acctFromLabel').textContent = 'From';
     $('acctToLabel').textContent   = 'To';
+    const toSel = $('acctTxnTo');
+    if (toSel && type === 'transfer') {
+      const transferTargets = AC.defs.filter(d => d.Display || (d.Type || '').toLowerCase() === 'investment').map(d => d.AccountName);
+      toSel.innerHTML = `<option value="">— Select —</option>` +
+        transferTargets.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+    }
   } else if (type === 'income') {
     grid.style.gridTemplateColumns = '1fr 1fr';
     fromField.style.display = '';
@@ -5713,9 +5721,9 @@ function setTxnType(type) {
     $('acctToLabel').textContent   = 'Account To';
     const fromSel = $('acctTxnFrom');
     if (fromSel) {
-      const incomeSources = ITMS().rows.filter(r => r.Section === 'Income').map(r => r.ItemName);
+      const displayAccts = AC.defs.filter(d => d.Display).map(d => d.AccountName);
       fromSel.innerHTML = `<option value="">— Select —</option>` +
-        incomeSources.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+        displayAccts.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
     }
   } else {
     grid.style.gridTemplateColumns = '1fr';
@@ -5725,7 +5733,7 @@ function setTxnType(type) {
     $('acctToLabel').textContent   = 'To (optional)';
   }
   $('acctItemField').style.display         = '';
-  $('acctIncomePeriodField').style.display = type === 'income'   ? ''     : 'none';
+  $('acctIncomePeriodField').style.display = 'none';
   $('acctChargesField').style.display      = (type === 'transfer' || type === 'expense') ? '' : 'none';
   const forRow = $('acctMonthForRow');
   if (forRow) forRow.style.display = (type === 'transfer' || type === 'expense') ? 'none' : 'grid';
@@ -6030,6 +6038,7 @@ async function saveAccountTxn() {
   const type = AC.txnType || 'expense';
   let accountFrom = '', accountTo = '';
   if (type === 'income') {
+    accountFrom = $('acctTxnFrom')?.value || '';
     accountTo   = $('acctTxnTo')?.value   || '';
     if (!accountTo) { alert('Select an account'); return; }
   } else if (type === 'expense') {
