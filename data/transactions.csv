@@ -353,3 +353,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202613,,Others,,500,Clothes,Monthly,,,June,2026,Expense,,I don’t event know wai,2507202613
 2507202614,Nationwide Medical Insurance,,7000,,Salary,Monthly,,,August,2026,Income,,,2507202614
 2507202614,,Ecobank,,7000,Salary,Monthly,,,August,2026,Income,,,2507202614
+2507202615,Ecobank,,60,,Transport,Monthly,,,July,2026,Expense,,,2507202615
+2507202615,,Others,,60,Transport,Monthly,,,July,2026,Expense,,,2507202615
