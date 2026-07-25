@@ -6039,9 +6039,11 @@ async function openAddTxnModal(accountName, itemName, lockExpense) {
 }
 
 async function openEditTxnModal(txnId) {
-  const txnRows = AC.rows.filter(r => r.TransactionID === txnId);
+  // Load the primary transaction rows plus all group members (same GroupTransactionID)
+  const txnRows = AC.rows.filter(r => r.TransactionID === txnId || r.GroupTransactionID === txnId);
   if (!txnRows.length) return;
-  const [t] = _groupTxns(txnRows);
+  const allGrouped = _groupTxns(txnRows);
+  const [t] = allGrouped;
   if (!t) return;
   acctPopulateMonthSelects();
   acctPopulateFromToSelects('');
@@ -6067,10 +6069,19 @@ async function openEditTxnModal(txnId) {
   if ($('acctTxnTo'))   $('acctTxnTo').value   = t.accountTo   || '';
   onAcctTxnToChange();
   await acctPopulateItemSelect(t.item || '', type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null);
-  // Re-apply the saved month selection after item population resets it
-  if (type === 'expense' && t.monthFor && t.yearFor) {
-    AC.splitSelection = new Set([`${t.monthFor}|${t.yearFor}`]);
-    renderAllocInfo(t.item || '');
+  if (type === 'expense') {
+    // Collect all expense legs in this group, sum total, pre-tick all months
+    const groupExpenses = allGrouped.filter(g =>
+      (g.transactionType || '').toLowerCase() === 'expense' && g.item === t.item
+    );
+    const groupTotal  = groupExpenses.reduce((s, g) => s + g.amount, 0);
+    const groupMonths = new Set(groupExpenses.map(g => `${g.monthFor}|${g.yearFor}`).filter(k => !k.startsWith('|')));
+    AC.editingTxn.groupMemberIds = groupExpenses.map(g => g.id);
+    if (groupTotal > 0) $('acctTxnCredit').value = String(groupTotal);
+    if (groupMonths.size > 0) {
+      AC.splitSelection = groupMonths;
+      renderAllocInfo(t.item || '');
+    }
   }
   $('accountModalOverlay').classList.add('open');
 }
@@ -6118,12 +6129,36 @@ async function saveAccountTxn() {
 
   try {
     if (AC.editingTxn) {
-      // Editing: single transaction update
-      const payload = { ...basePayload, monthFor: $('acctTxnMonthFor').value, yearFor: $('acctTxnYearFor').value, amount: totalAmount };
-      await apiFetch('/accounts/transaction', {
-        method: 'PUT',
-        body: JSON.stringify({ ...payload, transactionId: AC.editingTxn.transactionId }),
-      });
+      const memberIds = AC.editingTxn.groupMemberIds && AC.editingTxn.groupMemberIds.length > 0
+        ? AC.editingTxn.groupMemberIds
+        : [AC.editingTxn.transactionId];
+      if (memberIds.length > 1 || (AC.txnSplit && AC.txnSplit.length > 1)) {
+        // Group edit: delete all old members then recreate
+        for (const mid of memberIds) {
+          await apiFetch(`/accounts/transaction/${encodeURIComponent(mid)}`, { method: 'DELETE' });
+        }
+        const newGroupId = _genTxnId(TXNS().rows);
+        if (AC.txnSplit && AC.txnSplit.length > 1) {
+          for (const s of AC.txnSplit) {
+            await apiFetch('/accounts/transaction', {
+              method: 'POST',
+              body: JSON.stringify({ ...basePayload, monthFor: s.month, yearFor: s.year, amount: s.amount, groupTransactionId: newGroupId }),
+            });
+          }
+        } else {
+          await apiFetch('/accounts/transaction', {
+            method: 'POST',
+            body: JSON.stringify({ ...basePayload, monthFor: $('acctTxnMonthFor').value, yearFor: $('acctTxnYearFor').value, amount: totalAmount, groupTransactionId: newGroupId }),
+          });
+        }
+      } else {
+        // Single transaction update
+        const payload = { ...basePayload, monthFor: $('acctTxnMonthFor').value, yearFor: $('acctTxnYearFor').value, amount: totalAmount };
+        await apiFetch('/accounts/transaction', {
+          method: 'PUT',
+          body: JSON.stringify({ ...payload, transactionId: AC.editingTxn.transactionId }),
+        });
+      }
     } else if (type === 'expense' && AC.txnSplit && AC.txnSplit.length > 0) {
       // One transaction per split month; GroupTransactionID = first transaction's ID (same as its own if only one)
       const groupId = _genTxnId(TXNS().rows);
