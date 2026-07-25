@@ -19,7 +19,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,April,,,,Claude Subscription,April 2026,,,
 2026,February,,,,Claude Subscription,February 2026,,,
 2026,January,,,,Claude Subscription,January 2026,,,
-2026,July,,,,Claude Subscription,July 2026,,,
+2026,July,,,,Claude Subscription,July 2026,,300,
 2026,June,,,,Claude Subscription,June 2026,,,
 2026,March,,,,Claude Subscription,March 2026,,,
 2026,May,,,,Claude Subscription,May 2026,,,
