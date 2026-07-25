@@ -2720,7 +2720,7 @@ const LocalAPI = {
     // POST /bonus-allocation — store in BALLOC as AllocatedCompanyBonusPortion on the monthly row
     if (method === 'POST' && rawPath === '/bonus-allocation') {
       const { source, item, month, year, amount } = body;
-      if (!source || !item || !month || !year || !amount) throw new Error('Missing allocation fields');
+      if (!source || !item || !month || !year || amount == null || amount === '') throw new Error('Missing allocation fields');
       const period = month + ' ' + String(year);
       const balloc = BALLOC();
       // Find the "once" row for this item+period (no Day value)
