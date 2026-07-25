@@ -14,7 +14,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,July,,,,Charges,July 2026,,,
 2026,June,,,,Charges,June 2026,,,
 2026,March,,,,Charges,March 2026,,8.5,
-2026,May,,,,Charges,May 2026,,,
+2026,May,,,,Charges,May 2026,,28.5,
 2025,December,,,,Claude Subscription,December 2025,,,
 2026,April,,,,Claude Subscription,April 2026,,,
 2026,February,,,,Claude Subscription,February 2026,,,
