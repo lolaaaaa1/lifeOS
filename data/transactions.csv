@@ -41,8 +41,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202611,,Charges,,3.98,Charges,Monthly,,,July,2026,Expense,,,
 507202644,Telecel Cash,,3.01,,Charges,Monthly,,,July,2026,Transfer,,,
 507202644,,Charges,,3.01,Charges,Monthly,,,July,2026,Transfer,,,
-2407202608,Telecel Cash,,10.23,,Charges,Monthly,,,July,2026,Expense,,,
-2407202608,,Others,,10.23,Charges,Monthly,,,July,2026,Expense,,,
 507202627,Ecobank,,300,,Claude Subscription,Monthly,,,July,2026,Expense,,,507202627
 507202627,,Claude,,300,Claude Subscription,Monthly,,,July,2026,Expense,,,507202627
 507202602,Ecobank,,100,,Clothes,Monthly,,,May,2026,Expense,,,
