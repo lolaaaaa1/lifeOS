@@ -320,7 +320,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,July,,,,Rent,July 2026,,,
 2026,June,,,,Rent,June 2026,,,
 2026,March,,,,Rent,March 2026,,1000,
-2026,May,,,,Rent,May 2026,,,
+2026,May,,,,Rent,May 2026,,1000,
 2025,December,,,,Rent Charges,December 2025,,,
 2026,April,,,,Rent Charges,April 2026,,120,
 2026,February,,,,Rent Charges,February 2026,,120,
