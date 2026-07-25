@@ -585,7 +585,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,April,,,,Travel,April 2026,,100,
 2026,February,,,,Travel,February 2026,,,
 2026,January,,,,Travel,January 2026,,,
-2026,July,,,,Travel,July 2026,,,
+2026,July,,,,Travel,July 2026,,100,
 2026,June,,,,Travel,June 2026,,,
 2026,March,,,,Travel,March 2026,,,
 2026,May,,,,Travel,May 2026,,,
