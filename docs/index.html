@@ -4024,12 +4024,18 @@ function sbItemRow(it) {
     ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
     : '';
   const row = document.createElement('div');
-  row.style = `display:grid;grid-template-columns:1fr 100px 84px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);cursor:pointer;${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
-  row.innerHTML = `
-    <span style="font-size:14px;${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}</span>
-    <span style="font-size:14px;font-weight:${noSalary ? '400' : '500'};${noSalary ? 'opacity:.35;' : ''}text-align:right;">${noSalary ? '—' : fmtGHS(it.amount)}</span>
-    <span style="font-size:14px;font-weight:${noBonus ? '400' : '500'};${noBonus ? 'opacity:.35;' : ''}text-align:right;">${noBonus ? '—' : fmtGHS(it.bonus || 0)}</span>`;
-  row.onclick = () => openSbAmountEdit(it.name);
+  row.style = `display:grid;grid-template-columns:1fr 100px 84px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
+  const salCell = document.createElement('span');
+  salCell.style = `font-size:14px;font-weight:${noSalary ? '400' : '500'};${noSalary ? 'opacity:.35;' : ''}text-align:right;cursor:pointer;`;
+  salCell.textContent = noSalary ? '—' : fmtGHS(it.amount);
+  salCell.onclick = () => openSbAmountEdit(it.name);
+  const bonCell = document.createElement('span');
+  bonCell.style = `font-size:14px;font-weight:${noBonus ? '400' : '500'};${noBonus ? 'opacity:.35;' : ''}text-align:right;cursor:pointer;`;
+  bonCell.textContent = noBonus ? '—' : fmtGHS(it.bonus || 0);
+  bonCell.onclick = () => openBpAmountModal(it.name, it.name, 'bonus');
+  row.innerHTML = `<span style="font-size:14px;${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}</span>`;
+  row.appendChild(salCell);
+  row.appendChild(bonCell);
   return row;
 }
 
@@ -4817,13 +4823,16 @@ function setBpCalcType(type) {
   else hint.textContent = '';
 }
 
-function openBpAmountModal(itemId, itemName) {
+function openBpAmountModal(itemId, itemName, amountType) {
   if (!requireSpecificMonth()) return;
-  BP.amountItemId = itemId;
+  BP.amountItemId  = itemId;
+  BP.amountType    = amountType || 'salary';
+  const typeLabel  = BP.amountType === 'bonus' ? 'Bonus' : 'Salary';
   $('bpAmountModalTitle').textContent = itemName;
-  $('bpAmountLabel').textContent = `Amount — ${S.currentMonth ? S.currentMonth.Month + ' ' + S.currentMonth.Year : ''}`;
-  const current = BP.monthAmounts[itemId] ?? null;
-  $('bpAmountInput').value = current !== null ? current : '';
+  $('bpAmountLabel').textContent = `${typeLabel} Amount — ${S.currentMonth ? S.currentMonth.Month + ' ' + S.currentMonth.Year : ''}`;
+  const g = _ballocGrouped(`${S.currentMonth.Month} ${S.currentMonth.Year}`)[itemId] || { salary: 0, bonus: 0 };
+  const current = BP.amountType === 'bonus' ? g.bonus : g.salary;
+  $('bpAmountInput').value = current > 0 ? current : '';
   onBpAmountInput();
   $('bpAmountModalOverlay').classList.add('open');
   const savedType = BP.calculatedTypes[itemId] || 'Actual';
@@ -5061,16 +5070,24 @@ async function saveBpAmount() {
   BP.monthAmounts[savedId]    = val;
   BP.calculatedTypes[savedId] = calcType;
   try {
-    await Promise.all([
-      apiFetch(`/finance/months/${S.currentMonth.Month}/${S.currentMonth.Year}/budget`, {
-        method: 'PUT',
-        body: JSON.stringify({ [savedId]: val }),
-      }),
-      apiFetch(`/budget-meta/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(savedId)}`, {
-        method: 'PUT',
-        body: JSON.stringify({ calculatedType: calcType }),
-      }),
-    ]);
+    const saveType = BP.amountType || 'salary';
+    if (saveType === 'bonus') {
+      await apiFetch('/bonus-allocation', {
+        method: 'POST',
+        body: JSON.stringify({ source: 'Company Bonus', item: savedId, month: S.currentMonth.Month, year: S.currentMonth.Year, amount: val }),
+      });
+    } else {
+      await Promise.all([
+        apiFetch(`/finance/months/${S.currentMonth.Month}/${S.currentMonth.Year}/budget`, {
+          method: 'PUT',
+          body: JSON.stringify({ [savedId]: val }),
+        }),
+        apiFetch(`/budget-meta/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(savedId)}`, {
+          method: 'PUT',
+          body: JSON.stringify({ calculatedType: calcType }),
+        }),
+      ]);
+    }
   } catch (e) { alert('Error saving: ' + e.message); return; }
 
   $('bpAmountModalOverlay').classList.remove('open');
