@@ -89,8 +89,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 102202609,Ecobank,,580,,Food,Monthly,,,February,2026,Expense,,,
 102202609,,Others,,580,Food,Monthly,,,February,2026,Expense,,,
 507202639,,Others,,260,Food,Monthly,,,February,2026,Expense,,,
-101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense,,,
-101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense,,,
 607202604,Cash,,80,,Food,Monthly,,,July,2026,Expense,,UGMC Snacks,607202604
 2407202602,Ecobank,,880,,Food,Monthly,,,July,2026,Expense,,,
 507202642,,Uncle Steven (HGT Khebab),,30,Food,Monthly,,,July,2026,Expense,,Pork 2,507202642
@@ -344,3 +342,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202607,,Telecel Cash,,3.4,,Monthly,,,June,2026,Transfer,,,2507202607
 807202601,Cash,,30,,Food,Monthly,,,July,2026,Expense,,Plantain Chips,
 807202601,,Auntie Gloria (NMI),,30,Food,Monthly,,,July,2026,Expense,,Plantain Chips,
+101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense,,,
+101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense,,,
