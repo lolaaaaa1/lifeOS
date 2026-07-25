@@ -121,8 +121,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202611,,Others,,107.29,Hair,Monthly,,,July,2026,Expense,,,2407202611
 507202636,Ecobank,,150,,Hair,Monthly,,,June,2026,Expense,,I don’t know,
 507202636,,Others,,150,Hair,Monthly,,,June,2026,Expense,,I don’t know,
-307202601,Ecobank,,400,,Hair,Monthly,,,July,2026,Expense,,,
-307202601,,Auntie Happy (Hair Dresser),,400,Hair,Monthly,,,July,2026,Expense,,,
 307202603,Ecobank,,100,,Hair,Monthly,,,July,2026,Expense,,,
 307202603,,Others,,100,Hair,Monthly,,,July,2026,Expense,,,
 307202604,Ecobank,,120,,Hair,Monthly,,,April,2026,Expense,,,
