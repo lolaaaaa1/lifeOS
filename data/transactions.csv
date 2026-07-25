@@ -337,3 +337,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202647,,Telecel Cash,,3.01,,Monthly,,,July,2026,Transfer,,,507202647
 307202614,Ecobank,,100,,,Monthly,,,July,2026,Transfer,,,
 307202614,,Telecel Cash,,100,,Monthly,,,July,2026,Transfer,,,
+2507202605,MTN Mobile Money,,0.76,,,Monthly,,,June,2026,Transfer,,,2507202605
+2507202605,,Telecel Cash,,0.76,,Monthly,,,June,2026,Transfer,,,2507202605
