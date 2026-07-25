@@ -5742,7 +5742,7 @@ function setTxnType(type) {
     const fromSel = $('acctTxnFrom');
     if (fromSel) {
       const incomeFromAccts = AC.defs
-        .filter(d => !d.Display && (d.Type || '').toLowerCase() !== 'investment')
+        .filter(d => !d.Display)
         .map(d => d.AccountName);
       fromSel.innerHTML = `<option value="">— Select —</option>` +
         incomeFromAccts.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
