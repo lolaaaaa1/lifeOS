@@ -6067,6 +6067,11 @@ async function openEditTxnModal(txnId) {
   if ($('acctTxnTo'))   $('acctTxnTo').value   = t.accountTo   || '';
   onAcctTxnToChange();
   await acctPopulateItemSelect(t.item || '', type === 'income' ? 'Income' : type === 'expense' ? 'Budget' : null);
+  // Re-apply the saved month selection after item population resets it
+  if (type === 'expense' && t.monthFor && t.yearFor) {
+    AC.splitSelection = new Set([`${t.monthFor}|${t.yearFor}`]);
+    renderAllocInfo(t.item || '');
+  }
   $('accountModalOverlay').classList.add('open');
 }
 
