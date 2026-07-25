@@ -499,9 +499,9 @@
     .dash-table-header { display: grid; grid-template-columns: 1fr 105px 90px; padding: 4px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
     .dash-table-header span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
     .dash-table-header span:nth-child(2), .dash-table-header span:nth-child(3) { text-align: right; }
-    .dash-item-row--4col { display: grid; grid-template-columns: 1fr 68px 54px 62px; align-items: baseline; }
+    .dash-item-row--4col { display: grid; grid-template-columns: minmax(0,1fr) 78px 65px 72px; align-items: baseline; }
     .dash-item-row--4col span:nth-child(2), .dash-item-row--4col span:nth-child(3), .dash-item-row--4col span:nth-child(4) { text-align: right; }
-    .dash-table-header--4col { display: grid; grid-template-columns: 1fr 68px 54px 62px; padding: 4px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+    .dash-table-header--4col { display: grid; grid-template-columns: minmax(0,1fr) 78px 65px 72px; padding: 4px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
     .dash-table-header--4col span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); text-align: right; }
     .dash-table-header--4col span:first-child { text-align: left; }
 
@@ -2077,8 +2077,25 @@ const DATA = {
   },
 };
 
+// Normalise any Mon-YY MonthYearToUse values to full "Month YYYY" format.
+// This auto-corrects rows that were manually written with abbreviated format.
+const _MONTH_ABBR = {Jan:'January',Feb:'February',Mar:'March',Apr:'April',May:'May',Jun:'June',
+                     Jul:'July',Aug:'August',Sep:'September',Oct:'October',Nov:'November',Dec:'December'};
+function _normaliseBalloc(d) {
+  if (!d) return d;
+  d.rows.forEach(r => {
+    if (!r.MonthYearToUse) return;
+    r.MonthYearToUse = r.MonthYearToUse.replace(/^([A-Za-z]{3})-(\d{2})$/, (_, mo, yr) => {
+      const full = _MONTH_ABBR[mo.charAt(0).toUpperCase() + mo.slice(1).toLowerCase()];
+      if (!full) return _;
+      return full + ' 20' + yr;
+    });
+  });
+  return d;
+}
+
 // Shorthand accessors to cached data
-function BALLOC() { return DATA.get('data/budgetAllocations.csv') || { headers: [], rows: [] }; }
+function BALLOC() { return _normaliseBalloc(DATA.get('data/budgetAllocations.csv')) || { headers: [], rows: [] }; }
 function ITMS()   { return DATA.get('data/items.csv')              || { headers: [], rows: [] }; }
 function TXNS()   { return DATA.get('data/transactions.csv')       || { headers: [], rows: [] }; }
 function CONS()   { return DATA.get('data/constraints.csv')        || { headers: [], rows: [] }; }
@@ -2791,7 +2808,7 @@ function nextMonthName(monthName) {
 }
 
 const fmtGHS = (n) => {
-  const num = parseFloat(n) || 0;
+  const num = (parseFloat(n) || 0) + 0; // +0 converts -0 to 0
   return `GH₵ ${num.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
@@ -3217,12 +3234,12 @@ async function renderDashboardCalc() {
       bonRow.className = 'dash-total-row';
       bonRow.innerHTML = `<span class="dash-total-label">Bonus</span><span class="dash-total-amount">${fmtGHS(netBonus)}</span>`;
       slide.appendChild(bonRow);
+      const grandRow = document.createElement('div');
+      grandRow.className = 'dash-total-row';
+      grandRow.style.cssText = 'margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:600;';
+      grandRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(totalSalary + netBonus)}</span>`;
+      slide.appendChild(grandRow);
     }
-    const grandRow = document.createElement('div');
-    grandRow.className = 'dash-total-row';
-    grandRow.style.cssText = 'margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:600;';
-    grandRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(totalSalary + netBonus)}</span>`;
-    slide.appendChild(grandRow);
 
     return slide;
   });
@@ -3304,12 +3321,12 @@ async function renderDashboardCalc() {
       bonRow.className = 'dash-total-row';
       bonRow.innerHTML = `<span class="dash-total-label">Bonus</span><span class="dash-total-amount">${fmtGHS(ytdNetBonus)}</span>`;
       slide.appendChild(bonRow);
+      const grandRow = document.createElement('div');
+      grandRow.className = 'dash-total-row';
+      grandRow.style.cssText = 'margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:600;';
+      grandRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(ytdTotalSalary + ytdNetBonus)}</span>`;
+      slide.appendChild(grandRow);
     }
-    const grandRow = document.createElement('div');
-    grandRow.className = 'dash-total-row';
-    grandRow.style.cssText = 'margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:600;';
-    grandRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(ytdTotalSalary + ytdNetBonus)}</span>`;
-    slide.appendChild(grandRow);
     slide.classList.remove('dash-slide');
     yearlyBody.appendChild(slide);
   }
@@ -5810,15 +5827,14 @@ function renderAllocInfo(val) {
   const txnRows = TXNS().rows;
 
   // Build per-period allocation map for this item from BALLOC
-  // MonthYearToUse format: "Jul-26" → month:"July" year:"2026"
+  // MonthYearToUse format: "July 2026" (full name + space + 4-digit year)
   const allocMap = {};
   BALLOC().rows.forEach(r => {
     if (r.Item !== val || !r.MonthYearToUse || r.AppliesToDay === 'FALSE') return;
-    const parts = r.MonthYearToUse.split('-');
-    if (parts.length < 2) return;
-    const abbr = parts[0], yr2 = parts[1];
-    const pmo = MONTHS_AC.find(m => m.toLowerCase().startsWith(abbr.toLowerCase())) || abbr;
-    const pyr = yr2.length <= 2 ? '20' + yr2 : yr2;
+    const ls = r.MonthYearToUse.lastIndexOf(' ');
+    if (ls < 0) return;
+    const pmo = r.MonthYearToUse.slice(0, ls);
+    const pyr = r.MonthYearToUse.slice(ls + 1);
     const key = `${pmo}|${pyr}`;
     if (!allocMap[key]) allocMap[key] = { month: pmo, year: pyr, alloc: 0, spent: 0 };
     allocMap[key].alloc += (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
