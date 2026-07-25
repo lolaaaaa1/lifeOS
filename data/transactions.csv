@@ -287,8 +287,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 107202608,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,July,2026,Transfer,,,
 2811202503,Ecobank,,200,,Trust Fund,Monthly,,,December,2025,Transfer,,,
 2811202503,,Achieve Trust Fund,,200,Trust Fund,Monthly,,,December,2025,Transfer,,,
-507202628,Ecobank,,111.9,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,507202628
-507202628,,Others,,111.9,Utilities,Monthly,,,July,2026,Expense,,I don’t know,507202628
 507202631,Ecobank,,100,,Utilities,Monthly,,,April,2026,Expense,,,507202631
 507202631,,Others,,100,Utilities,Monthly,,,April,2026,Expense,,,507202631
 507202632,Ecobank,,100,,Utilities,Monthly,,,May,2026,Expense,,,507202631
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 307202609,,Philip Twum,,100,Utilities,Monthly,,,June,2026,Expense,,,
 307202610,Ecobank,,256,,Utilities,Monthly,,,June,2026,Expense,,,
 307202610,,Others,,256,Utilities,Monthly,,,June,2026,Expense,,,
+507202628,Ecobank,,111.9,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
+507202628,,Others,,111.9,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
