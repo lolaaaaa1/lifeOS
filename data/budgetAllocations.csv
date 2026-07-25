@@ -363,7 +363,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,May,,,,SOA Exams,May 2026,,,
 2025,December,,,,Tithe,December 2025,,,
 2026,April,,,,Tithe,April 2026,,,
-2026,February,,,,Tithe,February 2026,,,
+2026,February,,,,Tithe,February 2026,,500,
 2026,January,,,,Tithe,January 2026,,500,
 2026,July,,,,Tithe,July 2026,,,
 2026,June,,,,Tithe,June 2026,,700,
