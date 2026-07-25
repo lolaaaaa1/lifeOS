@@ -83,8 +83,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 103202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,March,2026,Expense,,,
 105202604,Ecobank,,200,,Electricity,Monthly,,,May,2026,Expense,,,
 105202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,May,2026,Expense,,,
-103202609,Ecobank,,580,,Food,Monthly,,,March,2026,Expense,,,
-103202609,,Others,,580,Food,Monthly,,,March,2026,Expense,,,
 507202619,Ecobank,,35,,Gifting,Monthly,,,April,2026,Expense,,Black Flats-haven’t decided who for,507202619
 507202618,Ecobank,,65,,Gifting,Monthly,,,April,2026,Expense,,Edem-Nogahil Pastries,507202618
 507202618,,Others,,65,Gifting,Monthly,,,April,2026,Expense,,Edem-Nogahil Pastries,507202618
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202601,,Others,,260,Food,Monthly,,,March,2026,Expense,,,
 105202608,Ecobank,,840,,Food,Monthly,,,May,2026,Expense,,,
 105202608,,Others,,840,Food,Monthly,,,May,2026,Expense,,,
+103202609,Ecobank,,580,,Food,Monthly,,,March,2026,Expense,,,
+103202609,,Others,,580,Food,Monthly,,,March,2026,Expense,,,
