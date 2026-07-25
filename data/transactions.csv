@@ -209,9 +209,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202610,,Others,,60,Clothes,Monthly,,,July,2026,Expense,,,2507202610
 106202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,June,2026,Expense,,,
 106202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,June,2026,Expense,,,
-106202601,Ecobank,,9.5,,Charges,Monthly,,,June,2026,Expense,,,
 507202648,Ecobank,,19,,Charges,Monthly,,,June,2026,Expense,,I don’t know,507202648
-106202601,,Charges,,9.5,Charges,Monthly,,,June,2026,Expense,,,
 507202648,,Charges,,19,Charges,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202603,Ecobank,,50,,Clothes,Monthly,,,June,2026,Expense,,,
 507202603,,Adoma (ShopAdomzy),,50,Clothes,Monthly,,,June,2026,Expense,,,
@@ -225,8 +223,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202636,,Others,,150,Hair,Monthly,,,June,2026,Expense,,I don’t know,
 2507202602,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
 2507202602,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
-106202601,Ecobank,,1000,,Rent,Monthly,,,June,2026,Expense,,,
-106202601,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense,,,
 106202602,Ecobank,,120,,Rent Charges,Monthly,,,June,2026,Expense,,,
 106202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,June,2026,Expense,,,
 106202603,Ecobank,,140,,Rental Utilities,Monthly,,,June,2026,Expense,,,
@@ -347,3 +343,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 3006202602,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,Income,,,
 307202610,Ecobank,,331,,Utilities,Monthly,,,June,2026,Expense,,,
 307202610,,Others,,331,Utilities,Monthly,,,June,2026,Expense,,,
+106202601,Ecobank,,1000,,Rent,Monthly,,,June,2026,Expense,,,
+106202601,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense,,,
