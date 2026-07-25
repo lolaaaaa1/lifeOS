@@ -3541,37 +3541,51 @@ function renderIncomeSections() {
   container.innerHTML = '';
   syncIncomeToggle();
 
-  // 3-period swiper: prev | current | next based on selected month
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const mo  = S.currentMonth ? S.currentMonth.Month : MONTHS[new Date().getMonth()];
   const yr  = S.currentMonth ? S.currentMonth.Year  : new Date().getFullYear();
   const idx = MONTHS.indexOf(mo);
+  const currentPeriod = `${mo} ${yr}`;
 
-  const periods = [-1, 0, 1].map(offset => {
-    let i = idx + offset, y = yr;
-    if (i < 0)   { i += 12; y--; }
-    if (i >= 12) { i -= 12; y++; }
-    return `${MONTHS[i]} ${y}`;
+  // Adjacent calendar months (for labelling and filtering boundary rows)
+  let prevIdx = idx - 1, prevYr = yr;
+  if (prevIdx < 0) { prevIdx += 12; prevYr--; }
+  let nextIdx = idx + 1, nextYr = yr;
+  if (nextIdx >= 12) { nextIdx -= 12; nextYr++; }
+  const prevMo = MONTHS[prevIdx];
+  const nextMo = MONTHS[nextIdx];
+
+  // Single pass: all 3 cards read the SAME currentPeriod (MonthYearToUse).
+  // prev card  = rows from the previous calendar month that spill into this period (ISO boundary).
+  // middle card = full total for the period.
+  // next card  = rows from the next calendar month that spill into this period.
+  let totalSal = 0, totalBon = 0;
+  let prevSal  = 0, prevBon  = 0;
+  let nextSal  = 0, nextBon  = 0;
+
+  BALLOC().rows.forEach(r => {
+    if (r.MonthYearToUse !== currentPeriod || !r.Item) return;
+    if (_budgetMode(r.Item) === 'Daily' && r.AppliesToDay === 'FALSE') return;
+    const sal = parseFloat(r.AllocatedSalaryPortion)        || 0;
+    const bon = parseFloat(r.AllocatedCompanyBonusPortion)  || 0;
+    totalSal += sal; totalBon += bon;
+    if (r.Month === prevMo && String(r.Year) === String(prevYr)) { prevSal += sal; prevBon += bon; }
+    if (r.Month === nextMo && String(r.Year) === String(nextYr)) { nextSal += sal; nextBon += bon; }
   });
 
-  const slides = periods.map(period => {
-    // Sum all BALLOC rows for this period via MonthYearToUse.
-    // This automatically includes boundary daily rows from adjacent calendar months.
-    let totalSalary = 0, totalBonus = 0;
-    BALLOC().rows.forEach(r => {
-      if (r.MonthYearToUse !== period || !r.Item) return;
-      if (_budgetMode(r.Item) === 'Daily' && r.AppliesToDay === 'FALSE') return;
-      totalSalary += parseFloat(r.AllocatedSalaryPortion) || 0;
-      totalBonus  += parseFloat(r.AllocatedCompanyBonusPortion) || 0;
-    });
-    const grandTotal = totalSalary + totalBonus;
+  const slideData = [
+    { label: `${prevMo.slice(0,3).toUpperCase()} ${String(prevYr).slice(2)}`, sal: prevSal,  bon: prevBon  },
+    { label: `${mo.slice(0,3).toUpperCase()} ${String(yr).slice(2)}`,          sal: totalSal, bon: totalBon },
+    { label: `${nextMo.slice(0,3).toUpperCase()} ${String(nextYr).slice(2)}`, sal: nextSal,  bon: nextBon  },
+  ];
 
+  const slides = slideData.map(({ label, sal, bon }) => {
+    const grand = sal + bon;
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
     slide.style.cssText = 'min-width:100%;padding:12px 0;';
-
     slide.innerHTML = `
-      <div class="dash-slide-period">${period}</div>
+      <div class="dash-slide-period">${label}</div>
       <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:4px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px;">
         <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;"></span>
         <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Salary</span>
@@ -3579,12 +3593,12 @@ function renderIncomeSections() {
       </div>
       <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
         <span style="font-size:14px;">Allocated</span>
-        <span style="font-size:14px;font-weight:500;text-align:right;">${totalSalary > 0 ? fmtGHS(totalSalary) : '—'}</span>
-        <span style="font-size:14px;font-weight:500;text-align:right;">${totalBonus  > 0 ? fmtGHS(totalBonus)  : '—'}</span>
+        <span style="font-size:14px;font-weight:500;text-align:right;">${sal  > 0 ? fmtGHS(sal)  : '—'}</span>
+        <span style="font-size:14px;font-weight:500;text-align:right;">${bon  > 0 ? fmtGHS(bon)  : '—'}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;font-weight:600;border-top:2px solid rgba(0,0,0,0.08);margin-top:4px;">
         <span style="font-size:14px;">Total</span>
-        <span style="font-size:14px;text-align:right;grid-column:2/4;">${grandTotal > 0 ? fmtGHS(grandTotal) : '—'}</span>
+        <span style="font-size:14px;text-align:right;grid-column:2/4;">${grand > 0 ? fmtGHS(grand) : '—'}</span>
       </div>`;
     return slide;
   });
