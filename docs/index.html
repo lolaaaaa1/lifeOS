@@ -1879,12 +1879,6 @@
       <button style="flex:1;padding:7px;font-size:13px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Calculated</button>
     </div>
     <div id="dailyWeeksHint" style="font-size:13px;opacity:.55;margin-bottom:14px;"></div>
-    <div style="margin-bottom:14px;">
-      <div style="font-size:12px;opacity:.5;margin-bottom:5px;">Monthly target</div>
-      <input id="dailyMonthlyTarget" type="number" min="0" placeholder="0"
-        style="width:100%;padding:9px 12px;border:1px solid rgba(0,0,0,0.12);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;"
-        oninput="onMonthlyTargetInput()">
-    </div>
     <div id="dailyDaysRows"></div>
     <div id="dailyTotalHint" style="font-size:13px;opacity:.6;padding-top:8px;border-top:1px solid rgba(0,0,0,0.08);margin-top:8px;"></div>
   </div>
@@ -4218,12 +4212,15 @@ async function ensureBallocRows(month, year) {
   const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const monthIdx    = MONTH_NAMES.indexOf(month);
   if (monthIdx < 0) return;
-  const yr         = parseInt(yearStr);
-  const daysInMonth = new Date(yr, monthIdx + 1, 0).getDate();
+  const yr          = parseInt(yearStr);
+  // Only create rows for the income period days (wk × 7), not all calendar days
+  const consRow     = CONS().rows.find(r => r.Month === month && String(r.Year) === yearStr);
+  const wk          = parseInt(consRow?.PersonalFinanceNumberOfWeeks) || 4;
+  const incomeDays  = wk * 7;
   for (const itm of items) {
     const mode = itm.BudgetMode || 'Once';
     if (mode === 'Daily') {
-      for (let d = 1; d <= daysInMonth; d++) {
+      for (let d = 1; d <= incomeDays; d++) {
         const dayName = DAY_NAMES[new Date(yr, monthIdx, d).getDay()];
         balloc.rows.push({
           Year: yearStr, Month: month, MonthNumber: String(monthIdx + 1),
@@ -5019,14 +5016,8 @@ async function openDailyAmountModal(itemName) {
     container.appendChild(row);
   });
 
-  const targetEl = $('dailyMonthlyTarget');
-  if (targetEl) {
-    const existing = BP.monthAmounts[itemName] || 0;
-    targetEl.value = existing > 0 ? existing : '';
-  }
   onDailyInput();
   $('dailyAmountOverlay').classList.add('open');
-  setTimeout(() => { const f = $('dailyMonthlyTarget'); if (f) f.focus(); }, 80);
 }
 
 function toggleDayApply(dayKey) {
@@ -5057,22 +5048,6 @@ function switchDailyToActual() {
   BP.calculatedTypes[name] = 'Actual';
   BP._calcType = 'Actual';
   openBpAmountModal(name, name);
-}
-
-function onMonthlyTargetInput() {
-  const wk = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
-  const target = parseFloat($('dailyMonthlyTarget').value) || 0;
-  if (target <= 0) return;
-  const KEYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  const applicableCount = KEYS.filter(k => _dailyApplies[k] !== false).length;
-  const totalDays = applicableCount * wk;
-  const rate = totalDays > 0 ? Math.round(target / totalDays * 100) / 100 : 0;
-  KEYS.forEach(k => {
-    if (_dailyApplies[k] === false) return;
-    const input = $(`daily_${k}`);
-    if (input && !input.disabled) input.value = rate;
-  });
-  onDailyInput();
 }
 
 function onDailyInput() {
