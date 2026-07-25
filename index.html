@@ -5881,8 +5881,12 @@ function renderAllocInfo(val) {
       leftToSplit -= take;
     }
     if (plan.length > 1) AC.txnSplit = plan;
-    // Single-month: set MonthFor/YearFor to that month
-    if (plan.length === 1) setMonthFor(plan[0].month, plan[0].year);
+    // Single-month: set MonthFor/YearFor directly (avoid re-entering renderAllocInfo)
+    if (plan.length === 1) {
+      const m = $('acctTxnMonthFor'), y = $('acctTxnYearFor');
+      if (m) m.value = plan[0].month;
+      if (y) y.value = plan[0].year;
+    }
   }
 
   const showSplit  = totalAmt > 0;
