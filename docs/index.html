@@ -5132,6 +5132,7 @@ const AC = {
   display: true,
   tab: 'current',    // 'current' | 'investment' | 'all'
   txnType: 'expense', // 'income' | 'expense' | 'transfer'
+  splitSelection: null, // null = auto; Set of "month|year" keys = manual selection
   budgetAmounts: {}, // {itemName: SalaryPortion} for current expense month
 };
 
@@ -5783,8 +5784,14 @@ function setAcctIncomePeriod(period) {
   if (row) row.style.display = 'grid';
 }
 
-function onAcctItemChange(val) { renderAllocInfo(val); }
+function onAcctItemChange(val) { AC.splitSelection = null; renderAllocInfo(val); }
 function onAcctAmountInput()   { renderAllocInfo($('acctTxnItem')?.value || ''); }
+function toggleSplitMonth(key) {
+  if (!AC.splitSelection) AC.splitSelection = new Set();
+  if (AC.splitSelection.has(key)) AC.splitSelection.delete(key);
+  else AC.splitSelection.add(key);
+  renderAllocInfo($('acctTxnItem')?.value || '');
+}
 
 function renderAllocInfo(val) {
   const info = $('acctItemAllocInfo');
@@ -5850,15 +5857,21 @@ function renderAllocInfo(val) {
     return yd !== 0 ? yd : MONTHS_AC.indexOf(a.month) - MONTHS_AC.indexOf(b.month);
   });
 
-  // Compute auto-split across available months for the entered amount
+  // Compute split across selected (or all available) months for the entered amount
   const totalAmt = parseFloat($('acctTxnCredit')?.value) || 0;
   const splitMap = {};
   AC.txnSplit = null;
   let leftToSplit = totalAmt;
 
+  // Determine which rows to split across: manual selection or auto (all available, oldest first)
+  const sel = AC.splitSelection;
+  const splitRows = sel && sel.size > 0
+    ? rows.filter(r => sel.has(`${r.month}|${r.year}`))
+    : rows;
+
   if (totalAmt > 0) {
     const plan = [];
-    for (const r of rows) {
+    for (const r of splitRows) {
       if (leftToSplit <= 0.001) break;
       const avail = Math.max(0, r.alloc - r.spent);
       if (avail <= 0) continue;
@@ -5868,13 +5881,13 @@ function renderAllocInfo(val) {
       leftToSplit -= take;
     }
     if (plan.length > 1) AC.txnSplit = plan;
+    // Single-month: set MonthFor/YearFor to that month
+    if (plan.length === 1) setMonthFor(plan[0].month, plan[0].year);
   }
 
   const showSplit  = totalAmt > 0;
   const cols       = showSplit ? '1fr 80px 80px 80px' : '1fr 90px 90px';
   const headerCols = showSplit ? '1fr 80px 80px 80px' : '1fr 90px 90px';
-  const curM = $('acctTxnMonthFor')?.value || '';
-  const curY = String($('acctTxnYearFor')?.value || '');
 
   info.innerHTML = `
     <div style="margin-top:8px;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:grid;grid-template-columns:${headerCols};padding:0 10px;">
@@ -5882,15 +5895,17 @@ function renderAllocInfo(val) {
     </div>
     <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
       ${rows.map(r => {
+        const key        = `${r.month}|${r.year}`;
         const rem        = r.alloc - r.spent;
         const available  = rem > 0;
-        const isSel      = r.month === curM && r.year === curY;
-        const splitAmt   = splitMap[`${r.month}|${r.year}`] || 0;
+        const isManSel   = sel && sel.has(key);
+        const splitAmt   = splitMap[key] || 0;
         const remColor   = rem < 0 ? '#a8533f' : !available ? 'var(--muted)' : '#3a6b4a';
         const splitColor = splitAmt > 0 ? '#5a4a3a' : 'var(--muted)';
-        return `<div class="alloc-row${isSel ? ' selected' : ''}" ${available ? `onclick="setMonthFor('${r.month}','${r.year}')"` : ''}
-          style="display:grid;grid-template-columns:${cols};align-items:center;padding:8px 10px;cursor:${available ? 'pointer' : 'default'};border-bottom:1px solid var(--border);opacity:${!available && splitAmt === 0 ? '0.4' : '1'};">
-          <span style="font-size:13px;">${r.month} ${r.year}</span>
+        const rowBg      = isManSel ? 'background:var(--accent-muted,rgba(90,120,90,0.12));' : '';
+        return `<div class="alloc-row${isManSel ? ' selected' : ''}" onclick="toggleSplitMonth('${key}')"
+          style="${rowBg}display:grid;grid-template-columns:${cols};align-items:center;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);opacity:${!available && splitAmt === 0 ? '0.4' : '1'};">
+          <span style="font-size:13px;">${isManSel ? '✓ ' : ''}${r.month} ${r.year}</span>
           <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${fmtGHS(r.alloc)}</span>
           <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${(rem < 0 ? '−' : '') + fmtGHS(Math.abs(rem))}</span>
           ${showSplit ? `<span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${splitColor};font-weight:${splitAmt > 0 ? '600' : '400'};">${splitAmt > 0 ? fmtGHS(splitAmt) : '—'}</span>` : ''}
@@ -5970,9 +5985,10 @@ async function saveAccountDef() {
 async function openAddTxnModal(accountName, itemName, lockExpense) {
   acctPopulateMonthSelects();
   acctPopulateFromToSelects('');
-  AC.editingTxn = null;
-  AC.lockExpense = lockExpense || false;
-  AC.txnSplit    = null;
+  AC.editingTxn    = null;
+  AC.lockExpense   = lockExpense || false;
+  AC.txnSplit      = null;
+  AC.splitSelection = null;
   $('accountModalTitle').textContent = 'Record Transaction';
   $('acctTxnMonthFor').value  = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Month : '';
   $('acctTxnYearFor').value   = (S.currentMonth && !isAllMonths()) ? S.currentMonth.Year  : '';
@@ -6033,7 +6049,8 @@ async function openEditTxnModal(txnId) {
 function closeAccountModal(event) {
   if (event && event.target !== $('accountModalOverlay')) return;
   $('accountModalOverlay').classList.remove('open');
-  AC.editingTxn = null;
+  AC.editingTxn    = null;
+  AC.splitSelection = null;
   const info = $('acctItemAllocInfo');
   if (info) info.innerHTML = '';
 }
@@ -6103,8 +6120,9 @@ async function saveAccountTxn() {
       } catch {}
     }
     $('accountModalOverlay').classList.remove('open');
-    AC.editingTxn = null;
-    AC.txnSplit   = null;
+    AC.editingTxn    = null;
+    AC.txnSplit      = null;
+    AC.splitSelection = null;
     renderAccountsList();
     if (S.currentMonth) await loadBpData();
   } catch (e) { alert('Error: ' + e.message); }
