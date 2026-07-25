@@ -6285,6 +6285,41 @@ async function saveAccountTxn() {
         });
       } catch {}
     }
+    // Auto-rebalance BALLOC when spending from an investment account
+    const invFromDef = AC.defs.find(d => d.AccountName === accountFrom);
+    if (type === 'expense' && (invFromDef?.Type || '').toLowerCase() === 'investment') {
+      const legs = AC.txnSplit && AC.txnSplit.length > 0
+        ? AC.txnSplit
+        : [{ month: $('acctTxnMonthFor').value, year: $('acctTxnYearFor').value, amount: totalAmount }];
+      const balloc = BALLOC();
+      let ballocChanged = false;
+      for (const leg of legs) {
+        const period = `${leg.month} ${leg.year}`;
+        const srcTransfer = TXNS().rows.find(r =>
+          r.TransactionType === 'Transfer' && r.AccountTo === accountFrom &&
+          r.MonthFor === leg.month && r.YearFor === String(leg.year) && r.Item
+        );
+        const srcItem = srcTransfer?.Item || null;
+        if (!srcItem || srcItem === item) continue;
+        const [moStr, yrStr] = period.split(' ');
+        // Reduce source item's lump-sum allocation
+        const srcRow = balloc.rows.find(r => r.Item === srcItem && r.MonthYearToUse === period && !r.Day);
+        if (!srcRow) continue;
+        srcRow.AllocatedSalaryPortion = String(Math.round(((parseFloat(srcRow.AllocatedSalaryPortion) || 0) - leg.amount) * 100) / 100);
+        // Increase expense item's allocation (create lump-sum row if needed)
+        let toRow = balloc.rows.find(r => r.Item === item && r.MonthYearToUse === period && !r.Day);
+        if (!toRow) {
+          toRow = { Year: yrStr, Month: moStr, MonthNumber: '', Day: '', DayName: '',
+            Item: item, MonthYearToUse: period, AppliesToDay: '',
+            AllocatedSalaryPortion: '0', AllocatedCompanyBonusPortion: '' };
+          balloc.rows.push(toRow);
+        }
+        toRow.AllocatedSalaryPortion = String(Math.round(((parseFloat(toRow.AllocatedSalaryPortion) || 0) + leg.amount) * 100) / 100);
+        ballocChanged = true;
+      }
+      if (ballocChanged) await DATA.save('data/budgetAllocations.csv', `Realloc: ${accountFrom} → ${item}`);
+    }
+
     $('accountModalOverlay').classList.remove('open');
     AC.editingTxn    = null;
     AC.txnSplit      = null;
