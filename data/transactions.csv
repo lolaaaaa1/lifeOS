@@ -347,3 +347,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202604,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,March,2026,Expense,,,2507202604
 507202640,Ecobank,,50,,Transport,Monthly,,,July,2026,Expense,,,
 507202640,,Others,,50,Transport,Monthly,,,July,2026,Expense,,,
+2507202605,Ecobank,,25.2,,Charges,Monthly,,,June,2026,Expense,,,2507202605
+2507202605,,Others,,25.2,Charges,Monthly,,,June,2026,Expense,,,2507202605
