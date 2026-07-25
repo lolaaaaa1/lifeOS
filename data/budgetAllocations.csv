@@ -534,3 +534,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,July,,,,Rent,Jul-26,,1000,
 2026,July,,,,MSc. Actuarial Science,Jul-26,,1500,
 2026,July,,,,SOA Exams,Jul-26,,340,
+2026,August,8,1,Saturday,Food,Jul-26,TRUE,30,
+2026,August,8,2,Sunday,Food,Jul-26,TRUE,30,
+2026,August,8,1,Saturday,Transport,Jul-26,FALSE,0,
+2026,August,8,2,Sunday,Transport,Jul-26,TRUE,60,
