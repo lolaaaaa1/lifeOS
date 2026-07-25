@@ -5730,7 +5730,7 @@ function setTxnType(type) {
     fromField.style.display = '';
     toField.style.display   = '';
     $('acctFromLabel').textContent = 'From Account';
-    $('acctToLabel').textContent   = 'To (optional)';
+    $('acctToLabel').textContent   = 'To Account';
   }
   $('acctItemField').style.display         = '';
   $('acctIncomePeriodField').style.display = 'none';
@@ -5803,11 +5803,15 @@ function renderAllocInfo(val) {
   const txnRows = TXNS().rows;
 
   // Build per-period allocation map for this item from BALLOC
+  // MonthYearToUse format: "Jul-26" → month:"July" year:"2026"
   const allocMap = {};
   BALLOC().rows.forEach(r => {
     if (r.Item !== val || !r.MonthYearToUse || r.AppliesToDay === 'FALSE') return;
-    const ls = r.MonthYearToUse.lastIndexOf(' ');
-    const pmo = r.MonthYearToUse.slice(0, ls), pyr = r.MonthYearToUse.slice(ls + 1);
+    const parts = r.MonthYearToUse.split('-');
+    if (parts.length < 2) return;
+    const abbr = parts[0], yr2 = parts[1];
+    const pmo = MONTHS_AC.find(m => m.toLowerCase().startsWith(abbr.toLowerCase())) || abbr;
+    const pyr = yr2.length <= 2 ? '20' + yr2 : yr2;
     const key = `${pmo}|${pyr}`;
     if (!allocMap[key]) allocMap[key] = { month: pmo, year: pyr, alloc: 0, spent: 0 };
     allocMap[key].alloc += (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
@@ -6040,17 +6044,18 @@ async function saveAccountTxn() {
   if (type === 'income') {
     accountFrom = $('acctTxnFrom')?.value || '';
     accountTo   = $('acctTxnTo')?.value   || '';
-    if (!accountTo) { alert('Select an account'); return; }
+    if (!accountFrom || !accountTo) { alert('Select Account From and Account To'); return; }
   } else if (type === 'expense') {
     accountFrom = $('acctTxnFrom')?.value || '';
-    accountTo   = $('acctTxnTo')?.value   || '';   // optional — who you're paying
-    if (!accountFrom) { alert('Select an account'); return; }
+    accountTo   = $('acctTxnTo')?.value   || '';
+    if (!accountFrom || !accountTo) { alert('Select Account From and Account To'); return; }
   } else {
     accountFrom = $('acctTxnFrom')?.value || '';
     accountTo   = $('acctTxnTo')?.value   || '';
     if (!accountFrom || !accountTo) { alert('Select both accounts'); return; }
   }
   const item    = $('acctTxnItem')?.value || '';
+  if (!item) { alert('Select an item'); return; }
   const txnType = type === 'opening balance' ? 'Opening Balance' : type === 'closing balance' ? 'Closing Balance' : type.charAt(0).toUpperCase() + type.slice(1);
   const basePayload = {
     accountFrom,
