@@ -336,7 +336,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,July,,,,Rental Utilities,July 2026,,,
 2026,June,,,,Rental Utilities,June 2026,,,
 2026,March,,,,Rental Utilities,March 2026,,140,
-2026,May,,,,Rental Utilities,May 2026,,,
+2026,May,,,,Rental Utilities,May 2026,,140,
 2025,December,,,,Shoes,December 2025,,,
 2026,April,,,,Shoes,April 2026,,200,
 2026,February,,,,Shoes,February 2026,,,
