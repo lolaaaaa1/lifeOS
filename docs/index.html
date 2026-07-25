@@ -3878,7 +3878,7 @@ async function saveIncomeAmount() {
 
 async function deleteIncomeSource(name) {
   if (!requireSpecificMonth()) return;
-  if (!confirm(`Remove "${name}" from this month?`)) return;
+  if (!(await showConfirm('Remove income source', `Remove "${name}" from this month?`))) return;
   try {
     await apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(name)}`, { method: 'DELETE' });
   } catch (e) { alert('Error: ' + e.message); return; }
@@ -4009,7 +4009,7 @@ function closeVariableIncomeDetail(event) {
 }
 
 async function removeAllocation(source, item, month, year) {
-  if (!confirm('Remove this allocation?')) return;
+  if (!(await showConfirm('Remove allocation', 'Remove this allocation?'))) return;
   try {
     await apiFetch(`/bonus-allocation/${encodeURIComponent(source)}/${encodeURIComponent(item)}/${encodeURIComponent(month)}/${encodeURIComponent(year)}`, { method: 'DELETE' });
   } catch (e) { alert('Error: ' + e.message); return; }
@@ -4834,7 +4834,7 @@ async function saveBpItem() {
 }
 
 async function deleteBpItem(id) {
-  if (!confirm('Remove this budget item?')) return;
+  if (!(await showConfirm('Remove budget item', 'Remove this budget item?'))) return;
   try {
     await apiFetch(`/budget/items/${id}`, { method: 'DELETE' });
   } catch (e) { alert('Error deleting: ' + e.message); return; }
@@ -6149,7 +6149,7 @@ async function saveAccountTxn() {
 }
 
 async function deleteTxn(transactionId, accountName, item, monthFor, yearFor) {
-  if (!confirm('Delete this transaction?')) return;
+  if (!(await showConfirm('Delete transaction', 'Delete this transaction?'))) return;
   try {
     if (transactionId) {
       await apiFetch(`/accounts/transaction/${encodeURIComponent(transactionId)}`, { method: 'DELETE' });
@@ -6162,7 +6162,7 @@ async function deleteTxn(transactionId, accountName, item, monthFor, yearFor) {
 }
 
 async function deleteAccount(name) {
-  if (!confirm(`Delete "${name}" and all its transactions?`)) return;
+  if (!(await showConfirm('Delete account', `Delete "${name}" and all its transactions?`))) return;
   try {
     await apiFetch(`/account-defs/${encodeURIComponent(name)}`, { method: 'DELETE' });
     [AC.defs, AC.rows] = await Promise.all([apiFetch('/account-defs'), apiFetch('/accounts')]);
@@ -6231,6 +6231,35 @@ async function init() {
 }
 
 init();
+
+// ── Custom confirm dialog ─────────────────────────────────────────────────────
+let _confirmResolve = null;
+function showConfirm(title, message) {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    $('confirmTitle').textContent   = title;
+    $('confirmMessage').textContent = message;
+    $('confirmOverlay').classList.add('open');
+  });
+}
+function _confirmAnswer(yes) {
+  $('confirmOverlay').classList.remove('open');
+  if (_confirmResolve) { _confirmResolve(yes); _confirmResolve = null; }
+}
 </script>
+
+<!-- ── Confirm dialog modal ──────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:320px;padding:28px 24px;">
+    <div style="margin-bottom:16px;">
+      <div class="modal-title" id="confirmTitle" style="font-size:18px;margin-bottom:8px;"></div>
+      <p id="confirmMessage" style="font-size:14px;color:var(--muted);margin:0;line-height:1.5;"></p>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn btn-ghost" onclick="_confirmAnswer(false)">Cancel</button>
+      <button class="btn" style="background:var(--red,#a8533f);color:#fff;border-color:var(--red,#a8533f);" onclick="_confirmAnswer(true)">Delete</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
