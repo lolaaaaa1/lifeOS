@@ -2929,6 +2929,30 @@ function navigate(page) {
   if (page === 'transactions') renderTransactionsPage();
 }
 
+function makeSwiper(slides, startIdx) {
+  const wrap = document.createElement('div');
+  wrap.className = 'dash-swiper';
+
+  slides.forEach(slide => wrap.appendChild(slide));
+
+  const dots = document.createElement('div');
+  dots.className = 'dash-dots';
+  const dotEls = slides.map((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'dash-dot' + (i === startIdx ? ' active' : '');
+    dots.appendChild(d);
+    return d;
+  });
+  wrap.addEventListener('scroll', () => {
+    const idx = Math.round(wrap.scrollLeft / (wrap.offsetWidth || 1));
+    dotEls.forEach((d, i) => d.classList.toggle('active', i === idx));
+  }, { passive: true });
+
+  return { wrap, dots, scrollTo: (idx) => {
+    wrap.scrollLeft = idx * wrap.offsetWidth;
+  }};
+}
+
 async function renderDashboardCalc() {
   const container = $('dash-calc-items');
   if (!container) return;
@@ -3014,30 +3038,6 @@ async function renderDashboardCalc() {
     return { sec, body };
   }
 
-  function makeSwiper(slides, startIdx) {
-    const wrap = document.createElement('div');
-    wrap.className = 'dash-swiper';
-
-    slides.forEach(slide => wrap.appendChild(slide));
-
-    // dot indicators
-    const dots = document.createElement('div');
-    dots.className = 'dash-dots';
-    const dotEls = slides.map((_, i) => {
-      const d = document.createElement('span');
-      d.className = 'dash-dot' + (i === startIdx ? ' active' : '');
-      dots.appendChild(d);
-      return d;
-    });
-    wrap.addEventListener('scroll', () => {
-      const idx = Math.round(wrap.scrollLeft / (wrap.offsetWidth || 1));
-      dotEls.forEach((d, i) => d.classList.toggle('active', i === idx));
-    }, { passive: true });
-
-    return { wrap, dots, scrollTo: (idx) => {
-      wrap.scrollLeft = idx * wrap.offsetWidth;
-    }};
-  }
 
   // remainderMap: if provided, overrides the per-item remaining calculation (used for daily items
   // where remaining = total allocation - total spending, not today's allocation - today's spending)
