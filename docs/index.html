@@ -4525,7 +4525,7 @@ function computeMonthContributions() {
   const curMo  = S.currentMonth.Month;
   const curYr  = String(S.currentMonth.Year);
   const curIdx = MONTHS.indexOf(curMo);
-  const period = `${ABBR[curIdx]}-${curYr.slice(2)}`;
+  const period = `${curMo} ${curYr}`;
   const prevIdx = (curIdx + 11) % 12;
   const nextIdx = (curIdx + 1) % 12;
   const prevMo = MONTHS[prevIdx];
