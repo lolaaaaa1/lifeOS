@@ -345,5 +345,3 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 106202601,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense,,,
 2811202501,Nationwide Medical Insurance,,1300,,Salary,Monthly,,,December,2025,Income,,,
 2811202501,,Ecobank,,1300,Salary,Monthly,,,December,2025,Income,,,
-2507202611,Achieve MSc. Actuarial Science,,3500,,MSc. Actuarial Science,Monthly,,,December,2025,Transfer,,I needed money,2507202611
-2507202611,,Ecobank,,3500,MSc. Actuarial Science,Monthly,,,December,2025,Transfer,,I needed money,2507202611
