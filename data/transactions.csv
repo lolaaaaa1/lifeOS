@@ -305,8 +305,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202634,,Others,,32.1,Utilities,Monthly,,,July,2026,Expense,,,507202631
 507202635,Ecobank,,200,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,507202635
 507202635,,Others,,200,Utilities,Monthly,,,July,2026,Expense,,I don’t know,507202635
-507202637,Ecobank,,1500,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202637
-507202637,,Others,,1500,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202637
 507202648,Ecobank,,70,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202648,,Others,,70,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202649,Ecobank,,70,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202617,,Others,,120,Shoes,Monthly,,,June,2026,Expense,,Delivery,
 507202616,Ecobank,,220,,Shoes,Monthly,,,June,2026,Expense,,Black Flats (like the Brown),
 507202616,,Others,,220,Shoes,Monthly,,,June,2026,Expense,,Black Flats (like the Brown),
+507202637,Ecobank,,500,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
+507202637,,Others,,500,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
