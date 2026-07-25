@@ -301,7 +301,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,April,,,,Nails,April 2026,,,
 2026,February,,,,Nails,February 2026,,,
 2026,January,,,,Nails,January 2026,,,
-2026,July,,,,Nails,July 2026,,,
+2026,July,,,,Nails,July 2026,,35,
 2026,June,,,,Nails,June 2026,,,
 2026,March,,,,Nails,March 2026,,,
 2026,May,,,,Nails,May 2026,,,
