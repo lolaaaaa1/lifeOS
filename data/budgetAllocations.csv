@@ -543,7 +543,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,August,,,,Charges,August 2026,,,
 2026,August,,,,Claude Subscription,August 2026,,,
 2026,August,,,,Clothes,August 2026,,,
-2026,August,,,,Department Dues,August 2026,,,
+2026,August,,,,Department Dues,August 2026,,100,
 2026,August,,,,Electricity,August 2026,,,
 2026,August,8,1,Saturday,Food,August 2026,TRUE,,
 2026,August,8,2,Sunday,Food,August 2026,TRUE,,
