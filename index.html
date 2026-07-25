@@ -4960,12 +4960,23 @@ async function openDailyAmountModal(itemName) {
   const wk = (S.monthData && S.monthData.PersonalFinanceNumberOfWeeks) || 4;
   $('dailyWeeksHint').textContent = `${wk} weeks · ${S.currentMonth ? S.currentMonth.Month + ' ' + S.currentMonth.Year : ''}`;
 
-  // Fetch per-weekday amounts from days.csv via API
+  // Fetch per-weekday amounts — prefer BALLOC, fall back to days.csv
   let dayData = {};
   if (S.currentMonth) {
     try {
       dayData = await apiFetch(`/days/${S.currentMonth.Month}/${S.currentMonth.Year}/${encodeURIComponent(itemName)}/amounts`);
     } catch {}
+    // If days.csv returned nothing, read saved per-weekday amounts from BALLOC
+    if (!dayData || !Object.keys(dayData).length) {
+      const period = S.currentMonth.Month + ' ' + S.currentMonth.Year;
+      const bRows  = BALLOC().rows.filter(r => r.Item === itemName && r.MonthYearToUse === period && r.DayName);
+      if (bRows.length) {
+        ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].forEach(dn => {
+          const r = bRows.find(b => b.DayName === dn);
+          if (r) dayData[dn] = { amount: parseFloat(r.AllocatedSalaryPortion) || 0, applies: r.AppliesToDay !== 'FALSE' };
+        });
+      }
+    }
   }
 
   const DAYS_INFO = [
