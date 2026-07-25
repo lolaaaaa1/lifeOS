@@ -269,7 +269,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,April,,,,Gifting,April 2026,,100,
 2026,February,,,,Gifting,February 2026,,,
 2026,January,,,,Gifting,January 2026,,,
-2026,July,,,,Gifting,July 2026,,0,900
+2026,July,,,,Gifting,July 2026,,890,900
 2026,June,,,,Gifting,June 2026,,,
 2026,March,,,,Gifting,March 2026,,,
 2026,May,,,,Gifting,May 2026,,100,
