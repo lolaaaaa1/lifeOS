@@ -83,10 +83,8 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 103202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,March,2026,Expense,,,
 105202604,Ecobank,,200,,Electricity,Monthly,,,May,2026,Expense,,,
 105202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,May,2026,Expense,,,
-507202639,Ecobank,,260,,Food,Monthly,,,February,2026,Expense,,,
 102202609,Ecobank,,580,,Food,Monthly,,,February,2026,Expense,,,
 102202609,,Others,,580,Food,Monthly,,,February,2026,Expense,,,
-507202639,,Others,,260,Food,Monthly,,,February,2026,Expense,,,
 607202604,Cash,,80,,Food,Monthly,,,July,2026,Expense,,UGMC Snacks,607202604
 2407202602,Ecobank,,880,,Food,Monthly,,,July,2026,Expense,,,
 607202604,,Others,,80,Food,Monthly,,,July,2026,Expense,,UGMC Snacks,607202604
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 807202601,,Auntie Gloria (NMI),,30,Food,Monthly,,,July,2026,Expense,,Plantain Chips,
 104202608,Ecobank,,1050,,Food,Monthly,,,April,2026,Expense,,,
 104202608,,Others,,1050,Food,Monthly,,,April,2026,Expense,,,
+507202639,Ecobank,,260,,Food,Monthly,,,February,2026,Expense,,,
+507202639,,Others,,260,Food,Monthly,,,February,2026,Expense,,,
