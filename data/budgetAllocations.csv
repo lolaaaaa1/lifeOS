@@ -332,7 +332,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2025,December,,,,Rental Utilities,December 2025,,,
 2026,April,,,,Rental Utilities,April 2026,,,
 2026,February,,,,Rental Utilities,February 2026,,,
-2026,January,,,,Rental Utilities,January 2026,,,
+2026,January,,,,Rental Utilities,January 2026,,140,
 2026,July,,,,Rental Utilities,July 2026,,,
 2026,June,,,,Rental Utilities,June 2026,,,
 2026,March,,,,Rental Utilities,March 2026,,,
