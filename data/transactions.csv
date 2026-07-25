@@ -345,3 +345,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202630,,Others,,100,Outing,Monthly,,,April,2026,Expense,,To some restaurant with my church friends,
 2507202603,Ecobank,,100,,Outing,Monthly,,,July,2026,Expense,,,2507202603
 2507202603,,Others,,100,Outing,Monthly,,,July,2026,Expense,,,2507202603
+2507202604,Ecobank,,100,,Trust Fund,Monthly,,,March,2026,Expense,,,2507202604
+2507202604,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,March,2026,Expense,,,2507202604
