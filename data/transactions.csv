@@ -1,9 +1,9 @@
 TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,TransactionType,BalancingPeriod,Note,GroupTransactionID
-104202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,April,2026,Expense,,,
+104202607,MTN Mobile Money,,30,,Apple Music Subscription,Monthly,,,April,2026,Expense,,,
 104202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,April,2026,Expense,,,
-102202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,February,2026,Expense,,,
+102202607,MTN Mobile Money,,30,,Apple Music Subscription,Monthly,,,February,2026,Expense,,,
 102202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,February,2026,Expense,,,
-101202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,January,2026,Expense,,,
+101202607,Telecel Cash,,30,,Apple Music Subscription,Monthly,,,January,2026,Expense,,,
 101202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,January,2026,Expense,,,
 2407202603,Ecobank,,30,,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
 2407202603,,Apple Music,,30,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
