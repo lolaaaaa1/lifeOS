@@ -135,8 +135,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 107202607,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Transfer,,,
 307202611,Ecobank,,35,,Nails,Monthly,,,July,2026,Expense,,,
 307202611,,Others,,35,Nails,Monthly,,,July,2026,Expense,,,
-507202630,Ecobank,,100,,Outing,Monthly,,,July,2026,Expense,,To some restaurant with my church friends,507202629
-507202630,,Others,,100,Outing,Monthly,,,July,2026,Expense,,To some restaurant with my church friends,507202629
 102202601,Ecobank,,1000,,Rent,Monthly,,,February,2026,Expense,,,
 102202601,,National Rental Assistance,,1000,Rent,Monthly,,,February,2026,Expense,,,
 103202601,Ecobank,,1000,,Rent,Monthly,,,March,2026,Expense,,,
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202634,,Others,,32.1,Utilities,Monthly,,,June,2026,Expense,,,
 507202649,Ecobank,,28.6,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
 507202649,,Others,,28.6,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
+507202630,Ecobank,,200,,Outing,Monthly,,,April,2026,Expense,,To some restaurant with my church friends,
+507202630,,Others,,200,Outing,Monthly,,,April,2026,Expense,,To some restaurant with my church friends,
