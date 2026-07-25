@@ -2221,7 +2221,18 @@ const LocalAPI = {
     }
 
     // PUT /finance/months/{month}/{year}/salary (no-op)
-    if (rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/(?:budget|salary)$/) && method === 'PUT')
+    if ((m = rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/budget$/)) && method === 'PUT') {
+      const period = decodeURIComponent(m[1]) + ' ' + m[2];
+      const balloc = BALLOC();
+      // body = { [itemName]: salaryAmount }
+      Object.entries(body).forEach(([itemName, amount]) => {
+        const row = balloc.rows.find(r => r.Item === itemName && r.MonthYearToUse === period && !r.Day);
+        if (row) row.AllocatedSalaryPortion = String(parseFloat(amount) || 0);
+      });
+      await DATA.save('data/budgetAllocations.csv', `Budget allocation ${period}`);
+      return { ok: true };
+    }
+    if (rawPath.match(/^\/finance\/months\/([^/]+)\/(\d+)\/salary$/) && method === 'PUT')
       return { ok: true };
 
     // GET /budget/items
