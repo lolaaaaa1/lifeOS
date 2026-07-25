@@ -6139,10 +6139,12 @@ async function saveAccountTxn() {
         }
         const newGroupId = _genTxnId(TXNS().rows);
         if (AC.txnSplit && AC.txnSplit.length > 1) {
-          for (const s of AC.txnSplit) {
+          for (let i = 0; i < AC.txnSplit.length; i++) {
+            const s = AC.txnSplit[i];
+            const legPayload = i === 0 ? { ...basePayload } : { ...basePayload, charges: 0 };
             await apiFetch('/accounts/transaction', {
               method: 'POST',
-              body: JSON.stringify({ ...basePayload, monthFor: s.month, yearFor: s.year, amount: s.amount, groupTransactionId: newGroupId }),
+              body: JSON.stringify({ ...legPayload, monthFor: s.month, yearFor: s.year, amount: s.amount, groupTransactionId: newGroupId }),
             });
           }
         } else {
@@ -6160,12 +6162,14 @@ async function saveAccountTxn() {
         });
       }
     } else if (type === 'expense' && AC.txnSplit && AC.txnSplit.length > 0) {
-      // One transaction per split month; GroupTransactionID = first transaction's ID (same as its own if only one)
+      // One transaction per split month; charges only on first leg
       const groupId = _genTxnId(TXNS().rows);
-      for (const s of AC.txnSplit) {
+      for (let i = 0; i < AC.txnSplit.length; i++) {
+        const s = AC.txnSplit[i];
+        const legPayload = i === 0 ? { ...basePayload } : { ...basePayload, charges: 0 };
         await apiFetch('/accounts/transaction', {
           method: 'POST',
-          body: JSON.stringify({ ...basePayload, monthFor: s.month, yearFor: s.year, amount: s.amount, groupTransactionId: groupId }),
+          body: JSON.stringify({ ...legPayload, monthFor: s.month, yearFor: s.year, amount: s.amount, groupTransactionId: groupId }),
         });
       }
     } else {
