@@ -2225,9 +2225,20 @@ const LocalAPI = {
       const period = decodeURIComponent(m[1]) + ' ' + m[2];
       const balloc = BALLOC();
       // body = { [itemName]: salaryAmount }
+      const [moStr, yrStr] = period.split(' ');
       Object.entries(body).forEach(([itemName, amount]) => {
         const row = balloc.rows.find(r => r.Item === itemName && r.MonthYearToUse === period && !r.Day);
-        if (row) row.AllocatedSalaryPortion = String(parseFloat(amount) || 0);
+        if (row) {
+          row.AllocatedSalaryPortion = String(parseFloat(amount) || 0);
+        } else {
+          // Row missing (item added after initial BALLOC creation) — create it
+          balloc.rows.push({
+            Year: yrStr, Month: moStr, MonthNumber: '', Day: '', DayName: '',
+            Item: itemName, MonthYearToUse: period, AppliesToDay: '',
+            AllocatedSalaryPortion: String(parseFloat(amount) || 0),
+            AllocatedCompanyBonusPortion: '',
+          });
+        }
       });
       await DATA.save('data/budgetAllocations.csv', `Budget allocation ${period}`);
       return { ok: true };
