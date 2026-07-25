@@ -295,8 +295,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202633,,Others,,100,Utilities,Monthly,,,June,2026,Expense,,,507202631
 507202648,Ecobank,,70,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202648,,Others,,70,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202648
-507202649,Ecobank,,70,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,
-507202649,,Others,,70,Utilities,Monthly,,,July,2026,Expense,,I don’t know,
 507202645,Cash,,26.59,,,Monthly,,,July,2026,Transfer,,,507202645
 507202645,,MTN Mobile Money,,26.59,,Monthly,,,July,2026,Transfer,,,507202645
 507202647,Cash,,3.01,,,Monthly,,,July,2026,Transfer,,,507202647
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202635,,Others,,200,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
 507202634,Ecobank,,32.1,,Utilities,Monthly,,,June,2026,Expense,,,
 507202634,,Others,,32.1,Utilities,Monthly,,,June,2026,Expense,,,
+507202649,Ecobank,,28.6,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
+507202649,,Others,,28.6,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
