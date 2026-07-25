@@ -1570,7 +1570,7 @@
     <div id="acctFromToGrid" style="display:grid;grid-template-columns:1fr;gap:10px;">
       <div class="form-field" id="acctFromField">
         <label class="form-label" id="acctFromLabel">From Account</label>
-        <select id="acctTxnFrom" class="form-input"></select>
+        <select id="acctTxnFrom" class="form-input" onchange="onAcctTxnFromChange()"></select>
       </div>
       <div class="form-field" id="acctToField" style="display:none;">
         <label class="form-label" id="acctToLabel">Into Account</label>
@@ -5807,6 +5807,7 @@ function setAcctIncomePeriod(period) {
 
 function onAcctItemChange(val) { AC.splitSelection = null; renderAllocInfo(val); }
 function onAcctAmountInput()   { renderAllocInfo($('acctTxnItem')?.value || ''); }
+function onAcctTxnFromChange() { AC.splitSelection = null; renderAllocInfo($('acctTxnItem')?.value || ''); }
 function toggleSplitMonth(key) {
   if (!AC.splitSelection) AC.splitSelection = new Set();
   if (AC.splitSelection.has(key)) AC.splitSelection.delete(key);
@@ -5829,6 +5830,101 @@ function renderAllocInfo(val) {
   const MONTHS_AC = ['January','February','March','April','May','June','July','August',
                      'September','October','November','December'];
   const txnRows = TXNS().rows;
+
+  // Investment account expense: show transfer history to that account instead of BALLOC
+  const acctFrom   = $('acctTxnFrom')?.value || '';
+  const fromDef    = AC.defs.find(d => d.AccountName === acctFrom);
+  const isInvFrom  = AC.txnType === 'expense' && (fromDef?.Type || '').toLowerCase() === 'investment';
+
+  if (isInvFrom) {
+    const editingGidInv = AC.editingTxn?.groupTransactionId || null;
+    const invMap = {};
+
+    // Accumulate transfers TO this account
+    txnRows.forEach(r => {
+      if (r.TransactionType !== 'Transfer' || r.AccountTo !== acctFrom) return;
+      const credit = parseFloat(r.Credit) || 0;
+      if (credit <= 0 || !r.MonthFor || !r.YearFor) return;
+      const key = `${r.MonthFor}|${r.YearFor}`;
+      if (!invMap[key]) invMap[key] = { month: r.MonthFor, year: r.YearFor, alloc: 0, spent: 0 };
+      invMap[key].alloc += credit;
+    });
+
+    Object.keys(invMap).forEach(k => { if (invMap[k].alloc <= 0) delete invMap[k]; });
+    if (!Object.keys(invMap).length) { info.innerHTML = ''; AC.txnSplit = null; return; }
+
+    // Subtract expenses already FROM this account (excluding the transaction being edited)
+    txnRows.forEach(r => {
+      if (r.TransactionType !== 'Expense' || r.AccountFrom !== acctFrom) return;
+      if (editingGidInv && (r.GroupTransactionID === editingGidInv || r.TransactionID === editingGidInv)) return;
+      const debit = parseFloat(r.Debit) || 0;
+      if (debit <= 0) return;
+      const key = `${r.MonthFor}|${r.YearFor}`;
+      if (invMap[key]) invMap[key].spent += debit;
+    });
+
+    const invRows = Object.values(invMap).sort((a, b) => {
+      const yd = parseInt(a.year) - parseInt(b.year);
+      return yd !== 0 ? yd : MONTHS_AC.indexOf(a.month) - MONTHS_AC.indexOf(b.month);
+    });
+
+    const totalAmtInv = parseFloat($('acctTxnCredit')?.value) || 0;
+    const splitMapInv = {};
+    AC.txnSplit = null;
+    let leftInv = totalAmtInv;
+    const selInv = AC.splitSelection;
+    const splitRowsInv = selInv && selInv.size > 0
+      ? invRows.filter(r => selInv.has(`${r.month}|${r.year}`))
+      : invRows;
+
+    if (totalAmtInv > 0) {
+      const planInv = [];
+      for (const r of splitRowsInv) {
+        if (leftInv <= 0.001) break;
+        const avail = Math.max(0, r.alloc - r.spent);
+        if (avail <= 0) continue;
+        const take = Math.min(avail, leftInv);
+        planInv.push({ month: r.month, year: r.year, amount: Math.round(take * 100) / 100 });
+        splitMapInv[`${r.month}|${r.year}`] = Math.round(take * 100) / 100;
+        leftInv -= take;
+      }
+      if (planInv.length > 1) AC.txnSplit = planInv;
+      if (planInv.length === 1) {
+        const mi = $('acctTxnMonthFor'), yi = $('acctTxnYearFor');
+        if (mi) mi.value = planInv[0].month;
+        if (yi) yi.value = planInv[0].year;
+      }
+    }
+
+    const showInv = totalAmtInv > 0;
+    const colsInv = showInv ? '1fr 80px 80px 80px' : '1fr 90px 90px';
+    info.innerHTML = `
+      <div style="margin-top:8px;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:grid;grid-template-columns:${colsInv};padding:0 10px;">
+        <span>Month</span><span style="text-align:right;">Transferred</span><span style="text-align:right;">Remaining</span>${showInv ? '<span style="text-align:right;">Split</span>' : ''}
+      </div>
+      <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        ${invRows.map(r => {
+          const key       = `${r.month}|${r.year}`;
+          const rem       = r.alloc - r.spent;
+          const available = rem > 0;
+          const isSel     = selInv && selInv.has(key);
+          const splitAmt  = splitMapInv[key] || 0;
+          const remColor  = rem < 0 ? '#a8533f' : !available ? 'var(--muted)' : '#3a6b4a';
+          const sColor    = splitAmt > 0 ? '#5a4a3a' : 'var(--muted)';
+          const rowBg     = isSel ? 'background:var(--accent-muted,rgba(90,120,90,0.12));' : '';
+          return `<div class="alloc-row${isSel ? ' selected' : ''}" onclick="toggleSplitMonth('${key}')"
+            style="${rowBg}display:grid;grid-template-columns:${colsInv};align-items:center;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);opacity:${!available && splitAmt === 0 ? '0.4' : '1'};">
+            <span style="font-size:13px;">${isSel ? '✓ ' : ''}${r.month} ${r.year}</span>
+            <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${fmtGHS(r.alloc)}</span>
+            <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${(rem < 0 ? '−' : '') + fmtGHS(Math.abs(rem))}</span>
+            ${showInv ? `<span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${sColor};font-weight:${splitAmt > 0 ? '600' : '400'};">${splitAmt > 0 ? fmtGHS(splitAmt) : '—'}</span>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+      ${showInv && leftInv > 0.001 ? `<div style="margin-top:6px;font-size:12px;color:#a8533f;">⚠ ${fmtGHS(leftInv)} has no balance available</div>` : ''}
+      ${showInv && AC.txnSplit ? `<div style="margin-top:6px;font-size:12px;color:var(--muted);">Will create ${AC.txnSplit.length} transactions</div>` : ''}`;
+    return;
+  }
 
   // Build per-period allocation map for this item from BALLOC
   // MonthYearToUse format: "July 2026" (full name + space + 4-digit year)
