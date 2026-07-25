@@ -1,8 +1,8 @@
 TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived,YearReceived,MonthFor,YearFor,TransactionType,BalancingPeriod,Note,GroupTransactionID
 2811202502,Ecobank,,344.52,,Long Term Savings,Monthly,,,December,2025,Transfer,,,
 2811202502,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,,,December,2025,Transfer,,,
-2811202501,Nationwide Medical Insurance,,1268.19,,Salary,Monthly,November,2025,December,2025,Income,,,
-2811202501,,Ecobank,,1268.19,Salary,Monthly,November,2025,December,2025,Income,,,
+2811202501,Nationwide Medical Insurance,,1328.19,,Salary,Monthly,November,2025,December,2025,Income,,,
+2811202501,,Ecobank,,1328.19,Salary,Monthly,November,2025,December,2025,Income,,,
 207202601,Ecobank,,488,,SOA Exams,Monthly,,,December,2025,Transfer,,,
 207202601,,Achieve SOA Exams,,488,SOA Exams,Monthly,,,December,2025,Transfer,,,
 2811202503,Ecobank,,200,,Trust Fund,Monthly,,,December,2025,Transfer,,,
