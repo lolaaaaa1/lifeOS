@@ -290,7 +290,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,March,,,,Long Term Savings,March 2026,,,
 2026,May,,,,Long Term Savings,May 2026,,,
 2025,December,,,,MSc. Actuarial Science,December 2025,,,
-2026,April,,,,MSc. Actuarial Science,April 2026,,,
+2026,April,,,,MSc. Actuarial Science,April 2026,,1500,
 2026,February,,,,MSc. Actuarial Science,February 2026,,,
 2026,January,,,,MSc. Actuarial Science,January 2026,,,
 2026,July,,,,MSc. Actuarial Science,July 2026,,,
