@@ -5292,6 +5292,7 @@ function renderTxnPageList() {
 
 async function renderAccountsPage() {
   try {
+    await DATA.load('data/transactions.csv');
     [AC.defs, AC.rows] = await Promise.all([
       apiFetch('/account-defs'),
       apiFetch('/accounts'),
