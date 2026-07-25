@@ -347,3 +347,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202602,,Others,,853,Food,Monthly,,,July,2026,Expense,,,
 507202626,Ecobank,,255,,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,
 507202626,,Doreen Gidi,,255,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,
+2507202602,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
+2507202602,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
