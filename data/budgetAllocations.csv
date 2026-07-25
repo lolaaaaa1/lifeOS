@@ -34,7 +34,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2025,December,,,,Department Dues,December 2025,,,
 2026,April,,,,Department Dues,April 2026,,,
 2026,February,,,,Department Dues,February 2026,,,
-2026,January,,,,Department Dues,January 2026,,,
+2026,January,,,,Department Dues,January 2026,,100,
 2026,July,,,,Department Dues,July 2026,,,
 2026,June,,,,Department Dues,June 2026,,,
 2026,March,,,,Department Dues,March 2026,,,
