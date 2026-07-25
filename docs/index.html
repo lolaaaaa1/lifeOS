@@ -5741,9 +5741,11 @@ function setTxnType(type) {
     $('acctToLabel').textContent   = 'Account To';
     const fromSel = $('acctTxnFrom');
     if (fromSel) {
-      const displayAccts = AC.defs.filter(d => d.Display).map(d => d.AccountName);
+      const incomeFromAccts = AC.defs
+        .filter(d => !d.Display && (d.Type || '').toLowerCase() !== 'investment')
+        .map(d => d.AccountName);
       fromSel.innerHTML = `<option value="">— Select —</option>` +
-        displayAccts.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+        incomeFromAccts.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
     }
   } else {
     grid.style.gridTemplateColumns = '1fr';
