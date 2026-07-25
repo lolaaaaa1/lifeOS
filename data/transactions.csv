@@ -321,8 +321,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202606,,Telecel Cash,,27,,Monthly,,,June,2026,Transfer,,,2507202606
 2507202607,Ecobank,,3.4,,,Monthly,,,June,2026,Transfer,,,2507202607
 2507202607,,Telecel Cash,,3.4,,Monthly,,,June,2026,Transfer,,,2507202607
-101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense,,,
-101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense,,,
 807202601,Cash,,30,,Food,Monthly,,,July,2026,Expense,,Plantain Chips,
 807202601,,Auntie Gloria (NMI),,30,Food,Monthly,,,July,2026,Expense,,Plantain Chips,
 104202608,Ecobank,,1050,,Food,Monthly,,,April,2026,Expense,,,
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 105202608,,Others,,840,Food,Monthly,,,May,2026,Expense,,,
 103202609,Ecobank,,580,,Food,Monthly,,,March,2026,Expense,,,
 103202609,,Others,,580,Food,Monthly,,,March,2026,Expense,,,
+101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense,,,
+101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense,,,
