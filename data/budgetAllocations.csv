@@ -593,7 +593,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,April,,,,Trust Fund,April 2026,,100,
 2026,February,,,,Trust Fund,February 2026,,,
 2026,January,,,,Trust Fund,January 2026,,,
-2026,July,,,,Trust Fund,July 2026,,,
+2026,July,,,,Trust Fund,July 2026,,100,
 2026,June,,,,Trust Fund,June 2026,,,
 2026,March,,,,Trust Fund,March 2026,,100,
 2026,May,,,,Trust Fund,May 2026,,100,
