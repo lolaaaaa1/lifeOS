@@ -93,8 +93,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 607202604,,Others,,62,Food,Monthly,,,July,2026,Expense,,UGMC Snacks,607202604
 807202601,Cash,,30,,Food,Monthly,,,July,2026,Expense,,Plantain Chips,807202601
 807202601,,Auntie Gloria (NMI),,30,Food,Monthly,,,July,2026,Expense,,Plantain Chips,807202601
-2407202601,Ecobank,,798,,Food,Monthly,,,July,2026,Expense,,,2407202601
-2407202601,,Others,,798,Food,Monthly,,,July,2026,Expense,,,2407202601
 101202609,Ecobank,,1050,,Food,Monthly,,,January,2026,Expense,,,
 101202609,,Others,,1050,Food,Monthly,,,January,2026,Expense,,,
 102202609,Ecobank,,580,,Food,Monthly,,,February,2026,Expense,,,
@@ -351,3 +349,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202601,,Others,,50,Clothes,Monthly,,,April,2026,Expense,,,2507202601
 507202639,Ecobank,,260,,Food,Monthly,,,February,2026,Expense,,,
 507202639,,Others,,260,Food,Monthly,,,February,2026,Expense,,,
+2407202601,Ecobank,,260,,Food,Monthly,,,March,2026,Expense,,,
+2407202601,,Others,,260,Food,Monthly,,,March,2026,Expense,,,
