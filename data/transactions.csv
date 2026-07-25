@@ -259,11 +259,9 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202648,Ecobank,,120,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202628,Ecobank,,150,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
 507202635,Ecobank,,200,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
-307202610,Ecobank,,350,,Utilities,Monthly,,,June,2026,Expense,,,
 507202637,Ecobank,,500,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
 307202607,,Others,,100,Utilities,Monthly,,,June,2026,Expense,,,
 307202609,,Philip Twum,,100,Utilities,Monthly,,,June,2026,Expense,,,
-307202610,,Others,,350,Utilities,Monthly,,,June,2026,Expense,,,
 507202628,,Others,,150,Utilities,Monthly,,,June,2026,Expense,,I don’t know,
 507202633,,Others,,120,Utilities,Monthly,,,June,2026,Expense,,,507202631
 507202634,,Others,,60,Utilities,Monthly,,,June,2026,Expense,,,
@@ -347,3 +345,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 3006202602,Nationwide Medical Insurance,,2500,,Company Bonus,Variable,June,2026,,,Income,,,
 207202602,,Ecobank,,900,Company Bonus,Variable,June,2026,,,Income,,,
 3006202602,,Ecobank,,2500,Company Bonus,Variable,June,2026,,,Income,,,
+307202610,Ecobank,,331,,Utilities,Monthly,,,June,2026,Expense,,,
+307202610,,Others,,331,Utilities,Monthly,,,June,2026,Expense,,,
