@@ -197,8 +197,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2811202501,,Ecobank,,1032.52,Salary,Monthly,,,December,2025,Income,,,
 507202614,Ecobank,,220,,Shoes,Monthly,,,July,2026,Expense,,Brown Flats,507202614
 507202614,,Others,,220,Shoes,Monthly,,,July,2026,Expense,,Brown Flats,507202614
-507202615,Ecobank,,200,,Shoes,Monthly,,,July,2026,Expense,,Blue Silver Charm Flats,507202615
-507202615,,Others,,200,Shoes,Monthly,,,July,2026,Expense,,Blue Silver Charm Flats,507202615
 507202616,Ecobank,,220,,Shoes,Monthly,,,July,2026,Expense,,Black Flats (like the Brown),507202616
 507202616,,Others,,220,Shoes,Monthly,,,July,2026,Expense,,Black Flats (like the Brown),507202616
 507202617,Ecobank,,120,,Shoes,Monthly,,,July,2026,Expense,,Delivery,507202617
@@ -343,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202626,,Doreen Gidi,,255,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,
 2507202602,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
 2507202602,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
+507202615,Ecobank,,200,,Shoes,Monthly,,,June,2026,Expense,,Blue Silver Charm Flats,
+507202615,,Others,,200,Shoes,Monthly,,,June,2026,Expense,,Blue Silver Charm Flats,
