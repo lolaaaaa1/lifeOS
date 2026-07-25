@@ -337,8 +337,8 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202634,,Others,,32.1,Utilities,Monthly,,,July,2026,Expense,,,507202631
 507202635,Ecobank,,200,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,507202635
 507202635,,Others,,200,Utilities,Monthly,,,July,2026,Expense,,I don’t know,507202635
-507202637,Ecobank,,900,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202637
-507202637,,Others,,900,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202637
+507202637,Ecobank,,1500,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202637
+507202637,,Others,,1500,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202637
 507202648,Ecobank,,70,,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202648,,Others,,70,Utilities,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202649,Ecobank,,70,,Utilities,Monthly,,,July,2026,Expense,,I don’t know,

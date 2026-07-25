@@ -2039,9 +2039,27 @@ const DATA = {
       d.sha = result.content.sha;
     } catch (e) {
       if (e.message && e.message.includes('409')) {
-        const { sha: freshSha } = await GH.fetchFile(path);
-        d.sha = freshSha;
-        const result = await GH.writeFile(path, content, d.sha, message);
+        // Re-fetch fresh content, merge our in-memory rows on top, then retry.
+        // This prevents stale-cache overwrites that silently discard concurrent commits.
+        const { text: freshText, sha: freshSha } = await GH.fetchFile(path);
+        const { headers: freshHeaders, rows: freshRows } = parseCSV(freshText);
+        // Identity key = all non-value columns (everything except amount/calculated fields)
+        const valueCols = new Set(['AllocatedSalaryPortion','AllocatedCompanyBonusPortion',
+          'Debit','Credit','Amount','SalaryPortion','BonusPortion','CalculatedType']);
+        const identCols = freshHeaders.filter(h => !valueCols.has(h));
+        const rowKey = r => identCols.map(k => (r[k] || '')).join('|');
+        const freshMap = Object.fromEntries(freshRows.map(r => [rowKey(r), r]));
+        // Apply our in-memory rows on top of the fresh set
+        d.rows.forEach(r => {
+          const k = rowKey(r);
+          if (freshMap[k]) Object.assign(freshMap[k], r);
+          else freshRows.push(r);
+        });
+        d.rows    = freshRows;
+        d.headers = freshHeaders;
+        d.sha     = freshSha;
+        const mergedContent = serializeCSV(d.headers, d.rows);
+        const result = await GH.writeFile(path, mergedContent, d.sha, message);
         d.sha = result.content.sha;
       } else {
         throw e;
