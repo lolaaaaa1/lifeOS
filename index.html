@@ -2808,7 +2808,9 @@ function nextMonthName(monthName) {
 }
 
 const fmtGHS = (n) => {
-  const num = (parseFloat(n) || 0) + 0; // +0 converts -0 to 0
+  let num = parseFloat(n) || 0;
+  num = Math.round(num * 100) / 100; // round to 2dp first
+  if (Object.is(num, -0) || num === 0) num = 0; // prevent -0.00
   return `GH₵ ${num.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
