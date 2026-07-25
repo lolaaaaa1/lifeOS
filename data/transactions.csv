@@ -115,8 +115,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202624,,Lauraine Obey-Mantey,,280,Gifting,Monthly,,,July,2026,Expense,,Silver Heels,507202624
 507202625,Ecobank,,280,,Gifting,Monthly,,,July,2026,Expense,,Red Flats,507202625
 507202625,,Valerie Emefa Aseye Akli-Nartey,,280,Gifting,Monthly,,,July,2026,Expense,,Red Flats,507202625
-507202626,Ecobank,,155,,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,507202626
-507202626,,Doreen Gidi,,155,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,507202626
 2407202611,Ecobank,,107.29,,Hair,Monthly,,,July,2026,Expense,,,2407202611
 2407202611,,Others,,107.29,Hair,Monthly,,,July,2026,Expense,,,2407202611
 507202636,Ecobank,,150,,Hair,Monthly,,,June,2026,Expense,,I don’t know,
@@ -347,3 +345,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 106202608,,Others,,840,Food,Monthly,,,June,2026,Expense,,,
 2407202602,Ecobank,,853,,Food,Monthly,,,July,2026,Expense,,,
 2407202602,,Others,,853,Food,Monthly,,,July,2026,Expense,,,
+507202626,Ecobank,,255,,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,
+507202626,,Doreen Gidi,,255,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,
