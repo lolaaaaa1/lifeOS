@@ -21,8 +21,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202601,,Telecel Company,,400,Bundle,Monthly,,,July,2026,Expense,,,
 507202648,Ecobank,,1.4,,Charges,Monthly,,,June,2026,Expense,,I don’t know,507202648
 507202648,,Charges,,1.4,Charges,Monthly,,,June,2026,Expense,,I don’t know,507202648
-2407202607,Ecobank,,29.12,,Charges,Monthly,,,July,2026,Expense,,,2407202607
-2407202607,,Charges,,29.12,Charges,Monthly,,,July,2026,Expense,,,2407202607
 102202601,Ecobank,,8.5,,Charges,Monthly,,,February,2026,Expense,,,
 102202601,,Charges,,8.5,Charges,Monthly,,,February,2026,Expense,,,
 103202601,Ecobank,,8.5,,Charges,Monthly,,,March,2026,Expense,,,
@@ -347,3 +345,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202640,,Others,,50,Transport,Monthly,,,July,2026,Expense,,,
 2507202605,Ecobank,,25.2,,Charges,Monthly,,,June,2026,Expense,,,2507202605
 2507202605,,Others,,25.2,Charges,Monthly,,,June,2026,Expense,,,2507202605
+2407202607,Ecobank,,19.12,,Charges,Monthly,,,July,2026,Expense,,,
+2407202607,,Charges,,19.12,Charges,Monthly,,,July,2026,Expense,,,
