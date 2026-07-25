@@ -10,7 +10,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2025,December,,,,Charges,December 2025,,,
 2026,April,,,,Charges,April 2026,,,
 2026,February,,,,Charges,February 2026,,,
-2026,January,,,,Charges,January 2026,,,
+2026,January,,,,Charges,January 2026,,120.1,
 2026,July,,,,Charges,July 2026,,,
 2026,June,,,,Charges,June 2026,,,
 2026,March,,,,Charges,March 2026,,,
