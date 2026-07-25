@@ -345,3 +345,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202640,,Others,,50,Transport,Monthly,,,July,2026,Expense,,,
 2407202607,Ecobank,,19.12,,Charges,Monthly,,,July,2026,Expense,,,
 2407202607,,Charges,,19.12,Charges,Monthly,,,July,2026,Expense,,,
+2507202605,Ecobank,,20.07,,Charges,Monthly,,,July,2026,Expense,,,2507202605
+2507202605,,,,20.07,Charges,Monthly,,,July,2026,Expense,,,2507202605
