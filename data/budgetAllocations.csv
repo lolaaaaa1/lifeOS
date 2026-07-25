@@ -309,7 +309,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,April,,,,Outing,April 2026,,100,
 2026,February,,,,Outing,February 2026,,,
 2026,January,,,,Outing,January 2026,,,
-2026,July,,,,Outing,July 2026,,,
+2026,July,,,,Outing,July 2026,,100,
 2026,June,,,,Outing,June 2026,,,
 2026,March,,,,Outing,March 2026,,,
 2026,May,,,,Outing,May 2026,,,
