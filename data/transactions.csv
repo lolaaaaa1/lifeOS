@@ -371,3 +371,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2607202603,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,August,2026,Expense,,,2607202603
 2607202604,Telecel Cash,,200,,Electricity,Monthly,,,August,2026,Expense,,,2607202604
 2607202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,August,2026,Expense,,,2607202604
+2607202605,Telecel Cash,,150,,Gifting,Monthly,,,August,2026,Expense,,Payment for wedding dress-I have sent 150 already,2607202605
+2607202605,Telecel Cash,,1.13,,Charges,Monthly,,,August,2026,Expense,,Payment for wedding dress-I have sent 150 already,2607202605
+2607202605,,Charges,,1.13,Charges,Monthly,,,August,2026,Expense,,Payment for wedding dress-I have sent 150 already,2607202605
+2607202605,,Valerie Emefa Aseye Akli-Nartey,,150,Gifting,Monthly,,,August,2026,Expense,,Payment for wedding dress-I have sent 150 already,2607202605
