@@ -369,3 +369,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2607202603,Telecel Cash,,1,,Charges,Monthly,,,August,2026,Expense,,,2607202603
 2607202603,,Charges,,1,Charges,Monthly,,,August,2026,Expense,,,2607202603
 2607202603,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,August,2026,Expense,,,2607202603
+2607202604,Telecel Cash,,200,,Electricity,Monthly,,,August,2026,Expense,,,2607202604
+2607202604,,Electricity Company of Ghana,,200,Electricity,Monthly,,,August,2026,Expense,,,2607202604
