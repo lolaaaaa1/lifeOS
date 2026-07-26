@@ -359,3 +359,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202616,Ecobank,,20,,Charges,Monthly,,,August,2026,Transfer,,,2507202616
 2507202616,,Charges,,20,Charges,Monthly,,,August,2026,Transfer,,,2507202616
 2507202616,,Telecel Cash,,5000,Simple Transfer,Monthly,,,August,2026,Transfer,,,2507202616
+2607202601,Telecel Cash,,700,,Tithe,Monthly,,,August,2026,Expense,,,2607202601
+2607202601,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,August,2026,Expense,,,2607202601
