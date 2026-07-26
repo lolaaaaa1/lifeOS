@@ -365,3 +365,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2607202602,Telecel Cash,,10,,Charges,Monthly,,,August,2026,Expense,,,
 2607202602,,Charges,,10,Charges,Monthly,,,August,2026,Expense,,,
 2607202602,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,August,2026,Expense,,,
+2607202603,Telecel Cash,,100,,Trust Fund,Monthly,,,August,2026,Expense,,,2607202603
+2607202603,Telecel Cash,,1,,Charges,Monthly,,,August,2026,Expense,,,2607202603
+2607202603,,Charges,,1,Charges,Monthly,,,August,2026,Expense,,,2607202603
+2607202603,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,August,2026,Expense,,,2607202603
