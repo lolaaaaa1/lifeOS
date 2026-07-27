@@ -379,3 +379,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2707202601,Telecel Cash,,7,,Charges,Monthly,,,August,2026,Transfer,,,2707202601
 2707202601,,Charges,,7,Charges,Monthly,,,August,2026,Transfer,,,2707202601
 2707202601,,MTN Mobile Money,,2050,Simple Transfer,Monthly,,,August,2026,Transfer,,,2707202601
+2707202602,MTN Mobile Money,,2000,,Simple Transfer,Monthly,,,August,2026,Transfer,,,2707202602
+2707202602,MTN Mobile Money,,20,,Charges,Monthly,,,August,2026,Transfer,,,2707202602
+2707202602,,Charges,,20,Charges,Monthly,,,August,2026,Transfer,,,2707202602
+2707202602,,Cash,,2000,Simple Transfer,Monthly,,,August,2026,Transfer,,,2707202602
