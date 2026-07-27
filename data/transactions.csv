@@ -375,3 +375,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2607202605,Telecel Cash,,1.13,,Charges,Monthly,,,August,2026,Expense,,Payment for wedding dress-I have sent 150 already,2607202605
 2607202605,,Charges,,1.13,Charges,Monthly,,,August,2026,Expense,,Payment for wedding dress-I have sent 150 already,2607202605
 2607202605,,Valerie Emefa Aseye Akli-Nartey,,150,Gifting,Monthly,,,August,2026,Expense,,Payment for wedding dress-I have sent 150 already,2607202605
+2707202601,Telecel Cash,,2050,,Simple Transfer,Monthly,,,August,2026,Transfer,,,2707202601
+2707202601,Telecel Cash,,7,,Charges,Monthly,,,August,2026,Transfer,,,2707202601
+2707202601,,Charges,,7,Charges,Monthly,,,August,2026,Transfer,,,2707202601
+2707202601,,MTN Mobile Money,,2050,Simple Transfer,Monthly,,,August,2026,Transfer,,,2707202601
