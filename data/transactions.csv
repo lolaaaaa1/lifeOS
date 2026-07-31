@@ -391,3 +391,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 3107202601,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,August,2026,Expense,,,3107202601
 3107202602,Telecel Cash,,120,,Simple Transfer,Monthly,,,August,2026,Transfer,,,3107202602
 3107202602,,MTN Mobile Money,,120,Simple Transfer,Monthly,,,August,2026,Transfer,,,3107202602
+3107202603,Achieve Long Term Savings,,344.52,,Long Term Savings,Monthly,,,August,2026,Transfer,,,3107202603
+3107202603,,Telecel Cash,,344.52,Long Term Savings,Monthly,,,August,2026,Transfer,,,3107202603
