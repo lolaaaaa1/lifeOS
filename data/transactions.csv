@@ -397,3 +397,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0108202601,Telecel Cash,,0.7,,Charges,Monthly,,,August,2026,Expense,,,0108202601
 0108202601,,Charges,,0.7,Charges,Monthly,,,August,2026,Expense,,,0108202601
 0108202601,,Alhassan,,140,Rental Utilities,Monthly,,,August,2026,Expense,,,0108202601
+0108202602,MTN Mobile Money,,40,,Utilities,Monthly,,,August,2026,Expense,,Electricity Issues,0108202602
+0108202602,,Jason (Apartment Neighbor),,40,Utilities,Monthly,,,August,2026,Expense,,Electricity Issues,0108202602
