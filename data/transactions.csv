@@ -402,7 +402,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0308202601,Cash,,5,,Food,Monthly,,,August,2026,Expense,,Rock buns,0308202601
 0308202601,,Atswei (Bernice NMI),,5,Food,Monthly,,,August,2026,Expense,,Rock buns,0308202601
 0308202602,Cash,,13,,Food,Monthly,,,August,2026,Expense,,Yogurt,0308202602
-0308202602,,Nicholas Menano-NMK,,13,Food,Monthly,,,August,2026,Expense,,Yogurt,0308202602
+0308202602,,Nicholas Menano-NMI,,13,Food,Monthly,,,August,2026,Expense,,Yogurt,0308202602
 0308202603,Cash,,10,,Food,Monthly,,,August,2026,Expense,,"Koko 4, Koose 2 and Bofrot 2, one for 2",0308202603
 0308202603,,Koko Seller-37,,10,Food,Monthly,,,August,2026,Expense,,"Koko 4, Koose 2 and Bofrot 2, one for 2",0308202603
 0308202604,Cash,,13,,Transport,Monthly,,,August,2026,Expense,,,0308202604
