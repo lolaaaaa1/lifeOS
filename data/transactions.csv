@@ -399,3 +399,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0108202601,,Alhassan,,140,Rental Utilities,Monthly,,,August,2026,Expense,,,0108202601
 0108202602,MTN Mobile Money,,40,,Utilities,Monthly,,,August,2026,Expense,,Electricity Issues,0108202602
 0108202602,,Jason (Apartment Neighbor),,40,Utilities,Monthly,,,August,2026,Expense,,Electricity Issues,0108202602
+0308202601,Cash,,5,,Food,Monthly,,,August,2026,Expense,,Rock buns,0308202601
+0308202601,,Atswei (Bernice NMI),,5,Food,Monthly,,,August,2026,Expense,,Rock buns,0308202601
