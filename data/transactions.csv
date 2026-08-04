@@ -409,3 +409,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0308202604,,Trotro,,13,Transport,Monthly,,,August,2026,Expense,,,0308202604
 0408202601,Cash,,11,,Transport,Monthly,,,August,2026,Expense,,,0408202601
 0408202601,,Trotro,,11,Transport,Monthly,,,August,2026,Expense,,,0408202601
+0408202602,Cash,,13,,Transport,Monthly,,,August,2026,Expense,,,0408202602
+0408202602,,Trotro,,13,Transport,Monthly,,,August,2026,Expense,,,0408202602
