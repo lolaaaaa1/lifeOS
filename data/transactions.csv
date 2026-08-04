@@ -407,3 +407,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0308202603,,Koko Seller-37,,10,Food,Monthly,,,August,2026,Expense,,"Koko 4, Koose 2 and Bofrot 2, one for 2",0308202603
 0308202604,Cash,,13,,Transport,Monthly,,,August,2026,Expense,,,0308202604
 0308202604,,Trotro,,13,Transport,Monthly,,,August,2026,Expense,,,0308202604
+0408202601,Cash,,11,,Transport,Monthly,,,August,2026,Expense,,,0408202601
+0408202601,,Trotro,,11,Transport,Monthly,,,August,2026,Expense,,,0408202601
