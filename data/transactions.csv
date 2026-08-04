@@ -411,3 +411,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0408202601,,Trotro,,11,Transport,Monthly,,,August,2026,Expense,,,0408202601
 0408202602,Cash,,13,,Transport,Monthly,,,August,2026,Expense,,,0408202602
 0408202602,,Trotro,,13,Transport,Monthly,,,August,2026,Expense,,,0408202602
+0408202603,Ecobank,,1000,,Rent,Monthly,,,August,2026,Expense,,,0408202603
+0408202603,,National Rental Assistance,,1000,Rent,Monthly,,,August,2026,Expense,,,0408202603
