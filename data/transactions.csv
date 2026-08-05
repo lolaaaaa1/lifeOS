@@ -423,3 +423,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0508202602,,Amanda Bio-Marfo,,24.37,Food,Monthly,,,August,2026,Expense,,Angwamo,
 0508202603,Cash,,8,,Transport,Monthly,,,August,2026,Expense,,,0508202603
 0508202603,,Trotro,,8,Transport,Monthly,,,August,2026,Expense,,,0508202603
+0508202604,Telecel Cash,,5,,Food,Monthly,,,August,2026,Expense,,Plantain Chips for Samuella,0508202604
+0508202604,,Auntie Gloria (NMI),,5,Food,Monthly,,,August,2026,Expense,,Plantain Chips for Samuella,0508202604
