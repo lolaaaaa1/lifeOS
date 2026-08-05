@@ -433,3 +433,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0508202607,,ECOBANK Virtual Card,,30,Simple Transfer,Monthly,,,August,2026,Transfer,,,0508202607
 0508202606,MTN Mobile Money,,3,,Simple Transfer,Monthly,,,August,2026,Transfer,,,
 0508202606,,Ecobank,,3,Simple Transfer,Monthly,,,August,2026,Transfer,,,
+0508202608,Telecel Cash,,120,,Food,Monthly,,,August,2026,Expense,,,0508202608
+0508202608,Telecel Cash,,0.6,,Charges,Monthly,,,August,2026,Expense,,,0508202608
+0508202608,,Charges,,0.6,Charges,Monthly,,,August,2026,Expense,,,0508202608
+0508202608,,Starbites,,120,Food,Monthly,,,August,2026,Expense,,,0508202608
