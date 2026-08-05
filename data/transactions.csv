@@ -417,3 +417,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0408202604,Ecobank,,10,,Charges,Monthly,,,August,2026,Expense,,,0408202604
 0408202604,,Charges,,10,Charges,Monthly,,,August,2026,Expense,,,0408202604
 0408202604,,National Rental Assistance,,120,Rent Charges,Monthly,,,August,2026,Expense,,,0408202604
+0508202601,Cash,,0.63,,Food,Monthly,,,July,2026,Expense,,Angwamo,0508202601
+0508202601,,Amanda Bio-Marfo,,0.63,Food,Monthly,,,July,2026,Expense,,Angwamo,0508202601
