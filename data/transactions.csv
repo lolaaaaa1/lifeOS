@@ -437,3 +437,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0508202608,Telecel Cash,,0.6,,Charges,Monthly,,,August,2026,Expense,,,0508202608
 0508202608,,Charges,,0.6,Charges,Monthly,,,August,2026,Expense,,,0508202608
 0508202608,,Starbites,,120,Food,Monthly,,,August,2026,Expense,,,0508202608
+0508202609,Cash,,6,,Transport,Monthly,,,August,2026,Expense,,,0508202609
+0508202609,,Trotro,,6,Transport,Monthly,,,August,2026,Expense,,,0508202609
