@@ -439,3 +439,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0508202608,,Starbites,,120,Food,Monthly,,,August,2026,Expense,,,0508202608
 0508202609,Cash,,6,,Transport,Monthly,,,August,2026,Expense,,,0508202609
 0508202609,,Trotro,,6,Transport,Monthly,,,August,2026,Expense,,,0508202609
+0708202601,Cash,,11,,Transport,Monthly,,,August,2026,Expense,,,0708202601
+0708202601,,Trotro,,11,Transport,Monthly,,,August,2026,Expense,,,0708202601
