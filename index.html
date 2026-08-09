@@ -1524,12 +1524,18 @@
 <div id="app">
   <!-- ── Sidebar ───────────────────────────────────────────────────────────── -->
   <aside id="sidebar">
-    <div class="sidebar-logo" style="cursor:pointer;" onclick="goHome()" title="Back to home">
+    <div class="sidebar-logo">
       <div class="wordmark">lifeOS</div>
       <div class="tagline">Personal Finance</div>
     </div>
 
     <nav class="sidebar-nav">
+      <button class="nav-item" onclick="goHome()" style="color:rgba(250,247,242,0.4);font-size:12px;margin-bottom:6px;">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10 12L6 8l4-4"/>
+        </svg>
+        Home
+      </button>
       <div class="nav-section-label">Finance</div>
       <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
         <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -3264,9 +3270,9 @@ function _setSectionVisibility(section) {
   $('home-screen').classList.toggle('active', section === 'home');
   $('app').classList.toggle('visible', section === 'finance');
   $('books-screen').classList.toggle('active', section === 'books');
-  // mobile header: hide on home screen (home has its own header), show otherwise
+  // mobile header: hide on home screen, show explicitly when in a section
   const mhdr = $('mobile-header');
-  if (mhdr) mhdr.style.display = section === 'home' ? 'none' : '';
+  if (mhdr) mhdr.style.display = section === 'home' ? 'none' : 'flex';
   const back = $('mobile-back');
   const hamburger = $('mobile-hamburger');
   if (back) back.classList.toggle('show', section !== 'home');
@@ -6954,6 +6960,32 @@ async function init() {
   }
   const token = localStorage.getItem('gh_token');
   if (!token) { showSetupScreen(); return; }
+
+  // Immediately restore section from localStorage so there's no home-screen flash
+  {
+    const _hashPage  = window.location.hash.replace('#', '');
+    const _savedSec  = localStorage.getItem('lifeos_section');
+    const _savedPg   = localStorage.getItem('lifeos_page');
+    if (VALID_PAGES.includes(_hashPage) || _savedSec === 'finance' || VALID_PAGES.includes(_savedPg)) {
+      $('home-screen').classList.remove('active');
+      $('app').classList.add('visible');
+      const mhdr = $('mobile-header');
+      if (mhdr) mhdr.style.display = 'flex';
+      const back = $('mobile-back');
+      if (back) back.classList.add('show');
+    } else if (_hashPage === 'books' || _savedSec === 'books') {
+      $('home-screen').classList.remove('active');
+      $('books-screen').classList.add('active');
+      const mhdr = $('mobile-header');
+      if (mhdr) mhdr.style.display = 'flex';
+      const mTitle = $('mobile-title');
+      if (mTitle) mTitle.textContent = 'Books';
+      const back = $('mobile-back');
+      if (back) back.classList.add('show');
+      const hamburger = $('mobile-hamburger');
+      if (hamburger) hamburger.style.display = 'none';
+    }
+  }
 
   if ($('monthTriggerValue')) $('monthTriggerValue').textContent = 'Loading…';
 
