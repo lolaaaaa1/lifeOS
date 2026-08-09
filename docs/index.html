@@ -4052,7 +4052,6 @@ async function selectMonth(month, year) {
   await fetchMonthData();
   if (S.currentPage === 'budget') renderBudgetPage();
   if (S.currentPage === 'budget-plan') renderBpPage();
-  computeAndSaveConstraints();
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
