@@ -5344,7 +5344,17 @@ function renderBpByIncome(container) {
     }
 
     if (amount <= 0) return;
-    if (!isPrimary && remainingAmt <= 0) return; // hide secondary sources with nothing left to allocate
+    if (!isPrimary) {
+      // Hide secondary income that wasn't received this month AND has nothing left to allocate
+      if (!isAllMonths() && S.currentMonth) {
+        const curM = S.currentMonth.Month;
+        const curY = String(S.currentMonth.Year);
+        const creditsThisMonth = TXNS().rows
+          .filter(r => r.Item === name && (parseFloat(r.Credit) || 0) > 0 && r.MonthFor === curM && (String(r.YearFor) === curY || String(r.Yearfor) === curY))
+          .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+        if (creditsThisMonth <= 0 && remainingAmt <= 0) return;
+      } else if (remainingAmt <= 0) return;
+    }
 
     const over = remainingAmt < 0;
     const card = document.createElement('div');
