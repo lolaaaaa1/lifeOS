@@ -1,7 +1,7 @@
 Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSalaryPortion,VariableIncomeSource,AllocatedVariableIncomePortion
 2025,December,,,,Trust Fund,December 2025,,200,,
 2025,December,,,,Long Term Savings,December 2025,,0,,
-2025,December,,,,Loan Repayment,December 2025,,344.52,,
+2025,December,,,,Loan Repayment,December 2025,,444.52,,
 2025,December,,,,SOA Exams,December 2025,,488,,
 2025,December,12,29,Monday,Food,January 2026,TRUE,10,,
 2025,December,12,30,Tuesday,Food,January 2026,TRUE,10,,
