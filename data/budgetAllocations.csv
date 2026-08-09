@@ -678,3 +678,4 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,August,8,28,Friday,Transport,August 2026,TRUE,,,
 2026,August,,,,Loan Repayment,August 2026,,,,
 2026,August,,,,Groceries,August 2026,,,,
+2026,August,,,,Groceries,August 2026,,,Telecel Loan,100
