@@ -457,3 +457,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202607,,Telecel Cash,,42,Simple Transfer,Monthly,,,August,2026,Transfer,,,0908202607
 0908202608,Cash,,26,,Transport,Monthly,,,August,2026,Expense,,Starbites Food Delivery,0908202608
 0908202608,,Others,,26,Transport,Monthly,,,August,2026,Expense,,Starbites Food Delivery,0908202608
+0908202609,Telecel Cash,,38,,Groceries,Monthly,,,August,2026,Expense,,Eggs (Half Crate),0908202609
+0908202609,Telecel Cash,,0.3,,Charges,Monthly,,,August,2026,Expense,,Eggs (Half Crate),0908202609
+0908202609,,Charges,,0.3,Charges,Monthly,,,August,2026,Expense,,Eggs (Half Crate),0908202609
+0908202609,,Others,,38,Groceries,Monthly,,,August,2026,Expense,,Eggs (Half Crate),0908202609
