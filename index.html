@@ -2028,6 +2028,17 @@
 </div>
 
 <!-- ── Variable income detail modal ──────────────────────────────────────── -->
+<!-- ── Item income breakdown modal ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="itemBreakdownOverlay" onclick="closeItemBreakdownModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="itemBreakdownTitle">Income Breakdown</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeItemBreakdownModal()">Close</button>
+    </div>
+    <div id="itemBreakdownList"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="varIncomeDetailOverlay" onclick="closeVariableIncomeDetail(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -4650,9 +4661,8 @@ function sbItemRow(it) {
   salCell.textContent = noSalary ? '—' : fmtGHS(it.amount);
   salCell.onclick = () => openSbAmountEdit(it.name);
   const varCell = document.createElement('span');
-  varCell.style = `font-size:14px;font-weight:${noVar ? '400' : '500'};${noVar ? 'opacity:.35;' : ''}text-align:right;cursor:pointer;`;
+  varCell.style = `font-size:14px;font-weight:${noVar ? '400' : '500'};${noVar ? 'opacity:.35;' : ''}text-align:right;`;
   varCell.textContent = noVar ? '—' : fmtGHS(varTotal);
-  varCell.onclick = () => openAllocateModal(Object.keys(it.variable || {})[0] || '');
   row.innerHTML = `<span style="font-size:14px;${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}</span>`;
   row.appendChild(salCell);
   row.appendChild(varCell);
@@ -5234,6 +5244,68 @@ function computeMonthContributions() {
   };
 }
 
+function openItemBreakdownModal(itemId, itemName) {
+  $('itemBreakdownTitle').textContent = itemName;
+  const list = $('itemBreakdownList');
+  list.innerHTML = '';
+
+  const filterMonth = S.currentMonth && !isAllMonths() ? S.currentMonth.Month : null;
+  const filterYear  = filterMonth ? String(S.currentMonth.Year) : null;
+  const periodLabel = filterMonth ? ` · ${filterMonth} ${filterYear}` : '';
+
+  let salaryTotal = 0;
+  const varBySource = {};
+  BALLOC().rows.forEach(r => {
+    if (r.Item !== itemId || r.AppliesToDay === 'FALSE') return;
+    if (filterMonth) {
+      const ls = (r.MonthYearToUse || '').lastIndexOf(' ');
+      if (r.MonthYearToUse.slice(0, ls) !== filterMonth || r.MonthYearToUse.slice(ls + 1) !== filterYear) return;
+    }
+    salaryTotal += parseFloat(r.AllocatedSalaryPortion) || 0;
+    const src = r.VariableIncomeSource;
+    const vAmt = parseFloat(r.AllocatedVariableIncomePortion) || 0;
+    if (src && vAmt > 0) varBySource[src] = (varBySource[src] || 0) + vAmt;
+  });
+
+  const subtitle = document.createElement('div');
+  subtitle.style = 'font-size:12px;opacity:.5;margin-bottom:14px;text-transform:uppercase;letter-spacing:.05em;';
+  subtitle.textContent = 'Funded by' + periodLabel;
+  list.appendChild(subtitle);
+
+  const sources = [];
+  if (salaryTotal > 0) sources.push({ name: 'Salary', amount: salaryTotal });
+  Object.entries(varBySource).forEach(([src, amt]) => sources.push({ name: src, amount: amt }));
+
+  if (!sources.length) {
+    const empty = document.createElement('div');
+    empty.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
+    empty.textContent = 'No allocations for this period.';
+    list.appendChild(empty);
+    $('itemBreakdownOverlay').classList.add('open');
+    return;
+  }
+
+  sources.forEach(src => {
+    const row = document.createElement('div');
+    row.style = 'display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06);';
+    row.innerHTML = `<span style="font-size:14px;">${escHtml(src.name)}</span><span style="font-size:14px;font-weight:500;">${fmtGHS(src.amount)}</span>`;
+    list.appendChild(row);
+  });
+
+  const total = sources.reduce((s, src) => s + src.amount, 0);
+  const foot = document.createElement('div');
+  foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;justify-content:space-between;font-size:14px;font-weight:600;';
+  foot.innerHTML = `<span>Total allocated</span><span>${fmtGHS(total)}</span>`;
+  list.appendChild(foot);
+
+  $('itemBreakdownOverlay').classList.add('open');
+}
+
+function closeItemBreakdownModal(event) {
+  if (event && event.target !== $('itemBreakdownOverlay')) return;
+  $('itemBreakdownOverlay').classList.remove('open');
+}
+
 function renderBpByIncome(container) {
   const periodLabel = isAllMonths()
     ? `All ${S.currentMonth.Year}`
@@ -5321,6 +5393,7 @@ function buildBpCard(item, status) {
 
   const card = document.createElement('div');
   card.className = 'budget-item-card';
+  card.style.cursor = 'pointer';
   if (over) card.style.borderLeft = '3px solid #a8533f';
   else if (done) card.style.borderLeft = '3px solid #3a6b4a';
   card.innerHTML = `
@@ -5344,6 +5417,10 @@ function buildBpCard(item, status) {
         <button class="btn btn-icon danger" onclick="deleteBpItem('${escHtml(item.Id)}')" title="Delete">✕</button>
       </div>
     </div>`;
+  card.addEventListener('click', e => {
+    if (e.target.closest('button')) return;
+    openItemBreakdownModal(item.Id, item.Name);
+  });
   return card;
 }
 
