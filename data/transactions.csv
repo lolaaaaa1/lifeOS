@@ -469,5 +469,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 103202610,,Others,,920,Transport,Monthly,,,March,2026,Expense,,,
 0908202605,MTN Mobile Money,,65.04,,Loan Repayment,Monthly,,,December,2025,Expense,,,
 0908202605,,MTN Company,,65.04,Loan Repayment,Monthly,,,December,2025,Expense,,,
-2811202501,Nationwide Medical Insurance,,900,,Salary,Monthly,,,December,2025,Income,,,
-2811202501,,Ecobank,,900,Salary,Monthly,,,December,2025,Income,,,
+2811202501,Nationwide Medical Insurance,,900.4,,Salary,Monthly,,,December,2025,Income,,,
+2811202501,,Ecobank,,900.4,Salary,Monthly,,,December,2025,Income,,,
