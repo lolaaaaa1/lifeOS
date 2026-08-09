@@ -133,8 +133,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202624,,Lauraine Obey-Mantey,,280,Gifting,Monthly,,,July,2026,Expense,,Silver Heels,507202624
 507202625,,Valerie Emefa Aseye Akli-Nartey,,280,Gifting,Monthly,,,July,2026,Expense,,Red Flats,507202625
 507202626,,Doreen Gidi,,255,Gifting,Monthly,,,July,2026,Expense,,Transport to Doreen’s Dad’s Funeral,
-107202607,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,July,2026,Transfer,,,
-107202607,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Transfer,,,
 307202611,Ecobank,,35,,Nails,Monthly,,,July,2026,Expense,,,
 307202611,,Others,,35,Nails,Monthly,,,July,2026,Expense,,,
 2507202603,Ecobank,,100,,Outing,Monthly,,,July,2026,Expense,,,2507202603
@@ -473,3 +471,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202618,,Achieve MSc. Actuarial Science,,20,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,,,0908202617
 0908202620,Ecobank,,20,,MSc. Actuarial Science,Monthly,,,December,2025,Transfer,,,
 0908202620,,Achieve MSc. Actuarial Science,,20,MSc. Actuarial Science,Monthly,,,December,2025,Transfer,,,
+107202607,Ecobank,,1472,,MSc. Actuarial Science,Monthly,,,July,2026,Transfer,,,
+107202607,,Achieve MSc. Actuarial Science,,1472,MSc. Actuarial Science,Monthly,,,July,2026,Transfer,,,
