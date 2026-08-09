@@ -1710,8 +1710,8 @@
       <button class="btn btn-primary btn-sm" onclick="saveAllocation()">Save</button>
     </div>
     <div class="form-field">
-      <label class="form-label">Source</label>
-      <div id="allocateSourceDisplay" class="form-input" style="background:var(--bg);pointer-events:none;opacity:0.8;"></div>
+      <label class="form-label">Income Source</label>
+      <select id="allocateSource" class="form-input"></select>
     </div>
     <div class="form-field">
       <label class="form-label">Budget Item</label>
@@ -2038,7 +2038,7 @@ const DATA = {
         const { text: freshText, sha: freshSha } = await GH.fetchFile(path);
         const { headers: freshHeaders, rows: freshRows } = parseCSV(freshText);
         // Identity key = all non-value columns (everything except amount/calculated fields)
-        const valueCols = new Set(['AllocatedSalaryPortion','AllocatedCompanyBonusPortion',
+        const valueCols = new Set(['AllocatedSalaryPortion','AllocatedVariableIncomePortion',
           'Debit','Credit','Amount','SalaryPortion','BonusPortion','CalculatedType']);
         const identCols = freshHeaders.filter(h => !valueCols.has(h));
         const rowKey = r => identCols.map(k => (r[k] || '')).join('|');
@@ -2131,22 +2131,30 @@ function _budgetMode(name) {
   return row ? (row.BudgetMode || 'Once') : 'Once';
 }
 
-// Group BALLOC rows by item for a given MonthYearToUse, summing salary+bonus allocations.
-// "paid" = sum of Debit from expense transactions for that item + period.
+// Sum all variable income portions for a grouped item
+function _varTotal(variable) {
+  return Object.values(variable || {}).reduce((s, v) => s + v, 0);
+}
+
+// Group BALLOC rows by item for a given MonthYearToUse.
+// Returns { itemName: { salary, variable: { sourceName: amount }, paid } }
 function _ballocGrouped(monthYearToUse) {
   const grouped = {};
   BALLOC().rows.forEach(r => {
     if (r.MonthYearToUse !== monthYearToUse || !r.Item) return;
     if (_budgetMode(r.Item) === 'Daily' && r.AppliesToDay === 'FALSE') return;
-    if (!grouped[r.Item]) grouped[r.Item] = { salary: 0, bonus: 0, paid: 0 };
+    if (!grouped[r.Item]) grouped[r.Item] = { salary: 0, variable: {}, paid: 0 };
     grouped[r.Item].salary += parseFloat(r.AllocatedSalaryPortion) || 0;
-    grouped[r.Item].bonus  += parseFloat(r.AllocatedCompanyBonusPortion) || 0;
+    if (r.VariableIncomeSource && (parseFloat(r.AllocatedVariableIncomePortion) || 0) > 0) {
+      const src = r.VariableIncomeSource;
+      grouped[r.Item].variable[src] = (grouped[r.Item].variable[src] || 0) + (parseFloat(r.AllocatedVariableIncomePortion) || 0);
+    }
   });
   // paid = expense transactions for the same period (MonthFor + ' ' + YearFor)
   TXNS().rows.forEach(r => {
     if (r.TransactionType !== 'Expense' || !r.Item || !(parseFloat(r.Debit) > 0)) return;
     if ((r.MonthFor + ' ' + r.YearFor) !== monthYearToUse) return;
-    if (!grouped[r.Item]) grouped[r.Item] = { salary: 0, bonus: 0, paid: 0 };
+    if (!grouped[r.Item]) grouped[r.Item] = { salary: 0, variable: {}, paid: 0 };
     grouped[r.Item].paid += parseFloat(r.Debit) || 0;
   });
   return grouped;
@@ -2158,7 +2166,7 @@ function _itemAllTimeLeft(item) {
   const isDaily = _budgetMode(item) === 'Daily';
   const alloc = BALLOC().rows
     .filter(r => r.Item === item && !(isDaily && r.AppliesToDay === 'FALSE'))
-    .reduce((s, r) => s + (parseFloat(r.AllocatedSalaryPortion) || 0) + (parseFloat(r.AllocatedCompanyBonusPortion) || 0), 0);
+    .reduce((s, r) => s + (parseFloat(r.AllocatedSalaryPortion) || 0) + (parseFloat(r.AllocatedVariableIncomePortion) || 0), 0);
   const debit = TXNS().rows
     .filter(r => r.TransactionType === 'Expense' && r.Item === item)
     .reduce((s, r) => s + (parseFloat(r.Debit) || 0), 0);
@@ -2265,7 +2273,7 @@ const LocalAPI = {
             Year: yrStr, Month: moStr, MonthNumber: '', Day: '', DayName: '',
             Item: itemName, MonthYearToUse: period, AppliesToDay: '',
             AllocatedSalaryPortion: String(parseFloat(amount) || 0),
-            AllocatedCompanyBonusPortion: '',
+            VariableIncomeSource: '', AllocatedVariableIncomePortion: '',
           });
         }
       });
@@ -2367,7 +2375,7 @@ const LocalAPI = {
         if (pyear !== yr) return;
         if (MONTHS_LIST.indexOf(pmonth) > upToIdx) return;
         if (r.AppliesToDay === 'FALSE') return;
-        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0);
         totals[r.Item] = (totals[r.Item]||0) + amt;
       });
       // paid = expense transactions: filter YearFor = yr, group by item, sum Debit
@@ -2393,8 +2401,8 @@ const LocalAPI = {
         const grouped = _ballocGrouped(period);
         return Object.entries(grouped).map(([item, g]) => ({
           Item: item, Month: mo, Year: yr, Type: 'Budget',
-          AllocatedSalaryPortion: String(g.salary), AllocatedCompanyBonusPortion: String(g.bonus),
-          TotalAllocation: String(g.salary + g.bonus), PaidAmount: String(g.paid)
+          AllocatedSalaryPortion: String(g.salary),
+          TotalAllocation: String(g.salary + _varTotal(g.variable)), PaidAmount: String(g.paid)
         }));
       }
       if (method === 'POST') {
@@ -2459,7 +2467,7 @@ const LocalAPI = {
       }
       await DATA.save('data/budgetAllocations.csv', `Daily amounts ${name} ${mo} ${yr}`);
       const total = balloc.rows.filter(r => r.Item===name && r.MonthYearToUse===period && r.AppliesToDay!=='FALSE')
-        .reduce((s,r) => s + (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0), 0);
+        .reduce((s,r) => s + (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0), 0);
       return { ok: true, total };
     }
 
@@ -2483,7 +2491,7 @@ const LocalAPI = {
       const amounts = {};
       BALLOC().rows.forEach(r => {
         if (r.Day && parseInt(r.Day) === td && r.Month === tm && r.Year === ty && r.AppliesToDay !== 'FALSE') {
-          const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+          const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0);
           if (amt > 0) amounts[r.Item] = (amounts[r.Item]||0) + amt;
         }
       });
@@ -2499,7 +2507,7 @@ const LocalAPI = {
       const totalAlloc = {};
       BALLOC().rows.forEach(r => {
         if (!r.Item || !dailyItems.has(r.Item) || r.AppliesToDay === 'FALSE') return;
-        const a = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        const a = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0);
         if (a > 0) totalAlloc[r.Item] = (totalAlloc[r.Item]||0) + a;
       });
       // remaining = total all-time allocation - total all-time expenses (no date filter)
@@ -2524,19 +2532,19 @@ const LocalAPI = {
         if (!r.Day || parseInt(r.Day) !== td || r.Month !== tm || r.Year !== ty) return;
         if (!periodName && r.MonthYearToUse) periodName = r.MonthYearToUse;
         if (r.AppliesToDay === 'FALSE') return;
-        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0);
         if (amt > 0) daily[r.Item] = (daily[r.Item]||0) + amt;
       });
       if (!periodName) periodName = tm + ' ' + ty;
       // Period budget: all items for this MonthYearToUse, grouped by item
       const periodBudget = {};
-      Object.entries(_ballocGrouped(periodName)).forEach(([item, g]) => { periodBudget[item] = g.salary + g.bonus; });
+      Object.entries(_ballocGrouped(periodName)).forEach(([item, g]) => { periodBudget[item] = g.salary + _varTotal(g.variable); });
       // Yearly totals: use year from MonthYearToUse
       const yearlyTotals = {};
       BALLOC().rows.forEach(r => {
         if (!r.MonthYearToUse || !r.Item || r.AppliesToDay === 'FALSE') return;
         if (r.MonthYearToUse.slice(r.MonthYearToUse.lastIndexOf(' ')+1) !== ty) return;
-        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0);
         yearlyTotals[r.Item] = (yearlyTotals[r.Item]||0) + amt;
       });
       // Daily expenses: transactions for daily items on today's date (TransactionID = DDMMYYYYnn)
@@ -2559,7 +2567,7 @@ const LocalAPI = {
     if ((m = rawPath.match(/^\/days\/([^/]+)\/(\d+)\/totals$/)) && method === 'GET') {
       const [, mo, yr] = m; const period = mo + ' ' + yr;
       const totals = {};
-      Object.entries(_ballocGrouped(period)).forEach(([item, g]) => { totals[item] = g.salary + g.bonus; });
+      Object.entries(_ballocGrouped(period)).forEach(([item, g]) => { totals[item] = g.salary + _varTotal(g.variable); });
       return totals;
     }
 
@@ -2571,7 +2579,7 @@ const LocalAPI = {
       BALLOC().rows.forEach(r => {
         if (r.Item !== name || r.Month !== mo || r.Year !== yr || !r.DayName) return;
         if (!(r.DayName in result)) return;
-        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        const amt = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0);
         result[r.DayName].amount = amt;
         result[r.DayName].applies = r.AppliesToDay !== 'FALSE';
       });
@@ -2717,28 +2725,47 @@ const LocalAPI = {
       return { ok: true };
     }
 
-    // POST /bonus-allocation — store in BALLOC as AllocatedCompanyBonusPortion on the monthly row
-    if (method === 'POST' && rawPath === '/bonus-allocation') {
+    // POST /variable-allocation — store variable income allocation in BALLOC
+    if (method === 'POST' && rawPath === '/variable-allocation') {
       const { source, item, month, year, amount } = body;
       if (!source || !item || !month || !year || amount == null || amount === '') throw new Error('Missing allocation fields');
       const period = month + ' ' + String(year);
       const balloc = BALLOC();
-      // Find the "once" row for this item+period (no Day value)
-      const row = balloc.rows.find(r => r.Item === item && r.MonthYearToUse === period && !r.Day);
-      if (!row) throw new Error(`Budget row not found for ${item} ${period}`);
-      row.AllocatedCompanyBonusPortion = String(parseFloat(amount) || 0);
+      // Find existing variable income row for this source+item+period, or the base once row
+      let row = balloc.rows.find(r => r.Item === item && r.MonthYearToUse === period && !r.Day && r.VariableIncomeSource === source);
+      if (!row) {
+        // Find base row to copy metadata from
+        const baseRow = balloc.rows.find(r => r.Item === item && r.MonthYearToUse === period && !r.Day);
+        if (!baseRow) throw new Error(`Budget row not found for ${item} ${period}`);
+        // Create new variable income row
+        row = {
+          Year: baseRow.Year, Month: baseRow.Month, MonthNumber: baseRow.MonthNumber,
+          Day: '', DayName: '', Item: item, MonthYearToUse: period, AppliesToDay: '',
+          AllocatedSalaryPortion: '', VariableIncomeSource: source, AllocatedVariableIncomePortion: ''
+        };
+        balloc.rows.push(row);
+      }
+      row.AllocatedVariableIncomePortion = String(parseFloat(amount) || 0);
       await DATA.save('data/budgetAllocations.csv', `Allocate ${amount} from ${source} to ${item} ${period}`);
       return { ok: true };
     }
+    // Keep old path as alias for backward compat
+    if (method === 'POST' && rawPath === '/bonus-allocation') {
+      const { source, item, month, year, amount } = body;
+      return LocalAPI.handle('POST', '/variable-allocation', { source: source || 'Company Bonus', item, month, year, amount });
+    }
 
-    // DELETE /bonus-allocation/:source/:item/:month/:year — clear AllocatedCompanyBonusPortion
-    if ((m = rawPath.match(/^\/bonus-allocation\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/)) && method === 'DELETE') {
+    // DELETE /variable-allocation/:source/:item/:month/:year — clear variable allocation row
+    if ((m = rawPath.match(/^\/variable-allocation\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/)) && method === 'DELETE') {
       const [, src, itm, mon, yr] = m.map(decodeURIComponent);
       const period = mon + ' ' + yr; const balloc = BALLOC();
-      const row = balloc.rows.find(r => r.Item === itm && r.MonthYearToUse === period && !r.Day);
-      if (row) row.AllocatedCompanyBonusPortion = '';
-      await DATA.save('data/budgetAllocations.csv', `Remove bonus allocation ${src} ${itm} ${period}`);
+      balloc.rows = balloc.rows.filter(r => !(r.Item === itm && r.MonthYearToUse === period && !r.Day && r.VariableIncomeSource === src));
+      await DATA.save('data/budgetAllocations.csv', `Remove variable allocation ${src} ${itm} ${period}`);
       return { ok: true };
+    }
+    if ((m = rawPath.match(/^\/bonus-allocation\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/)) && method === 'DELETE') {
+      const [, src, itm, mon, yr] = m.map(decodeURIComponent);
+      return LocalAPI.handle('DELETE', `/variable-allocation/${m[1]}/${m[2]}/${m[3]}/${m[4]}`, null);
     }
 
     throw new Error(`LocalAPI: unhandled ${method} ${rawPath}`);
@@ -3162,31 +3189,37 @@ async function renderDashboardCalc() {
     const mStr = m.Month, yStr = String(m.Year);
     const period = mStr + ' ' + yStr;
 
-    // Period-specific salary + bonus per item from BALLOC (ALL items including Daily)
-    const itemSalary = {}, itemBonus = {};
+    // Period-specific salary + variable income per item from BALLOC (ALL items including Daily)
+    const itemSalary = {}, itemVariable = {};
     BALLOC().rows.forEach(r => {
       if (r.MonthYearToUse !== period || !r.Item) return;
       if (_budgetMode(r.Item) === 'Daily' && r.AppliesToDay === 'FALSE') return;
-      itemSalary[r.Item] = (itemSalary[r.Item] || 0) + (parseFloat(r.AllocatedSalaryPortion) || 0);
-      itemBonus[r.Item]  = (itemBonus[r.Item]  || 0) + (parseFloat(r.AllocatedCompanyBonusPortion) || 0);
+      itemSalary[r.Item]   = (itemSalary[r.Item]   || 0) + (parseFloat(r.AllocatedSalaryPortion) || 0);
+      itemVariable[r.Item] = (itemVariable[r.Item] || 0) + (parseFloat(r.AllocatedVariableIncomePortion) || 0);
     });
     // Also include items with spending this month
     txnRows.forEach(t => {
       if (t.TransactionType !== 'Expense' || !t.Item || !(parseFloat(t.Debit) > 0)) return;
       if (t.MonthFor !== mStr || String(t.YearFor) !== yStr) return;
-      if (!itemSalary.hasOwnProperty(t.Item)) { itemSalary[t.Item] = 0; itemBonus[t.Item] = 0; }
+      if (!itemSalary.hasOwnProperty(t.Item)) { itemSalary[t.Item] = 0; itemVariable[t.Item] = 0; }
     });
 
-    const items = [...new Set([...Object.keys(itemSalary), ...Object.keys(itemBonus)])].sort();
+    const items = [...new Set([...Object.keys(itemSalary), ...Object.keys(itemVariable)])].sort();
 
     // Total income for this month
     const consRow = CONS().rows.find(r => r.Month === mStr && String(r.Year) === yStr);
     const totalSalary = parseFloat(consRow?.SalaryConstraints) || 0;
-    const netBonus = txnRows
-      .filter(r => r.Item === 'Company Bonus')
-      .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
+    // Net variable income per source from transactions
+    const secondarySources = ITMS().rows.filter(r => r.Section === 'Income' && r.IncomeType === 'Secondary').map(r => r.ItemName);
+    const netVariable = {};
+    secondarySources.forEach(src => {
+      const net = txnRows.filter(r => r.Item === src && r.MonthFor === mStr && String(r.YearFor) === yStr)
+        .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
+      if (net > 0) netVariable[src] = net;
+    });
+    const totalVariable = Object.values(netVariable).reduce((s, v) => s + v, 0);
 
-    // Build 4-column slide: Item | Salary | Bonus | Left
+    // Build slide: Item | Salary | Other | Left
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
     const periodEl = document.createElement('div');
@@ -3196,22 +3229,20 @@ async function renderDashboardCalc() {
 
     if (items.length) {
       const hdr = document.createElement('div');
-      hdr.className = 'dash-table-header--4col';
-      hdr.innerHTML = `<span>Item</span><span>Salary</span><span>Bonus</span><span>Left</span>`;
+      hdr.className = 'dash-table-header';
+      hdr.innerHTML = `<span>Item</span><span>Allocated</span><span>Left</span>`;
       slide.appendChild(hdr);
       const list = document.createElement('div');
       list.className = 'dash-items';
       items.forEach(item => {
-        const salary = itemSalary[item] || 0;
-        const bonus  = itemBonus[item]  || 0;
-        const left   = _itemAllTimeLeft(item);
-        const over   = left < 0;
-        const row = document.createElement('div');
-        row.className = 'dash-item-row dash-item-row--4col';
+        const alloc = (itemSalary[item] || 0) + (itemVariable[item] || 0);
+        const left  = _itemAllTimeLeft(item);
+        const over  = left < 0;
+        const row   = document.createElement('div');
+        row.className = 'dash-item-row';
         row.innerHTML = `
           <span class="dash-item-name">${escHtml(item)}</span>
-          <span class="dash-item-amount">${salary > 0 ? fmtGHS(salary) : '—'}</span>
-          <span class="dash-item-amount">${bonus  > 0 ? fmtGHS(bonus)  : '—'}</span>
+          <span class="dash-item-amount">${alloc > 0 ? fmtGHS(alloc) : '—'}</span>
           <span style="font-size:11px;color:${over ? '#a8533f' : '#3a6b4a'};text-align:right;">${over ? '−' : ''}${fmtGHS(Math.abs(left))}</span>`;
         row.style.cursor = 'pointer';
         row.title = `Record ${item} expense`;
@@ -3225,15 +3256,17 @@ async function renderDashboardCalc() {
     salRow.className = 'dash-total-row';
     salRow.innerHTML = `<span class="dash-total-label">Salary</span><span class="dash-total-amount">${fmtGHS(totalSalary)}</span>`;
     slide.appendChild(salRow);
-    if (netBonus > 0) {
-      const bonRow = document.createElement('div');
-      bonRow.className = 'dash-total-row';
-      bonRow.innerHTML = `<span class="dash-total-label">Bonus</span><span class="dash-total-amount">${fmtGHS(netBonus)}</span>`;
-      slide.appendChild(bonRow);
+    Object.entries(netVariable).forEach(([src, amt]) => {
+      const vRow = document.createElement('div');
+      vRow.className = 'dash-total-row';
+      vRow.innerHTML = `<span class="dash-total-label">${escHtml(src)}</span><span class="dash-total-amount">${fmtGHS(amt)}</span>`;
+      slide.appendChild(vRow);
+    });
+    if (totalVariable > 0) {
       const grandRow = document.createElement('div');
       grandRow.className = 'dash-total-row';
       grandRow.style.cssText = 'margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:600;';
-      grandRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(totalSalary + netBonus)}</span>`;
+      grandRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(totalSalary + totalVariable)}</span>`;
       slide.appendChild(grandRow);
     }
 
@@ -3254,29 +3287,25 @@ async function renderDashboardCalc() {
   const { sec: yearlySec, body: yearlyBody } = makeDashSection('Yearly', false);
 
   // Year-to-date: sum BALLOC rows for curYear (ALL items including Daily, skip AppliesToDay=FALSE)
-  const yearItemSalary = {}, yearItemBonus = {};
+  const yearItemAlloc = {};
   BALLOC().rows.forEach(r => {
     if (String(r.Year) !== String(curYear) || !r.Item) return;
     if (_budgetMode(r.Item) === 'Daily' && r.AppliesToDay === 'FALSE') return;
-    yearItemSalary[r.Item] = (yearItemSalary[r.Item] || 0) + (parseFloat(r.AllocatedSalaryPortion) || 0);
-    yearItemBonus[r.Item]  = (yearItemBonus[r.Item]  || 0) + (parseFloat(r.AllocatedCompanyBonusPortion) || 0);
+    const amt = (parseFloat(r.AllocatedSalaryPortion) || 0) + (parseFloat(r.AllocatedVariableIncomePortion) || 0);
+    yearItemAlloc[r.Item] = (yearItemAlloc[r.Item] || 0) + amt;
   });
   // Include items with YTD spending even if no BALLOC entry
   txnRows.forEach(t => {
     if (t.TransactionType !== 'Expense' || !t.Item || !(parseFloat(t.Debit) > 0)) return;
     if (String(t.YearFor) !== String(curYear) || MONTHS.indexOf(t.MonthFor) > curMonthIdx) return;
-    if (!yearItemSalary.hasOwnProperty(t.Item)) { yearItemSalary[t.Item] = 0; yearItemBonus[t.Item] = 0; }
+    if (!yearItemAlloc.hasOwnProperty(t.Item)) yearItemAlloc[t.Item] = 0;
   });
 
-  const yearlyItemKeys = [...new Set([...Object.keys(yearItemSalary), ...Object.keys(yearItemBonus)])].sort();
+  const yearlyItemKeys = Object.keys(yearItemAlloc).sort();
 
-  // YTD total salary from constraints; net bonus all-time
   const ytdTotalSalary = CONS().rows
     .filter(r => String(r.Year) === String(curYear) && MONTHS.indexOf(r.Month) <= curMonthIdx)
     .reduce((s, r) => s + (parseFloat(r.SalaryConstraints) || 0), 0);
-  const ytdNetBonus = txnRows
-    .filter(r => r.Item === 'Company Bonus')
-    .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
 
   if (yearlyItemKeys.length) {
     const slide = document.createElement('div');
@@ -3286,22 +3315,20 @@ async function renderDashboardCalc() {
     periodEl.textContent = String(curYear);
     slide.appendChild(periodEl);
     const hdr = document.createElement('div');
-    hdr.className = 'dash-table-header--4col';
-    hdr.innerHTML = `<span>Item</span><span>Salary</span><span>Bonus</span><span>Left</span>`;
+    hdr.className = 'dash-table-header';
+    hdr.innerHTML = `<span>Item</span><span>Allocated</span><span>Left</span>`;
     slide.appendChild(hdr);
     const list = document.createElement('div');
     list.className = 'dash-items';
     yearlyItemKeys.forEach(item => {
-      const salary = yearItemSalary[item] || 0;
-      const bonus  = yearItemBonus[item]  || 0;
-      const left   = _itemAllTimeLeft(item);
-      const over   = left < 0;
-      const row = document.createElement('div');
-      row.className = 'dash-item-row dash-item-row--4col';
+      const alloc = yearItemAlloc[item] || 0;
+      const left  = _itemAllTimeLeft(item);
+      const over  = left < 0;
+      const row   = document.createElement('div');
+      row.className = 'dash-item-row';
       row.innerHTML = `
         <span class="dash-item-name">${escHtml(item)}</span>
-        <span class="dash-item-amount">${salary > 0 ? fmtGHS(salary) : '—'}</span>
-        <span class="dash-item-amount">${bonus  > 0 ? fmtGHS(bonus)  : '—'}</span>
+        <span class="dash-item-amount">${alloc > 0 ? fmtGHS(alloc) : '—'}</span>
         <span style="font-size:11px;color:${over ? '#a8533f' : '#3a6b4a'};text-align:right;">${over ? '−' : ''}${fmtGHS(Math.abs(left))}</span>`;
       row.onclick = () => openAddTxnModal('', item, true);
       row.style.cursor = 'pointer';
@@ -3312,17 +3339,6 @@ async function renderDashboardCalc() {
     salRow.className = 'dash-total-row';
     salRow.innerHTML = `<span class="dash-total-label">Salary YTD</span><span class="dash-total-amount">${fmtGHS(ytdTotalSalary)}</span>`;
     slide.appendChild(salRow);
-    if (ytdNetBonus > 0) {
-      const bonRow = document.createElement('div');
-      bonRow.className = 'dash-total-row';
-      bonRow.innerHTML = `<span class="dash-total-label">Bonus</span><span class="dash-total-amount">${fmtGHS(ytdNetBonus)}</span>`;
-      slide.appendChild(bonRow);
-      const grandRow = document.createElement('div');
-      grandRow.className = 'dash-total-row';
-      grandRow.style.cssText = 'margin-top:4px;padding-top:4px;border-top:1px solid var(--border);font-weight:600;';
-      grandRow.innerHTML = `<span class="dash-total-label">Total</span><span class="dash-total-amount">${fmtGHS(ytdTotalSalary + ytdNetBonus)}</span>`;
-      slide.appendChild(grandRow);
-    }
     slide.classList.remove('dash-slide');
     yearlyBody.appendChild(slide);
   }
@@ -3593,46 +3609,36 @@ function renderIncomeSections() {
   // prev card  = rows from the previous calendar month that spill into this period (ISO boundary).
   // middle card = full total for the period.
   // next card  = rows from the next calendar month that spill into this period.
-  let totalSal = 0, totalBon = 0;
-  let prevSal  = 0, prevBon  = 0;
-  let nextSal  = 0, nextBon  = 0;
+  let totalSal = 0, totalVar = 0;
+  let prevSal  = 0, prevVar  = 0;
+  let nextSal  = 0, nextVar  = 0;
 
   BALLOC().rows.forEach(r => {
     if (r.MonthYearToUse !== currentPeriod || !r.Item) return;
     if (_budgetMode(r.Item) === 'Daily' && r.AppliesToDay === 'FALSE') return;
-    const sal = parseFloat(r.AllocatedSalaryPortion)        || 0;
-    const bon = parseFloat(r.AllocatedCompanyBonusPortion)  || 0;
-    totalSal += sal; totalBon += bon;
-    if (r.Month === prevMo && String(r.Year) === String(prevYr)) { prevSal += sal; prevBon += bon; }
-    if (r.Month === nextMo && String(r.Year) === String(nextYr)) { nextSal += sal; nextBon += bon; }
+    const sal = parseFloat(r.AllocatedSalaryPortion)           || 0;
+    const vari = parseFloat(r.AllocatedVariableIncomePortion)  || 0;
+    totalSal += sal; totalVar += vari;
+    if (r.Month === prevMo && String(r.Year) === String(prevYr)) { prevSal += sal; prevVar += vari; }
+    if (r.Month === nextMo && String(r.Year) === String(nextYr)) { nextSal += sal; nextVar += vari; }
   });
 
   const slideData = [
-    { label: `${prevMo.slice(0,3).toUpperCase()} ${String(prevYr).slice(2)}`, sal: prevSal,  bon: prevBon  },
-    { label: `${mo.slice(0,3).toUpperCase()} ${String(yr).slice(2)}`,          sal: totalSal, bon: totalBon },
-    { label: `${nextMo.slice(0,3).toUpperCase()} ${String(nextYr).slice(2)}`, sal: nextSal,  bon: nextBon  },
+    { label: `${prevMo.slice(0,3).toUpperCase()} ${String(prevYr).slice(2)}`, sal: prevSal,  vari: prevVar  },
+    { label: `${mo.slice(0,3).toUpperCase()} ${String(yr).slice(2)}`,          sal: totalSal, vari: totalVar },
+    { label: `${nextMo.slice(0,3).toUpperCase()} ${String(nextYr).slice(2)}`, sal: nextSal,  vari: nextVar  },
   ];
 
-  const slides = slideData.map(({ label, sal, bon }) => {
-    const grand = sal + bon;
+  const slides = slideData.map(({ label, sal, vari }) => {
+    const grand = sal + vari;
     const slide = document.createElement('div');
     slide.className = 'dash-slide';
     slide.style.cssText = 'min-width:100%;padding:12px 0;';
     slide.innerHTML = `
       <div class="dash-slide-period">${label}</div>
-      <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:4px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px;">
-        <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;"></span>
-        <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Salary</span>
-        <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Bonus</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.06);">
         <span style="font-size:14px;">Allocated</span>
-        <span style="font-size:14px;font-weight:500;text-align:right;">${sal  > 0 ? fmtGHS(sal)  : '—'}</span>
-        <span style="font-size:14px;font-weight:500;text-align:right;">${bon  > 0 ? fmtGHS(bon)  : '—'}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 90px 84px;padding:8px 0;font-weight:600;border-top:2px solid rgba(0,0,0,0.08);margin-top:4px;">
-        <span style="font-size:14px;">Total</span>
-        <span style="font-size:14px;text-align:right;grid-column:2/4;">${grand > 0 ? fmtGHS(grand) : '—'}</span>
+        <span style="font-size:14px;font-weight:500;">${grand > 0 ? fmtGHS(grand) : '—'}</span>
       </div>`;
     return slide;
   });
@@ -3887,9 +3893,11 @@ async function deleteIncomeSource(name) {
 const ALLOC_M = { source: '' };
 
 function openAllocateModal(source) {
-  ALLOC_M.source = source;
-  $('allocateModalTitle').textContent = `Allocate — ${source}`;
-  $('allocateSourceDisplay').textContent = source;
+  // Populate secondary income sources
+  const secondarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.IncomeType === 'Secondary').map(r => r.ItemName);
+  $('allocateSource').innerHTML = secondarySrcs.map(n => `<option value="${escHtml(n)}"${n === source ? ' selected' : ''}>${escHtml(n)}</option>`).join('');
+  ALLOC_M.source = source || secondarySrcs[0] || '';
+  $('allocateModalTitle').textContent = `Allocate`;
 
   const budgetItems = ITMS().rows.filter(r => r.Section === 'Budget').map(r => r.ItemName);
   $('allocateBudgetItem').innerHTML = budgetItems.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
@@ -3915,15 +3923,16 @@ function closeAllocateModal(event) {
 }
 
 async function saveAllocation() {
+  const source = $('allocateSource').value;
   const item   = $('allocateBudgetItem').value;
   const month  = $('allocateMonth').value;
   const year   = parseInt($('allocateYear').value, 10);
   const amount = parseFloat($('allocateAmount').value) || 0;
-  if (!item || !month || !year || !amount) { alert('Please fill all fields.'); return; }
+  if (!source || !item || !month || !year || !amount) { alert('Please fill all fields.'); return; }
   try {
-    await apiFetch('/bonus-allocation', {
+    await apiFetch('/variable-allocation', {
       method: 'POST',
-      body: JSON.stringify({ source: ALLOC_M.source, item, month, year, amount }),
+      body: JSON.stringify({ source, item, month, year, amount }),
     });
   } catch (e) { alert('Error: ' + e.message); return; }
   $('allocateModalOverlay').classList.remove('open');
@@ -3961,9 +3970,9 @@ function setVidTab(tab) {
       const ls = (r.MonthYearToUse || '').lastIndexOf(' ');
       if (r.MonthYearToUse.slice(0, ls) !== filterMonth || r.MonthYearToUse.slice(ls + 1) !== filterYear) return;
     }
-    const v = source === 'Company Bonus'
-      ? (parseFloat(r.AllocatedCompanyBonusPortion) || 0)
-      : (parseFloat(r.AllocatedSalaryPortion) || 0);
+    const v = source === 'Salary'
+      ? (parseFloat(r.AllocatedSalaryPortion) || 0)
+      : (r.VariableIncomeSource === source ? (parseFloat(r.AllocatedVariableIncomePortion) || 0) : 0);
     if (v > 0) amtByItem[r.Item] = (amtByItem[r.Item] || 0) + v;
   });
 
@@ -4007,7 +4016,7 @@ function closeVariableIncomeDetail(event) {
 async function removeAllocation(source, item, month, year) {
   if (!(await showConfirm('Remove allocation', 'Remove this allocation?'))) return;
   try {
-    await apiFetch(`/bonus-allocation/${encodeURIComponent(source)}/${encodeURIComponent(item)}/${encodeURIComponent(month)}/${encodeURIComponent(year)}`, { method: 'DELETE' });
+    await apiFetch(`/variable-allocation/${encodeURIComponent(source)}/${encodeURIComponent(item)}/${encodeURIComponent(month)}/${encodeURIComponent(year)}`, { method: 'DELETE' });
   } catch (e) { alert('Error: ' + e.message); return; }
   $('varIncomeDetailOverlay').classList.remove('open');
   renderBudgetPage();
@@ -4016,7 +4025,7 @@ async function removeAllocation(source, item, month, year) {
 /* ════════════════════════════════════════════════════════════════════════════
    SALARY HISTORY
    ════════════════════════════════════════════════════════════════════════════ */
-const SB = { tab: 'used', items: [], salary: 0, bonusByItem: {} };
+const SB = { tab: 'used', items: [], salary: 0, variableBySource: {} };
 
 async function openSalaryHistory() {
   if (!requireSpecificMonth('Select a specific month to view this breakdown.')) return;
@@ -4026,16 +4035,21 @@ async function openSalaryHistory() {
 
   try {
     const period = `${S.currentMonth.Month} ${S.currentMonth.Year}`;
-    SB.salary   = getBudgetForCurrentMonth() ?? getTotalIncome();
-    SB.netBonus = TXNS().rows
-      .filter(r => r.Item === 'Company Bonus')
-      .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
+    SB.salary = getBudgetForCurrentMonth() ?? getTotalIncome();
+    // Net per secondary income source for the current period
+    const secondarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.IncomeType === 'Secondary').map(r => r.ItemName);
+    SB.variableBySource = {};
+    secondarySrcs.forEach(src => {
+      const net = TXNS().rows.filter(r => r.Item === src && r.MonthFor === S.currentMonth.Month && String(r.YearFor) === String(S.currentMonth.Year))
+        .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
+      if (net > 0) SB.variableBySource[src] = net;
+    });
     const grouped = _ballocGrouped(period);
     SB.items = Object.entries(grouped).map(([name, g]) => ({
       name,
-      amount: g.salary,
-      bonus:  g.bonus,
-      paid:   g.paid > 0 ? String(g.paid) : ''
+      amount:   g.salary,
+      variable: g.variable,
+      paid:     g.paid > 0 ? String(g.paid) : ''
     }));
   } catch {
     $('salaryHistoryList').innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Could not load data.</div>';
@@ -4047,8 +4061,9 @@ async function openSalaryHistory() {
 
 
 function sbItemRow(it) {
+  const varTotal = _varTotal(it.variable);
   const noSalary = it.amount === 0;
-  const noBonus  = (it.bonus || 0) === 0;
+  const noVar    = varTotal === 0;
   const unset    = isCalcUnset(it.name);
   const paidAmt  = parseFloat(it.paid) || 0;
   const isTransferredItem = it.paid === 'Transferred';
@@ -4063,41 +4078,42 @@ function sbItemRow(it) {
   salCell.style = `font-size:14px;font-weight:${noSalary ? '400' : '500'};${noSalary ? 'opacity:.35;' : ''}text-align:right;cursor:pointer;`;
   salCell.textContent = noSalary ? '—' : fmtGHS(it.amount);
   salCell.onclick = () => openSbAmountEdit(it.name);
-  const bonCell = document.createElement('span');
-  bonCell.style = `font-size:14px;font-weight:${noBonus ? '400' : '500'};${noBonus ? 'opacity:.35;' : ''}text-align:right;cursor:pointer;`;
-  bonCell.textContent = noBonus ? '—' : fmtGHS(it.bonus || 0);
-  bonCell.onclick = () => openBpAmountModal(it.name, it.name, 'bonus');
+  const varCell = document.createElement('span');
+  varCell.style = `font-size:14px;font-weight:${noVar ? '400' : '500'};${noVar ? 'opacity:.35;' : ''}text-align:right;cursor:pointer;`;
+  varCell.textContent = noVar ? '—' : fmtGHS(varTotal);
+  varCell.onclick = () => openAllocateModal(Object.keys(it.variable || {})[0] || '');
   row.innerHTML = `<span style="font-size:14px;${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}</span>`;
   row.appendChild(salCell);
-  row.appendChild(bonCell);
+  row.appendChild(varCell);
   return row;
 }
 
 function sbTotalsRow(items) {
   const allocSalary = items.reduce((s, it) => s + (it.amount || 0), 0);
-  const allocBonus  = items.reduce((s, it) => s + (it.bonus  || 0), 0);
-  const salary      = SB.salary   || 0;
-  const netBonus    = SB.netBonus || 0;
-  const remSalary   = salary   - allocSalary;
-  const remBonus    = netBonus - allocBonus;
+  const allocVar    = items.reduce((s, it) => s + _varTotal(it.variable), 0);
+  const salary      = SB.salary || 0;
+  const netVar      = Object.values(SB.variableBySource || {}).reduce((s, v) => s + v, 0);
+  const remSalary   = salary - allocSalary;
+  const remVar      = netVar - allocVar;
   const overSal     = remSalary < 0;
-  const overBon     = remBonus  < 0;
+  const overVar     = remVar < 0;
   const foot = document.createElement('div');
   foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:grid;grid-template-columns:1fr 100px 84px;font-size:14px;font-weight:600;';
   foot.innerHTML = `
     <span>Remaining</span>
     <span style="text-align:right;color:${overSal ? '#a8533f' : '#3a6b4a'};">${overSal ? '−' : ''}${fmtGHS(Math.abs(remSalary))}</span>
-    <span style="text-align:right;color:${netBonus > 0 ? (overBon ? '#a8533f' : '#3a6b4a') : 'inherit'};">${netBonus > 0 ? `${overBon ? '−' : ''}${fmtGHS(Math.abs(remBonus))}` : '—'}</span>`;
+    <span style="text-align:right;color:${netVar > 0 ? (overVar ? '#a8533f' : '#3a6b4a') : 'inherit'};">${netVar > 0 ? `${overVar ? '−' : ''}${fmtGHS(Math.abs(remVar))}` : '—'}</span>`;
   return foot;
 }
 
 function sbSalaryHdr() {
+  const netVar = Object.values(SB.variableBySource || {}).reduce((s, v) => s + v, 0);
   const hdr = document.createElement('div');
   hdr.style = 'display:grid;grid-template-columns:1fr 100px 84px;align-items:center;padding:4px 0 10px;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:4px;';
   hdr.innerHTML = `
     <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;">Total</span>
     <strong style="font-size:15px;text-align:right;">${SB.salary > 0 ? fmtGHS(SB.salary) : '—'}</strong>
-    <strong style="font-size:15px;text-align:right;">${(SB.netBonus || 0) > 0 ? fmtGHS(SB.netBonus) : '—'}</strong>`;
+    <strong style="font-size:15px;text-align:right;">${netVar > 0 ? fmtGHS(netVar) : '—'}</strong>`;
   return hdr;
 }
 
@@ -4107,7 +4123,7 @@ function sbColHdr() {
   hdr.innerHTML = `
     <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;">Item</span>
     <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Salary</span>
-    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Bonus</span>`;
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Other</span>`;
   return hdr;
 }
 
@@ -4123,7 +4139,7 @@ function setSbTab(tab) {
 function renderSbUsed() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  const items = [...SB.items.filter(it => it.amount > 0 || (it.bonus || 0) > 0)]
+  const items = [...SB.items.filter(it => it.amount > 0 || _varTotal(it.variable) > 0)]
     .sort((a, b) => isCalc(a.name) ? -1 : isCalc(b.name) ? 1 : 0);
   if (!items.length) {
     const e = document.createElement('div');
@@ -4141,7 +4157,7 @@ function renderSbUsed() {
 function renderSbUnused() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  const items = SB.items.filter(it => it.amount === 0 && (it.bonus || 0) === 0);
+  const items = SB.items.filter(it => it.amount === 0 && _varTotal(it.variable) === 0);
   if (!items.length) {
     const e = document.createElement('div');
     e.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
@@ -4227,7 +4243,7 @@ async function ensureBallocRows(month, year) {
           Day: String(d), DayName: dayName,
           Item: itm.ItemName, MonthYearToUse: period,
           AppliesToDay: 'TRUE',
-          AllocatedSalaryPortion: '', AllocatedCompanyBonusPortion: ''
+          AllocatedSalaryPortion: '', VariableIncomeSource: '', AllocatedVariableIncomePortion: ''
         });
       }
     } else {
@@ -4235,7 +4251,7 @@ async function ensureBallocRows(month, year) {
         Year: yearStr, Month: month, MonthNumber: '', Day: '', DayName: '',
         Item: itm.ItemName, MonthYearToUse: period,
         AppliesToDay: '',
-        AllocatedSalaryPortion: '', AllocatedCompanyBonusPortion: ''
+        AllocatedSalaryPortion: '', VariableIncomeSource: '', AllocatedVariableIncomePortion: ''
       });
     }
   }
@@ -4456,7 +4472,7 @@ async function loadBpData() {
     const period = m.Month + ' ' + m.Year;
     const grouped = _ballocGrouped(period);
     Object.entries(grouped).forEach(([item, g]) => {
-      const v = g.salary + g.bonus;
+      const v = g.salary + _varTotal(g.variable);
       if (v > 0) hasAmt.add(item);
       amounts[item]   = (amounts[item]   || 0) + v;
       salaryAmts[item]= (salaryAmts[item]|| 0) + g.salary;
@@ -4630,7 +4646,7 @@ function computeMonthContributions() {
     if (_budgetMode(item.Id) === 'Daily') {
       BALLOC().rows.forEach(r => {
         if (r.Item !== item.Id || r.MonthYearToUse !== period || r.AppliesToDay === 'FALSE' || !r.Day) return;
-        const v = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+        const v = (parseFloat(r.AllocatedSalaryPortion)||0) + (parseFloat(r.AllocatedVariableIncomePortion)||0);
         if (r.Month === prevMo && String(r.Year) === prevYr) prev += v;
         else if (r.Month === curMo && String(r.Year) === curYr) curr += v;
         else if (r.Month === nextMo && String(r.Year) === nextYr) next += v;
@@ -4913,11 +4929,11 @@ function openBpAmountModal(itemId, itemName, amountType) {
   if (!requireSpecificMonth()) return;
   BP.amountItemId  = itemId;
   BP.amountType    = amountType || 'salary';
-  const typeLabel  = BP.amountType === 'bonus' ? 'Bonus' : 'Salary';
+  const typeLabel  = BP.amountType === 'salary' ? 'Salary' : BP.amountType;
   $('bpAmountModalTitle').textContent = itemName;
   $('bpAmountLabel').textContent = `${typeLabel} Amount — ${S.currentMonth ? S.currentMonth.Month + ' ' + S.currentMonth.Year : ''}`;
-  const g = _ballocGrouped(`${S.currentMonth.Month} ${S.currentMonth.Year}`)[itemId] || { salary: 0, bonus: 0 };
-  const current = BP.amountType === 'bonus' ? g.bonus : g.salary;
+  const g = _ballocGrouped(`${S.currentMonth.Month} ${S.currentMonth.Year}`)[itemId] || { salary: 0, variable: {} };
+  const current = BP.amountType === 'salary' ? g.salary : ((g.variable || {})[BP.amountType] || 0);
   $('bpAmountInput').value = current > 0 ? current : '';
   onBpAmountInput();
   $('bpAmountModalOverlay').classList.add('open');
@@ -5146,10 +5162,10 @@ async function saveBpAmount() {
   BP.calculatedTypes[savedId] = calcType;
   try {
     const saveType = BP.amountType || 'salary';
-    if (saveType === 'bonus') {
-      await apiFetch('/bonus-allocation', {
+    if (saveType !== 'salary') {
+      await apiFetch('/variable-allocation', {
         method: 'POST',
-        body: JSON.stringify({ source: 'Company Bonus', item: savedId, month: S.currentMonth.Month, year: S.currentMonth.Year, amount: val }),
+        body: JSON.stringify({ source: saveType, item: savedId, month: S.currentMonth.Month, year: S.currentMonth.Year, amount: val }),
       });
     } else {
       await Promise.all([
@@ -5725,9 +5741,9 @@ async function acctPopulateItemSelect(selected, section) {
     const allocMap = {};
     BALLOC().rows.forEach(r => {
       if (!r.Item) return;
-      const sal = parseFloat(r.AllocatedSalaryPortion) || 0;
-      const bon = parseFloat(r.AllocatedCompanyBonusPortion) || 0;
-      if (sal + bon > 0) allocMap[r.Item] = true;
+      const sal  = parseFloat(r.AllocatedSalaryPortion) || 0;
+      const vari = parseFloat(r.AllocatedVariableIncomePortion) || 0;
+      if (sal + vari > 0) allocMap[r.Item] = true;
     });
     const budgeted   = allBudgetItems.filter(n => allocMap[n]);
     const unbudgeted = allBudgetItems.filter(n => !allocMap[n]);
@@ -5973,7 +5989,7 @@ function renderAllocInfo(val) {
     const key = `${pmo}|${pyr}`;
     if (!allocMap[key]) allocMap[key] = { month: pmo, year: pyr, alloc: 0, sal: 0, bon: 0, spent: 0 };
     allocMap[key].sal   += (parseFloat(r.AllocatedSalaryPortion)||0);
-    allocMap[key].bon   += (parseFloat(r.AllocatedCompanyBonusPortion)||0);
+    allocMap[key].bon   += (parseFloat(r.AllocatedVariableIncomePortion)||0);
     allocMap[key].alloc  = allocMap[key].sal + allocMap[key].bon;
   });
   // Remove periods with zero allocation
@@ -6346,7 +6362,7 @@ async function saveAccountTxn() {
         if (!toRow) {
           toRow = { Year: yrStr, Month: moStr, MonthNumber: '', Day: '', DayName: '',
             Item: item, MonthYearToUse: period, AppliesToDay: '',
-            AllocatedSalaryPortion: '0', AllocatedCompanyBonusPortion: '' };
+            AllocatedSalaryPortion: '0', VariableIncomeSource: '', AllocatedVariableIncomePortion: '' };
           balloc.rows.push(toRow);
         }
         toRow.AllocatedSalaryPortion = String(Math.round(((parseFloat(toRow.AllocatedSalaryPortion) || 0) + leg.amount) * 100) / 100);
