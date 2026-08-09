@@ -469,5 +469,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 106202608,,Others,,1380,Food,Monthly,,,June,2026,Expense,,,
 2407202602,Ecobank,,239.37,,Food,Monthly,,,July,2026,Expense,,,
 2407202602,,Others,,239.37,Food,Monthly,,,July,2026,Expense,,,
-0908202615,Cash,,200,,Simple Transfer,Monthly,,,August,2026,Transfer,,,0908202615
-0908202615,,Ecobank,,200,Simple Transfer,Monthly,,,August,2026,Transfer,,,0908202615
+0908202615,Cash,,235,,Simple Transfer,Monthly,,,August,2026,Transfer,,,
+0908202615,,Ecobank,,235,Simple Transfer,Monthly,,,August,2026,Transfer,,,
