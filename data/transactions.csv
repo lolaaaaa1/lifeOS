@@ -459,8 +459,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202611,,Others,,38,Groceries,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
 0908202612,Ecobank,,50,,Ecobank Fixed Amount,Monthly,,,December,2025,Expense,,,0908202612
 0908202612,,Ecobank,,50,Ecobank Fixed Amount,Monthly,,,December,2025,Expense,,,0908202612
-103202609,Ecobank,,620,,Food,Monthly,,,March,2026,Expense,,,
-103202609,,Others,,620,Food,Monthly,,,March,2026,Expense,,,
 0908202613,Ecobank,,950,,Food,Monthly,,,January,2026,Expense,,,0908202613
 0908202613,,Others,,950,Food,Monthly,,,January,2026,Expense,,,0908202613
 0908202614,Ecobank,,480,,Food,Monthly,,,February,2026,Expense,,,0908202614
@@ -469,3 +467,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 105202608,,Others,,1000,Food,Monthly,,,May,2026,Expense,,,
 104202608,Ecobank,,310,,Food,Monthly,,,April,2026,Expense,,,
 104202608,,Others,,310,Food,Monthly,,,April,2026,Expense,,,
+103202609,Ecobank,,720,,Food,Monthly,,,March,2026,Expense,,,
+103202609,,Others,,720,Food,Monthly,,,March,2026,Expense,,,
