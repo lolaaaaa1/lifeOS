@@ -33,7 +33,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,March,3,14,Saturday,Transport,March 2026,FALSE,0,,
 2026,March,3,21,Saturday,Transport,March 2026,FALSE,0,,
 2026,March,3,28,Saturday,Transport,March 2026,FALSE,0,,
-2026,March,,,,Charges,March 2026,,60,,
+2026,March,,,,Charges,March 2026,,40,,
 2026,March,,,,Apple Music Subscription,March 2026,,30,,
 2026,March,,,,Department Dues,March 2026,,100,,
 2026,March,,,,Trust Fund,March 2026,,100,,
