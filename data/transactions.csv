@@ -471,5 +471,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202616,,MTN Mobile Money,,335,Simple Transfer,Monthly,,,August,2026,Transfer,,,
 0908202618,Ecobank,,20,,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,,,0908202617
 0908202618,,Achieve MSc. Actuarial Science,,20,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,,,0908202617
-0908202620,Ecobank,,67.4,,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,,,0908202620
-0908202620,,Achieve MSc. Actuarial Science,,67.4,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,,,0908202620
+0908202620,Ecobank,,20,,MSc. Actuarial Science,Monthly,,,December,2025,Transfer,,,
+0908202620,,Achieve MSc. Actuarial Science,,20,MSc. Actuarial Science,Monthly,,,December,2025,Transfer,,,
