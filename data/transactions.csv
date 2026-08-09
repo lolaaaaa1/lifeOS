@@ -197,8 +197,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 607202604,,Others,,80,Food,Monthly,,,July,2026,Expense,,UGMC Snacks,
 2407202602,Ecobank,,880,,Food,Monthly,,,July,2026,Expense,,,
 2407202602,,Others,,880,Food,Monthly,,,July,2026,Expense,,,
-2507202609,Ecobank,,59.37,,Food,Monthly,,,July,2026,Expense,,,2507202608
-2507202609,,Others,,59.37,Food,Monthly,,,July,2026,Expense,,,2507202608
 2507202610,Ecobank,,60,,Clothes,Monthly,,,July,2026,Expense,,,2507202610
 2507202610,,Others,,60,Clothes,Monthly,,,July,2026,Expense,,,2507202610
 106202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,June,2026,Expense,,,
