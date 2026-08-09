@@ -445,3 +445,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202601,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,,,December,2025,Transfer,,,0908202601
 0908202602,Cash,,100,,Food,Monthly,,,August,2026,Expense,,Bought Fried Rice from chow deck,0908202602
 0908202602,,Others,,100,Food,Monthly,,,August,2026,Expense,,Bought Fried Rice from chow deck,0908202602
+0908202603,Cash,,200,,Simple Transfer,Monthly,,,December,2025,Transfer,,,0908202603
+0908202603,,Telecel Cash,,200,Simple Transfer,Monthly,,,December,2025,Transfer,,,0908202603
