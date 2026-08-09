@@ -4879,9 +4879,9 @@ async function ensureBallocRows(month, year) {
   const items = ITMS().rows.filter(r => r.Section === 'Budget' && r.ItemName);
   if (!items.length) return;
 
-  // Check which items are missing a base (non-daily) row for this period
+  // Check which items are missing any row for this period
   const existing = new Set(
-    balloc.rows.filter(r => r.MonthYearToUse === period && !r.Day).map(r => r.Item)
+    balloc.rows.filter(r => r.MonthYearToUse === period).map(r => r.Item)
   );
   const missing = items.filter(it => !existing.has(it.ItemName));
   if (!missing.length) return; // all items already have rows
