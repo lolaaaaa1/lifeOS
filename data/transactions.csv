@@ -441,3 +441,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0708202602,,Taxi,,20,Transport,Monthly,,,August,2026,Expense,,,0708202602
 2811202502,Achieve Long Term Savings,,344.52,,Loan Repayment,Monthly,,,December,2025,Expense,,,
 2811202502,,MTN Company,,344.52,Loan Repayment,Monthly,,,December,2025,Expense,,,
+0908202601,Ecobank,,344.52,,Long Term Savings,Monthly,,,December,2025,Transfer,,,0908202601
+0908202601,,Achieve Long Term Savings,,344.52,Long Term Savings,Monthly,,,December,2025,Transfer,,,0908202601
