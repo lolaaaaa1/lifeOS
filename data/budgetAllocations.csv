@@ -980,4 +980,4 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2025,December,12,26,Friday,Transport,December 2025,TRUE,,,
 2025,December,12,27,Saturday,Transport,December 2025,TRUE,,,
 2025,December,12,28,Sunday,Transport,December 2025,TRUE,,,
-2025,December,,,,Ecobank Fixed Amount,December 2025,,,,
+2025,December,,,,Ecobank Fixed Amount,December 2025,,50,,
