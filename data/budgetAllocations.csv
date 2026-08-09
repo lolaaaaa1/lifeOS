@@ -92,7 +92,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,June,6,20,Saturday,Transport,June 2026,FALSE,0,,
 2026,June,6,27,Saturday,Transport,June 2026,FALSE,0,,
 2026,June,,,,Utilities,June 2026,,,Company Bonus,1750
-2026,June,,,,Charges,June 2026,,28.5,,
+2026,June,,,,Charges,June 2026,,30,,
 2026,June,,,,Apple Music Subscription,June 2026,,30,,
 2026,June,,,,Clothes,June 2026,,550,,
 2026,June,,,,Department Dues,June 2026,,100,,
