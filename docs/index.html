@@ -3870,7 +3870,7 @@ async function renderDashboardCalc() {
       const left  = _itemAllTimeLeft(item);
       const over  = left < 0;
       const row   = document.createElement('div');
-      row.className = 'dash-item-row';
+      row.className = 'dash-item-row dash-item-row--3col';
       row.innerHTML = `
         <span class="dash-item-name">${escHtml(item)}</span>
         <span class="dash-item-amount">${alloc > 0 ? fmtGHS(alloc) : '—'}</span>
@@ -5203,7 +5203,7 @@ function _getBudgetItemStatus() {
     var spent = 0;
     for (var k = 0; k < txnRows.length; k++) {
       var t = txnRows[k];
-      if (t.TransactionType !== 'Expense') continue;
+      if (t.TransactionType === 'Income') continue;
       if (t.Item !== itemName) continue;
       var dbt = parseFloat(t.Debit) || 0;
       if (dbt <= 0) continue;
