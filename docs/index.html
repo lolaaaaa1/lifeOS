@@ -3055,7 +3055,15 @@ const LocalAPI = {
       if (!row) {
         // Find base row to copy metadata from
         const baseRow = balloc.rows.find(r => r.Item === item && r.MonthYearToUse === period && !r.Day);
-        if (!baseRow) throw new Error(`Budget row not found for ${item} ${period}`);
+        if (!baseRow) {
+          // Item added after period was initialized — create the missing base row
+          baseRow = {
+            Year: String(year), Month: month, MonthNumber: '', Day: '', DayName: '',
+            Item: item, MonthYearToUse: period, AppliesToDay: '',
+            AllocatedSalaryPortion: '', VariableIncomeSource: '', AllocatedVariableIncomePortion: '',
+          };
+          balloc.rows.push(baseRow);
+        }
         // Create new variable income row
         row = {
           Year: baseRow.Year, Month: baseRow.Month, MonthNumber: baseRow.MonthNumber,
@@ -3966,6 +3974,7 @@ function updateMonthTrigger() {
 
 async function selectMonth(month, year) {
   S.currentMonth = { Month: month, Year: year };
+  BP._ready = false; // month changed — force fresh aggregation
   localStorage.setItem('lifeos_month', month);
   localStorage.setItem('lifeos_year', String(year));
   updateMonthTrigger();
@@ -4801,20 +4810,27 @@ async function ensureBallocRows(month, year) {
   const balloc  = BALLOC();
   const period  = `${month} ${year}`;
   const yearStr = String(year);
-  if (balloc.rows.some(r => r.MonthYearToUse === period)) return; // already has rows
   const items = ITMS().rows.filter(r => r.Section === 'Budget' && r.ItemName);
   if (!items.length) return;
+
+  // Check which items are missing a base (non-daily) row for this period
+  const existing = new Set(
+    balloc.rows.filter(r => r.MonthYearToUse === period && !r.Day).map(r => r.Item)
+  );
+  const missing = items.filter(it => !existing.has(it.ItemName));
+  if (!missing.length) return; // all items already have rows
+
   const MONTH_NAMES = ['January','February','March','April','May','June','July',
                        'August','September','October','November','December'];
   const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const monthIdx    = MONTH_NAMES.indexOf(month);
   if (monthIdx < 0) return;
   const yr          = parseInt(yearStr);
-  // Only create rows for the income period days (wk × 7), not all calendar days
   const consRow     = CONS().rows.find(r => r.Month === month && String(r.Year) === yearStr);
   const wk          = parseInt(consRow?.PersonalFinanceNumberOfWeeks) || 4;
   const incomeDays  = wk * 7;
-  for (const itm of items) {
+
+  for (const itm of missing) {
     const mode = itm.BudgetMode || 'Once';
     if (mode === 'Daily') {
       for (let d = 1; d <= incomeDays; d++) {
@@ -5021,9 +5037,11 @@ const BP = {
   editingId:      null, // item being edited in definition modal
   amountItemId:   null, // item for which we're setting monthly amount
   itemType:     'Obligation',
+  _ready:         false, // skip re-aggregation when data hasn't changed
 };
 
-async function loadBpData() {
+async function loadBpData(forceReload = false) {
+  if (BP._ready && !forceReload) return;
   try {
     const [rawBp, rawSrc] = await Promise.all([
       apiFetch('/budget/items'),
@@ -5101,6 +5119,7 @@ async function loadBpData() {
     .forEach(r => { paid[r.Item] = (paid[r.Item] || 0) + (parseFloat(r.Debit) || 0); });
   BP.paidAmounts = paid;
   BP.transferredItems = new Set();
+  BP._ready = true;
 }
 
 function getSalaryAmount() {
@@ -5565,6 +5584,7 @@ async function saveBpItem() {
 
   $('bpItemModalOverlay').classList.remove('open');
   BP.editingId = null;
+  BP._ready = false; // item list changed — force fresh load
   renderBpPage();
 }
 
@@ -5573,6 +5593,7 @@ async function deleteBpItem(id) {
   try {
     await apiFetch(`/budget/items/${id}`, { method: 'DELETE' });
   } catch (e) { alert('Error deleting: ' + e.message); return; }
+  BP._ready = false;
   renderBpPage();
 }
 
