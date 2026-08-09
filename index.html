@@ -2343,7 +2343,8 @@ const DATA = {
           const { text: freshText, sha: freshSha } = await GH.fetchFile(path);
           const { headers: freshHeaders, rows: freshRows } = parseCSV(freshText);
           const valueCols = new Set(['AllocatedSalaryPortion','AllocatedVariableIncomePortion',
-            'Debit','Credit','Amount','SalaryPortion','BonusPortion','CalculatedType']);
+            'Debit','Credit','Amount','SalaryPortion','BonusPortion','CalculatedType',
+            'Salary','SalaryConstraints']);
           const identCols = freshHeaders.filter(h => !valueCols.has(h));
           const rowKey = r => identCols.map(k => (r[k] || '')).join('|');
           const freshMap = Object.fromEntries(freshRows.map(r => [rowKey(r), r]));
@@ -4897,6 +4898,7 @@ async function saveSalary() {
     $('salaryModalOverlay').classList.remove('open');
   } catch (err) {
     showOfflineBanner(true);
+    alert('Failed to save salary: ' + err.message);
   } finally {
     $('saveSalaryBtn').textContent = 'Save';
     $('saveSalaryBtn').disabled = false;
