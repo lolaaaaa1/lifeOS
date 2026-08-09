@@ -38,9 +38,12 @@
 
     /* ── Layout ─────────────────────────────────────────────────────────────── */
     #app {
-      display: flex;
+      display: none;
       height: 100vh;
       overflow: hidden;
+    }
+    #app.visible {
+      display: flex;
     }
 
     /* ── Sidebar ─────────────────────────────────────────────────────────────── */
@@ -1301,12 +1304,207 @@
       .budget-item-actions { gap: 2px; }
       .btn-icon { padding: 4px 6px; }
     }
+
+    /* ── Home screen (section grid) ─────────────────────────────────────────── */
+    #home-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 300;
+      flex-direction: column;
+      padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+      overflow-y: auto;
+    }
+    #home-screen.active { display: flex; }
+
+    .home-header {
+      padding: 40px 28px 28px;
+    }
+    .home-wordmark {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 28px;
+      color: var(--accent-dk);
+      letter-spacing: -0.5px;
+    }
+    .home-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 4px;
+    }
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 0 20px 32px;
+    }
+    .section-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px 20px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .section-tile:active { transform: scale(0.97); background: var(--border); }
+    .section-tile-icon {
+      width: 40px; height: 40px;
+      background: var(--accent-dk);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .section-tile-icon svg { width: 20px; height: 20px; stroke: #faf7f2; fill: none; stroke-width: 1.5; }
+    .section-tile-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .section-tile-count {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.3px;
+    }
+
+    /* Back button in mobile header */
+    #mobile-back {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+    }
+    #mobile-back.show { display: flex; align-items: center; }
+
+    /* ── Books screen ────────────────────────────────────────────────────────── */
+    #books-screen {
+      display: none;
+      height: 100vh;
+      overflow: hidden;
+      padding-top: calc(52px + env(safe-area-inset-top, 0px));
+    }
+    #books-screen.active { display: block; }
+    #books-main {
+      height: 100%;
+      overflow-y: auto;
+      padding: 24px 16px calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+    @media (min-width: 769px) {
+      #books-screen { padding-top: 0; }
+      #books-main { max-width: 640px; margin: 0 auto; padding: 36px 32px 60px; }
+    }
+    .books-status-group { margin-bottom: 28px; }
+    .books-status-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      margin-bottom: 10px;
+    }
+    .book-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .book-card:active { background: var(--border); }
+    .book-card-body { flex: 1; min-width: 0; }
+    .book-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .book-author {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .book-meta {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      margin-top: 4px;
+    }
+    .book-rating { color: var(--gold); letter-spacing: 1px; }
+    .book-delete-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); padding: 4px; flex-shrink: 0;
+      opacity: 0.6;
+    }
+    .book-delete-btn:active { opacity: 1; color: var(--red); }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .status-badge--reading { background: #e8f0ea; color: var(--green); }
+    .status-badge--toread  { background: #f0eee8; color: var(--muted); }
+    .status-badge--done    { background: #e8ece0; color: var(--accent-dk); }
   </style>
 </head>
 <body>
 
+<!-- Home screen (section grid) -->
+<div id="home-screen" class="active">
+  <div class="home-header">
+    <div class="home-wordmark">lifeOS</div>
+    <div class="home-subtitle">Your personal OS</div>
+  </div>
+  <div class="section-grid">
+    <div class="section-tile" onclick="enterSection('finance')">
+      <div class="section-tile-icon">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5v7M5.5 6.5c0-1.1.9-2 2.5-2s2.5.9 2.5 2-1 1.5-2.5 2-2.5.9-2.5 2 .9 2 2.5 2 2.5-.9 2.5-2"/></svg>
+      </div>
+      <div>
+        <div class="section-tile-name">Finance</div>
+        <div class="section-tile-count" id="home-finance-count">Budget &amp; Transactions</div>
+      </div>
+    </div>
+    <div class="section-tile" onclick="enterSection('books')">
+      <div class="section-tile-icon">
+        <svg viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3V2z"/><path d="M10 2v3h3"/><path d="M5 7h6M5 9.5h4"/></svg>
+      </div>
+      <div>
+        <div class="section-tile-name">Books</div>
+        <div class="section-tile-count" id="home-books-count">Reading list</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Mobile header (hidden on desktop) -->
 <header id="mobile-header">
+  <button id="mobile-back" onclick="goHome()" aria-label="Back">
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M14 5l-7 6 7 6"/>
+    </svg>
+  </button>
   <button id="mobile-hamburger" onclick="toggleMobileSidebar()" aria-label="Menu">
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8">
       <path d="M3 6h16M3 11h16M3 16h16"/>
@@ -1325,7 +1523,7 @@
 <div id="app">
   <!-- ── Sidebar ───────────────────────────────────────────────────────────── -->
   <aside id="sidebar">
-    <div class="sidebar-logo">
+    <div class="sidebar-logo" style="cursor:pointer;" onclick="goHome()" title="Back to home">
       <div class="wordmark">lifeOS</div>
       <div class="tagline">Personal Finance</div>
     </div>
@@ -1658,6 +1856,57 @@
   </button>
 </nav>
 
+<!-- ── Books screen ─────────────────────────────────────────────────────────── -->
+<div id="books-screen">
+  <div id="books-main">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h1 style="font-family:'Fraunces',serif;font-style:italic;font-size:28px;font-weight:400;color:var(--accent-dk);">Books</h1>
+      <button class="btn-primary" onclick="openAddBookModal()">+ Add</button>
+    </div>
+    <div id="books-list"></div>
+  </div>
+</div>
+
+<!-- ── Add / Edit Book modal ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="bookModalOverlay" onclick="closeBookModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="bookModalTitle">Add Book</div>
+      <button class="modal-close" onclick="closeBookModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="form-label">Title</label>
+        <input id="bookTitle" class="form-input" type="text" placeholder="Book title" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Author</label>
+        <input id="bookAuthor" class="form-input" type="text" placeholder="Author name" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Status</label>
+        <select id="bookStatus" class="form-input">
+          <option value="To Read">To Read</option>
+          <option value="Reading">Reading</option>
+          <option value="Finished">Finished</option>
+        </select>
+      </div>
+      <div class="form-field" id="bookRatingField" style="display:none;">
+        <label class="form-label">Rating (1–5)</label>
+        <input id="bookRating" class="form-input" type="number" min="1" max="5" placeholder="e.g. 4" />
+      </div>
+      <div class="form-field">
+        <label class="form-label">Notes</label>
+        <textarea id="bookNotes" class="form-input" rows="3" placeholder="Optional notes…" style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeBookModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveBook()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Salary modal ─────────────────────────────────────────────────────────── -->
 <div class="modal-overlay" id="salaryModalOverlay" onclick="closeSalaryModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
@@ -1921,6 +2170,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 const S = {
   currentPage:   'dashboard',
+  section:       'home',      // 'home' | 'finance' | 'books'
   months:        [],          // [{Month, Year, SalaryType, SalaryAmount, SalaryPercentage}]
   currentMonth:  null,        // {Month, Year}
   monthData:     null,        // fetched single-month data
@@ -1930,6 +2180,7 @@ const S = {
   itemType:      'Obligation',
   itemSalaryType:'ghs',
   editingItemId: null,
+  editingBookId: null,
 };
 
 const LS_KEY = 'lifeos_budget_items';
@@ -2008,7 +2259,7 @@ const GH = {
         Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ message, content: btoa(binary), sha, branch: this.branch }),
+      body: JSON.stringify(Object.assign({ message, content: btoa(binary), branch: this.branch }, sha ? { sha } : {})),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -2075,6 +2326,7 @@ const DATA = {
       this.load('data/items.csv'),
       this.load('data/transactions.csv'),
       this.load('data/constraints.csv'),
+      this.load('data/books.csv').catch(() => {}),
     ]);
   },
 };
@@ -2101,6 +2353,11 @@ function BALLOC() { return _normaliseBalloc(DATA.get('data/budgetAllocations.csv
 function ITMS()   { return DATA.get('data/items.csv')              || { headers: [], rows: [] }; }
 function TXNS()   { return DATA.get('data/transactions.csv')       || { headers: [], rows: [] }; }
 function CONS()   { return DATA.get('data/constraints.csv')        || { headers: [], rows: [] }; }
+function BOOKS()  {
+  const d = DATA.get('data/books.csv');
+  if (d) return d;
+  return { headers: ['Title','Author','Status','StartDate','FinishDate','Rating','Notes'], rows: [] };
+}
 
 function getCurrentSalary() {
   if (!S.currentMonth) return null;
@@ -2996,6 +3253,208 @@ async function navigate(page) {
   if (page === 'budget-plan')  renderBpPage();
   if (page === 'accounts')     renderAccountsPage();
   if (page === 'transactions') renderTransactionsPage();
+}
+
+function _setSectionVisibility(section) {
+  S.section = section;
+  $('home-screen').classList.toggle('active', section === 'home');
+  $('app').classList.toggle('visible', section === 'finance');
+  $('books-screen').classList.toggle('active', section === 'books');
+  // mobile header: hide on home screen (home has its own header), show otherwise
+  const mhdr = $('mobile-header');
+  if (mhdr) mhdr.style.display = section === 'home' ? 'none' : '';
+  const back = $('mobile-back');
+  const hamburger = $('mobile-hamburger');
+  if (back) back.classList.toggle('show', section !== 'home');
+  if (hamburger) hamburger.style.display = section === 'finance' ? '' : 'none';
+  // bottom nav only for finance (media query shows it on mobile; hide when not in finance)
+  const bnav = $('bottom-nav');
+  if (bnav) bnav.style.display = section !== 'finance' ? 'none' : '';
+}
+
+function goHome() {
+  _setSectionVisibility('home');
+  history.replaceState(null, '', window.location.pathname);
+  _updateHomeCounts();
+}
+
+async function enterSection(section) {
+  _setSectionVisibility(section);
+  if (section === 'finance') {
+    const mTitle = $('mobile-title');
+    if (mTitle) mTitle.textContent = PAGE_TITLES[S.currentPage] || 'lifeOS';
+    history.replaceState(null, '', `#${S.currentPage}`);
+    try { await DATA.loadAll(); } catch {}
+    if (S.currentPage === 'dashboard')    renderDashboardCalc();
+    if (S.currentPage === 'budget')       renderBudgetPage();
+    if (S.currentPage === 'budget-plan')  renderBpPage();
+    if (S.currentPage === 'accounts')     renderAccountsPage();
+    if (S.currentPage === 'transactions') renderTransactionsPage();
+  }
+  if (section === 'books') {
+    const mTitle = $('mobile-title');
+    if (mTitle) mTitle.textContent = 'Books';
+    history.replaceState(null, '', '#books');
+    try { await DATA.loadAll(); } catch {}
+    renderBooksPage();
+  }
+}
+
+function _updateHomeCounts() {
+  const books = BOOKS().rows;
+  const reading = books.filter(r => r.Status === 'Reading').length;
+  const total   = books.length;
+  const booksEl = $('home-books-count');
+  if (booksEl) booksEl.textContent = total === 0 ? 'Reading list' : `${reading} reading · ${total} total`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BOOKS SECTION
+   ════════════════════════════════════════════════════════════════════════════ */
+
+const BOOKS_HEADERS = ['Title','Author','Status','StartDate','FinishDate','Rating','Notes'];
+
+function _ensureBooksFile() {
+  if (!DATA.get('data/books.csv')) {
+    DATA._c['data/books.csv'] = { headers: [...BOOKS_HEADERS], rows: [], sha: null };
+  }
+}
+
+function renderBooksPage() {
+  const list = $('books-list');
+  if (!list) return;
+  const books = BOOKS().rows;
+  const groups = [
+    { key: 'Reading',  label: 'Currently Reading' },
+    { key: 'To Read',  label: 'To Read' },
+    { key: 'Finished', label: 'Finished' },
+  ];
+  list.innerHTML = '';
+  let anyBooks = false;
+  groups.forEach(({ key, label }) => {
+    const items = books.filter(r => r.Status === key);
+    if (!items.length) return;
+    anyBooks = true;
+    const grp = document.createElement('div');
+    grp.className = 'books-status-group';
+    const lbl = document.createElement('div');
+    lbl.className = 'books-status-label';
+    lbl.textContent = label;
+    grp.appendChild(lbl);
+    items.forEach((book, idx) => {
+      const globalIdx = books.indexOf(book);
+      const card = document.createElement('div');
+      card.className = 'book-card';
+      card.onclick = () => openEditBookModal(globalIdx);
+
+      const stars = book.Rating ? '★'.repeat(Math.min(5, parseInt(book.Rating) || 0)) : '';
+
+      const body = document.createElement('div');
+      body.className = 'book-card-body';
+      body.innerHTML = `<div class="book-title">${escHtml(book.Title || '—')}</div>
+        <div class="book-author">${escHtml(book.Author || '')}</div>
+        ${stars ? `<div class="book-meta book-rating">${stars}</div>` : ''}
+        ${book.Notes ? `<div class="book-meta" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(book.Notes)}</div>` : ''}`;
+
+      const del = document.createElement('button');
+      del.className = 'book-delete-btn';
+      del.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 4V2.5h6V4M6 7v5M10 7v5M3 4l1 9.5h8L13 4"/></svg>';
+      del.onclick = async (e) => { e.stopPropagation(); await deleteBook(globalIdx); };
+
+      card.appendChild(body);
+      card.appendChild(del);
+      grp.appendChild(card);
+    });
+    list.appendChild(grp);
+  });
+  if (!anyBooks) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:14px;">No books yet — add your first one!</div>';
+  }
+}
+
+function openAddBookModal() {
+  S.editingBookId = null;
+  $('bookModalTitle').textContent = 'Add Book';
+  $('bookTitle').value = '';
+  $('bookAuthor').value = '';
+  $('bookStatus').value = 'To Read';
+  $('bookRating').value = '';
+  $('bookNotes').value = '';
+  $('bookRatingField').style.display = 'none';
+  $('bookStatus').onchange = _onBookStatusChange;
+  $('bookModalOverlay').classList.add('open');
+  setTimeout(() => $('bookTitle').focus(), 80);
+}
+
+function openEditBookModal(idx) {
+  const book = BOOKS().rows[idx];
+  if (!book) return;
+  S.editingBookId = idx;
+  $('bookModalTitle').textContent = 'Edit Book';
+  $('bookTitle').value  = book.Title  || '';
+  $('bookAuthor').value = book.Author || '';
+  $('bookStatus').value = book.Status || 'To Read';
+  $('bookRating').value = book.Rating || '';
+  $('bookNotes').value  = book.Notes  || '';
+  $('bookRatingField').style.display = book.Status === 'Finished' ? '' : 'none';
+  $('bookStatus').onchange = _onBookStatusChange;
+  $('bookModalOverlay').classList.add('open');
+}
+
+function _onBookStatusChange() {
+  $('bookRatingField').style.display = $('bookStatus').value === 'Finished' ? '' : 'none';
+}
+
+function closeBookModal(e) {
+  if (e && e.target !== $('bookModalOverlay')) return;
+  $('bookModalOverlay').classList.remove('open');
+}
+
+async function saveBook() {
+  const title  = $('bookTitle').value.trim();
+  const author = $('bookAuthor').value.trim();
+  const status = $('bookStatus').value;
+  const rating = $('bookRating').value.trim();
+  const notes  = $('bookNotes').value.trim();
+  if (!title) { alert('Please enter a title.'); return; }
+
+  _ensureBooksFile();
+  const d = DATA.get('data/books.csv');
+  if (!d.headers.length) d.headers = [...BOOKS_HEADERS];
+
+  if (S.editingBookId !== null) {
+    const row = d.rows[S.editingBookId];
+    if (row) { row.Title = title; row.Author = author; row.Status = status; row.Rating = rating; row.Notes = notes; }
+  } else {
+    d.rows.push({ Title: title, Author: author, Status: status, StartDate: '', FinishDate: '', Rating: rating, Notes: notes });
+  }
+
+  try {
+    await DATA.save('data/books.csv', `${S.editingBookId !== null ? 'Update' : 'Add'} book: ${title}`);
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+    return;
+  }
+  $('bookModalOverlay').classList.remove('open');
+  _updateHomeCounts();
+  renderBooksPage();
+}
+
+async function deleteBook(idx) {
+  const book = BOOKS().rows[idx];
+  if (!book) return;
+  const ok = await showConfirm('Delete Book', `Remove "${book.Title}" from your list?`);
+  if (!ok) return;
+  _ensureBooksFile();
+  DATA.get('data/books.csv').rows.splice(idx, 1);
+  try {
+    await DATA.save('data/books.csv', `Delete book: ${book.Title}`);
+  } catch (err) {
+    alert('Delete failed: ' + err.message);
+    return;
+  }
+  _updateHomeCounts();
+  renderBooksPage();
 }
 
 function makeSwiper(slides, startIdx) {
@@ -6505,12 +6964,24 @@ async function init() {
     return;
   }
 
-  const hashPage    = window.location.hash.replace('#', '');
-  const savedPage   = localStorage.getItem('lifeos_page');
-  const startPage   = VALID_PAGES.includes(hashPage) ? hashPage
-                    : VALID_PAGES.includes(savedPage) ? savedPage
-                    : 'dashboard';
-  navigate(startPage);
+  const hashPage  = window.location.hash.replace('#', '');
+  const savedPage = localStorage.getItem('lifeos_page');
+
+  // If hash/saved is a finance page, go directly into finance section
+  if (VALID_PAGES.includes(hashPage)) {
+    _setSectionVisibility('finance');
+    navigate(hashPage);
+  } else if (hashPage === 'books') {
+    _setSectionVisibility('books');
+    renderBooksPage();
+  } else if (VALID_PAGES.includes(savedPage)) {
+    _setSectionVisibility('finance');
+    navigate(savedPage);
+  } else {
+    // Default: show home grid
+    _setSectionVisibility('home');
+    _updateHomeCounts();
+  }
 
   loadBudgetItems();
   try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
