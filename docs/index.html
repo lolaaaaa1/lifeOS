@@ -8,7 +8,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400;1,9..144,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
+  <!-- Runs before paint — stamps data-section so CSS hides home-screen immediately -->
+  <script>
+  (function(){
+    var valid=['dashboard','budget','budget-plan','transactions','accounts','goals','loans'];
+    var hash=(location.hash||'').replace('#','');
+    var sec=localStorage.getItem('lifeos_section');
+    var pg=localStorage.getItem('lifeos_page');
+    if(valid.indexOf(hash)>=0||sec==='finance'||valid.indexOf(pg)>=0)
+      document.documentElement.dataset.section='finance';
+    else if(hash==='books'||sec==='books')
+      document.documentElement.dataset.section='books';
+  })();
+  </script>
+
   <style>
+    /* ── Pre-paint section restore (matches data-section set by head script) ── */
+    html[data-section="finance"] #home-screen  { display: none !important; }
+    html[data-section="finance"] #app          { display: flex !important; }
+    html[data-section="finance"] #mobile-header { display: flex !important; }
+    html[data-section="books"]   #home-screen  { display: none !important; }
+    html[data-section="books"]   #books-screen { display: block !important; }
+    html[data-section="books"]   #mobile-header { display: flex !important; }
+    html[data-section="books"]   #mobile-back  { display: flex !important; }
+    html[data-section="books"]   #mobile-hamburger { display: none !important; }
+
     /* ── Reset & tokens ─────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -3275,8 +3299,9 @@ function _setSectionVisibility(section) {
   if (mhdr) mhdr.style.display = section === 'home' ? 'none' : 'flex';
   const back = $('mobile-back');
   const hamburger = $('mobile-hamburger');
-  if (back) back.classList.toggle('show', section !== 'home');
-  if (hamburger) hamburger.style.display = section === 'finance' ? '' : 'none';
+  // Finance: hamburger only. Books: back arrow only. Home: neither.
+  if (back) back.classList.toggle('show', section === 'books');
+  if (hamburger) hamburger.style.display = section === 'finance' ? 'flex' : 'none';
   // bottom nav only for finance (media query shows it on mobile; hide when not in finance)
   const bnav = $('bottom-nav');
   if (bnav) bnav.style.display = section !== 'finance' ? 'none' : '';
@@ -6971,8 +6996,11 @@ async function init() {
       $('app').classList.add('visible');
       const mhdr = $('mobile-header');
       if (mhdr) mhdr.style.display = 'flex';
+      // Finance: hamburger only
+      const hamburger = $('mobile-hamburger');
+      if (hamburger) hamburger.style.display = 'flex';
       const back = $('mobile-back');
-      if (back) back.classList.add('show');
+      if (back) back.classList.remove('show');
     } else if (_hashPage === 'books' || _savedSec === 'books') {
       $('home-screen').classList.remove('active');
       $('books-screen').classList.add('active');
@@ -6980,6 +7008,7 @@ async function init() {
       if (mhdr) mhdr.style.display = 'flex';
       const mTitle = $('mobile-title');
       if (mTitle) mTitle.textContent = 'Books';
+      // Books: back arrow only
       const back = $('mobile-back');
       if (back) back.classList.add('show');
       const hamburger = $('mobile-hamburger');
