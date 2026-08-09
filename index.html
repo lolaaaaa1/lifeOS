@@ -5330,6 +5330,11 @@ function computeMonthContributions() {
 }
 
 function openItemBreakdownModal(itemId, itemName) {
+  if (isCalc(itemId) && S.currentMonth && !isAllMonths()) {
+    openDailyBreakdownModal(itemId, itemName);
+    return;
+  }
+
   $('itemBreakdownTitle').textContent = itemName;
   const list = $('itemBreakdownList');
   list.innerHTML = '';
@@ -5384,6 +5389,124 @@ function openItemBreakdownModal(itemId, itemName) {
   list.appendChild(foot);
 
   $('itemBreakdownOverlay').classList.add('open');
+}
+
+function openDailyBreakdownModal(itemId, itemName) {
+  const mon    = S.currentMonth.Month;
+  const yr     = String(S.currentMonth.Year);
+  const period = `${mon} ${yr}`;
+  const MO     = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  $('itemBreakdownTitle').textContent = itemName;
+  const list = $('itemBreakdownList');
+  list.innerHTML = '';
+
+  const dayRows = BALLOC().rows
+    .filter(r => r.Item === itemId && r.MonthYearToUse === period && r.AppliesToDay === 'TRUE')
+    .sort((a, b) => {
+      const ad = new Date(parseInt(a.Year), MO.indexOf(a.Month), parseInt(a.Day));
+      const bd = new Date(parseInt(b.Year), MO.indexOf(b.Month), parseInt(b.Day));
+      return ad - bd;
+    });
+
+  const subtitle = document.createElement('div');
+  subtitle.style = 'font-size:12px;opacity:.5;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;';
+  subtitle.textContent = `Daily amounts · ${period}`;
+  list.appendChild(subtitle);
+
+  const fillRow = document.createElement('div');
+  fillRow.style = 'display:flex;gap:8px;align-items:center;margin-bottom:14px;';
+  fillRow.innerHTML = `
+    <input id="dailyFillInput" type="number" min="0" step="any" placeholder="e.g. 30"
+      style="flex:1;padding:7px 10px;border:1px solid rgba(0,0,0,0.15);border-radius:8px;font-size:13px;background:transparent;color:inherit;">
+    <button class="btn btn-secondary btn-sm" id="dailyFillBtn" style="white-space:nowrap;">Fill all</button>`;
+  list.appendChild(fillRow);
+
+  if (!dayRows.length) {
+    const empty = document.createElement('div');
+    empty.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
+    empty.textContent = 'No daily rows for this period. Set up allocations first.';
+    list.appendChild(empty);
+    $('itemBreakdownOverlay').classList.add('open');
+    return;
+  }
+
+  const scroll = document.createElement('div');
+  scroll.style = 'overflow-y:auto;max-height:380px;margin-bottom:4px;';
+
+  dayRows.forEach(r => {
+    const isBridge = r.Month !== mon;
+    const label = isBridge ? `${r.Month.slice(0,3)} ${r.Day}` : `${r.Day} ${(r.DayName||'').slice(0,3)}`;
+    const amt = parseFloat(r.AllocatedSalaryPortion) || 0;
+
+    const row = document.createElement('div');
+    row.style = 'display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.06);gap:12px;';
+
+    const lbl = document.createElement('span');
+    lbl.style = `font-size:13px;min-width:90px;${isBridge ? 'opacity:0.55;' : ''}`;
+    lbl.textContent = label + (r.DayName && !isBridge ? ` (${r.DayName.slice(0,3)})` : '');
+
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.min = '0';
+    inp.step = 'any';
+    inp.value = amt;
+    inp.style = 'width:76px;padding:5px 8px;border:1px solid rgba(0,0,0,0.15);border-radius:6px;font-size:13px;text-align:right;background:transparent;color:inherit;';
+    inp.dataset.month = r.Month;
+    inp.dataset.year  = r.Year;
+    inp.dataset.day   = r.Day;
+
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    scroll.appendChild(row);
+  });
+
+  list.appendChild(scroll);
+
+  const total = dayRows.reduce((s, r) => s + (parseFloat(r.AllocatedSalaryPortion) || 0), 0);
+  const totalEl = document.createElement('div');
+  totalEl.id = 'dailyBreakdownTotal';
+  totalEl.style = 'padding:10px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:12px;';
+  totalEl.innerHTML = `<span>Total</span><span id="dailyBreakdownTotalAmt">${fmtGHS(total)}</span>`;
+  list.appendChild(totalEl);
+
+  const refreshTotal = () => {
+    const t = Array.from(scroll.querySelectorAll('input')).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
+    const el = $('dailyBreakdownTotalAmt');
+    if (el) el.textContent = fmtGHS(t);
+  };
+  scroll.addEventListener('input', refreshTotal);
+
+  $('dailyFillBtn').onclick = () => {
+    const v = parseFloat($('dailyFillInput').value);
+    if (isNaN(v)) return;
+    scroll.querySelectorAll('input[data-day]').forEach(i => { i.value = v; });
+    refreshTotal();
+  };
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.style = 'width:100%;';
+  saveBtn.textContent = 'Save';
+  saveBtn.onclick = () => saveDailyBreakdown(itemId, itemName, period, scroll);
+  list.appendChild(saveBtn);
+
+  $('itemBreakdownOverlay').classList.add('open');
+}
+
+async function saveDailyBreakdown(itemId, itemName, period, scrollEl) {
+  const balloc = BALLOC();
+  scrollEl.querySelectorAll('input[data-day]').forEach(inp => {
+    const row = balloc.rows.find(r =>
+      r.Item === itemId && r.MonthYearToUse === period &&
+      r.Month === inp.dataset.month && String(r.Year) === inp.dataset.year && String(r.Day) === inp.dataset.day
+    );
+    if (row) row.AllocatedSalaryPortion = String(parseFloat(inp.value) || 0);
+  });
+  await DATA.save('data/budgetAllocations.csv', `Daily amounts ${itemName} ${period}`);
+  BP._ready = false;
+  $('itemBreakdownOverlay').classList.remove('open');
+  renderBpPage();
 }
 
 function closeItemBreakdownModal(event) {
