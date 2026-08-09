@@ -209,8 +209,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202621,,Others,,100,Gifting,Monthly,,,June,2026,Expense,,Black Flats-haven’t decided who for,507202619
 507202636,Ecobank,,150,,Hair,Monthly,,,June,2026,Expense,,I don’t know,
 507202636,,Others,,150,Hair,Monthly,,,June,2026,Expense,,I don’t know,
-2507202602,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
-2507202602,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,2507202602
 106202602,Ecobank,,120,,Rent Charges,Monthly,,,June,2026,Expense,,,
 106202602,,National Rental Assistance,,120,Rent Charges,Monthly,,,June,2026,Expense,,,
 106202603,Ecobank,,140,,Rental Utilities,Monthly,,,June,2026,Expense,,,
@@ -471,3 +469,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2407202602,,Others,,239.37,Food,Monthly,,,July,2026,Expense,,,
 0908202615,Cash,,235,,Simple Transfer,Monthly,,,August,2026,Transfer,,,
 0908202615,,Ecobank,,235,Simple Transfer,Monthly,,,August,2026,Transfer,,,
+2507202602,Ecobank,,1000,,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,
+2507202602,,Achieve MSc. Actuarial Science,,1000,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,
