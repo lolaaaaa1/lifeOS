@@ -1763,6 +1763,13 @@
       <label class="form-label" for="addIncomeName">Name</label>
       <input class="form-input" type="text" id="addIncomeName" placeholder="e.g. Salary, Company Bonus…" />
     </div>
+    <div class="form-field">
+      <label class="form-label">Type</label>
+      <div class="toggle-group">
+        <button class="toggle-btn" id="addIncomeTypePrimary" onclick="setAddIncomeType('Primary')">Primary</button>
+        <button class="toggle-btn active" id="addIncomeTypeSecondary" onclick="setAddIncomeType('Secondary')">Secondary</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2407,11 +2414,11 @@ const LocalAPI = {
         }));
       }
       if (method === 'POST') {
-        const { name, period = 'Monthly' } = body;
+        const { name, period = 'Monthly', incomeType = 'Secondary' } = body;
         if (!name) throw new Error('name required');
         const itms = ITMS();
         if (!itms.rows.some(r => r.ItemName === name && r.Section === 'Income')) {
-          itms.rows.push({ ItemName: name, Section: 'Income', AccountType: '', Display: '', MinimumAmount: '', BudgetMode: '' });
+          itms.rows.push({ ItemName: name, Section: 'Income', AccountType: '', Display: '', MinimumAmount: '', BudgetMode: '', IncomeType: incomeType });
           await DATA.save('data/items.csv', `Add income item ${name}`);
         }
         return { ok: true };
@@ -3795,8 +3802,14 @@ function setIncomePeriod(p) {
   });
 }
 
+function setAddIncomeType(type) {
+  $('addIncomeTypePrimary').classList.toggle('active', type === 'Primary');
+  $('addIncomeTypeSecondary').classList.toggle('active', type === 'Secondary');
+}
+
 function openAddIncomeModal() {
   $('addIncomeName').value = '';
+  setAddIncomeType('Secondary');
   setIncomePeriod('Monthly');
   $('addIncomeModalOverlay').classList.add('open');
   setTimeout(() => $('addIncomeName').focus(), 80);
@@ -3808,13 +3821,14 @@ function closeAddIncomeModal(event) {
 }
 
 async function saveAddIncome() {
-  const name = $('addIncomeName').value.trim();
+  const name       = $('addIncomeName').value.trim();
+  const incomeType = $('addIncomeTypePrimary').classList.contains('active') ? 'Primary' : 'Secondary';
   if (!name) { $('addIncomeName').focus(); return; }
   if (!requireSpecificMonth()) return;
   try {
     await apiFetch(`/income/${S.currentMonth.Month}/${S.currentMonth.Year}`, {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, incomeType }),
     });
   } catch (e) { alert('Error: ' + e.message); return; }
   $('addIncomeModalOverlay').classList.remove('open');
@@ -4045,13 +4059,11 @@ function setVidTab(tab) {
   });
 
   if (tab === 'used') {
-    const allocated = Object.values(amtByItem).reduce((s, v) => s + v, 0);
-    const received = AC.rows.filter(r => r.Item === source && (parseFloat(r.Credit) || 0) > 0)
-      .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
-    const remaining = received - allocated;
+    const remaining = _variableRemaining(source, null, null);
+    const over = remaining < 0;
     const foot = document.createElement('div');
     foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:flex;justify-content:space-between;font-size:14px;font-weight:600;';
-    foot.innerHTML = `<span>Remaining</span><span>${fmtGHS(remaining)}</span>`;
+    foot.innerHTML = `<span>Remaining</span><span style="color:${over ? '#a8533f' : '#3a6b4a'};">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>`;
     list.appendChild(foot);
   }
 }
