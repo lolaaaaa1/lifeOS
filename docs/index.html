@@ -11,7 +11,7 @@
   <!-- Runs before paint — stamps data-section so CSS hides home-screen immediately -->
   <script>
   (function(){
-    var valid=['dashboard','budget','budget-plan','transactions','accounts','setup','goals','loans'];
+    var valid=['dashboard','budget','budget-plan','transactions','accounts','goals','loans'];
     var hash=(location.hash||'').replace('#','');
     var sec=localStorage.getItem('lifeos_section');
     // Only use hash or explicit lifeos_section — never infer from lifeos_page alone
@@ -1604,13 +1604,6 @@
         </svg>
         Accounts
       </button>
-      <button class="nav-item" data-page="setup" onclick="navigate('setup')">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="8" cy="8" r="2"/>
-          <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
-        </svg>
-        Set Up
-      </button>
 
       <div class="nav-section-label" style="margin-top:8px;">Planning</div>
       <button class="nav-item" data-page="goals" onclick="navigate('goals')">
@@ -1735,13 +1728,6 @@
           <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()">+ Add</button>
         </div>
         <div id="accountsList"></div>
-      </div>
-    </div>
-
-    <!-- Set Up page -->
-    <div class="page" id="page-setup">
-      <div class="page-content">
-        <div id="setupTable"></div>
       </div>
     </div>
 
@@ -3289,7 +3275,7 @@ async function saveGHToken() {
 /* ════════════════════════════════════════════════════════════════════════════
    NAVIGATION
    ════════════════════════════════════════════════════════════════════════════ */
-const PAGE_TITLES = { dashboard: 'lifeOS', budget: 'Income', 'budget-plan': 'Budget', transactions: 'Transactions', accounts: 'Accounts', setup: 'Set Up', goals: 'Goals', loans: 'Loans' };
+const PAGE_TITLES = { dashboard: 'lifeOS', budget: 'Income', 'budget-plan': 'Budget', transactions: 'Transactions', accounts: 'Accounts', goals: 'Goals', loans: 'Loans' };
 const VALID_PAGES = Object.keys(PAGE_TITLES);
 
 async function navigate(page) {
@@ -3339,7 +3325,6 @@ async function navigate(page) {
   if (page === 'budget-plan')  renderBpPage();
   if (page === 'accounts')     renderAccountsPage();
   if (page === 'transactions') renderTransactionsPage();
-  if (page === 'setup')        renderSetupPage();
 }
 
 function _setSectionVisibility(section) {
@@ -6135,57 +6120,6 @@ function renderTxnPageList() {
   });
 
   container.appendChild(list);
-}
-
-function renderSetupPage() {
-  const el = $('setupTable');
-  if (!el) return;
-  const rows = CONS().rows.filter(r => r.Month && r.Year);
-  if (!rows.length) { el.innerHTML = '<div style="padding:16px;opacity:0.5;">No constraint data found.</div>'; return; }
-
-  const fmt = v => {
-    const n = parseFloat(v);
-    return (n > 0) ? fmtGHS(n) : '—';
-  };
-
-  let html = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-    <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:680px;">
-      <thead>
-        <tr style="border-bottom:2px solid var(--border);text-align:right;">
-          <th style="text-align:left;padding:6px 8px;font-weight:600;white-space:nowrap;">Month</th>
-          <th style="padding:6px 4px;font-weight:600;">Wks</th>
-          <th style="padding:6px 4px;font-weight:600;">Salary</th>
-          <th style="padding:6px 4px;font-weight:600;">LM Gave</th>
-          <th style="padding:6px 4px;font-weight:600;">Give LM</th>
-          <th style="padding:6px 4px;font-weight:600;">Current</th>
-          <th style="padding:6px 4px;font-weight:600;">NM Gave</th>
-          <th style="padding:6px 4px;font-weight:600;">Give NM</th>
-          <th style="padding:6px 4px;font-weight:600;">Budget</th>
-          <th style="padding:6px 4px;font-weight:600;">✓</th>
-        </tr>
-      </thead>
-      <tbody>`;
-
-  rows.forEach(r => {
-    const hasSalary = parseFloat(r.Salary) > 0;
-    const netOk = !hasSalary || r['Net Effect'] === '0' || r['Net Effect'] === '';
-    const dimmed = !hasSalary ? 'opacity:0.35;' : '';
-    html += `<tr style="border-bottom:1px solid var(--border);${dimmed}">
-      <td style="padding:6px 8px;white-space:nowrap;font-weight:500;">${r.Month} ${r.Year}</td>
-      <td style="padding:6px 4px;text-align:center;">${r.PersonalFinanceNumberOfWeeks || '—'}</td>
-      <td style="padding:6px 4px;text-align:right;">${fmt(r.Salary)}</td>
-      <td style="padding:6px 4px;text-align:right;">${fmt(r['Last Month Gave'])}</td>
-      <td style="padding:6px 4px;text-align:right;">${fmt(r['Give Last Month'])}</td>
-      <td style="padding:6px 4px;text-align:right;">${fmt(r['Cuurent'])}</td>
-      <td style="padding:6px 4px;text-align:right;">${fmt(r['Next Month Gave'])}</td>
-      <td style="padding:6px 4px;text-align:right;">${fmt(r['Give Next Month'])}</td>
-      <td style="padding:6px 4px;text-align:right;font-weight:600;">${fmt(r.SalaryConstraints)}</td>
-      <td style="padding:6px 4px;text-align:center;font-size:14px;">${hasSalary ? (netOk ? '<span style="color:#3a6b4a;">✓</span>' : '<span style="color:#a8533f;">✗</span>') : ''}</td>
-    </tr>`;
-  });
-
-  html += `</tbody></table></div>`;
-  el.innerHTML = html;
 }
 
 async function renderAccountsPage() {
