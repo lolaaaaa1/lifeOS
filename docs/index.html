@@ -1711,7 +1711,7 @@
     </div>
     <div class="form-field">
       <label class="form-label">Income Source</label>
-      <select id="allocateSource" class="form-input"></select>
+      <select id="allocateSource" class="form-input" onchange="onAllocateAmountInput()"></select>
     </div>
     <div class="form-field">
       <label class="form-label">Budget Item</label>
@@ -1729,7 +1729,8 @@
     </div>
     <div class="form-field">
       <label class="form-label">Amount (GHS)</label>
-      <input id="allocateAmount" class="form-input" type="number" step="0.01" placeholder="0.00">
+      <input id="allocateAmount" class="form-input" type="number" step="0.01" placeholder="0.00" oninput="onAllocateAmountInput()">
+      <div id="allocateRemaining" class="form-hint"></div>
     </div>
   </div>
 </div>
@@ -3892,6 +3893,46 @@ async function deleteIncomeSource(name) {
    ════════════════════════════════════════════════════════════════════════════ */
 const ALLOC_M = { source: '' };
 
+// Net received from a secondary income source (credits minus debits), minus already-allocated.
+// excludeItem + excludePeriod = the item being edited, so its current allocation isn't double-counted.
+function _variableRemaining(source, excludeItem, excludePeriod) {
+  const netReceived = TXNS().rows
+    .filter(r => r.Item === source)
+    .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
+  const totalAllocated = BALLOC().rows
+    .filter(r => r.VariableIncomeSource === source && r.AppliesToDay !== 'FALSE')
+    .reduce((s, r) => s + (parseFloat(r.AllocatedVariableIncomePortion) || 0), 0);
+  // Add back the current allocation for the item being edited so we don't block re-saving
+  const currentAlloc = (excludeItem && excludePeriod)
+    ? BALLOC().rows
+        .filter(r => r.Item === excludeItem && r.VariableIncomeSource === source && r.MonthYearToUse === excludePeriod && !r.Day)
+        .reduce((s, r) => s + (parseFloat(r.AllocatedVariableIncomePortion) || 0), 0)
+    : 0;
+  return netReceived - totalAllocated + currentAlloc;
+}
+
+function onAllocateAmountInput() {
+  const source = $('allocateSource')?.value;
+  const item   = $('allocateBudgetItem')?.value;
+  const month  = $('allocateMonth')?.value;
+  const year   = $('allocateYear')?.value;
+  const hint   = $('allocateRemaining');
+  if (!hint) return;
+  const period = month && year ? `${month} ${year}` : null;
+  const remaining = source ? _variableRemaining(source, item, period) : 0;
+  const entered = parseFloat($('allocateAmount')?.value) || 0;
+  if (remaining <= 0) {
+    hint.textContent = `No remaining ${source || 'income'} to allocate.`;
+    hint.style.color = '#a8533f';
+  } else if (entered > remaining + 0.005) {
+    hint.textContent = `Exceeds remaining: ${fmtGHS(remaining)}`;
+    hint.style.color = '#a8533f';
+  } else {
+    hint.textContent = `Remaining: ${fmtGHS(remaining)}`;
+    hint.style.color = '';
+  }
+}
+
 function openAllocateModal(source) {
   // Populate secondary income sources
   const secondarySrcs = ITMS().rows.filter(r => r.Section === 'Income' && r.IncomeType === 'Secondary').map(r => r.ItemName);
@@ -3913,6 +3954,7 @@ function openAllocateModal(source) {
   }
 
   $('allocateAmount').value = '';
+  onAllocateAmountInput();
   $('allocateModalOverlay').classList.add('open');
   setTimeout(() => $('allocateAmount').focus(), 80);
 }
@@ -3929,6 +3971,12 @@ async function saveAllocation() {
   const year   = parseInt($('allocateYear').value, 10);
   const amount = parseFloat($('allocateAmount').value) || 0;
   if (!source || !item || !month || !year || !amount) { alert('Please fill all fields.'); return; }
+  const period    = `${month} ${year}`;
+  const remaining = _variableRemaining(source, item, period);
+  if (amount > remaining + 0.005) {
+    alert(`Only ${fmtGHS(remaining)} remaining from ${source}.`);
+    return;
+  }
   try {
     await apiFetch('/variable-allocation', {
       method: 'POST',
