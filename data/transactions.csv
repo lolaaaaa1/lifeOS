@@ -53,8 +53,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 104202611,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,April,2026,Transfer,,,
 507202631,Ecobank,,100,,Utilities,Monthly,,,April,2026,Expense,,,507202631
 507202631,,Others,,100,Utilities,Monthly,,,April,2026,Expense,,,507202631
-104202608,Ecobank,,1050,,Food,Monthly,,,April,2026,Expense,,,
-104202608,,Others,,1050,Food,Monthly,,,April,2026,Expense,,,
 102202607,MTN Mobile Money,,30,,Apple Music Subscription,Monthly,,,February,2026,Expense,,,
 102202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,February,2026,Expense,,,
 102202601,Ecobank,,8.5,,Charges,Monthly,,,February,2026,Expense,,,
@@ -465,3 +463,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202612,,Ecobank,,50,Ecobank Fixed Amount,Monthly,,,December,2025,Expense,,,0908202612
 103202609,Ecobank,,620,,Food,Monthly,,,March,2026,Expense,,,
 103202609,,Others,,620,Food,Monthly,,,March,2026,Expense,,,
+104202608,Ecobank,,420,,Food,Monthly,,,April,2026,Expense,,,
+104202608,,Others,,420,Food,Monthly,,,April,2026,Expense,,,
