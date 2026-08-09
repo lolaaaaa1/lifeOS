@@ -5497,13 +5497,14 @@ function openDailyBreakdownModal(itemId, itemName) {
   saveBtn.className = 'btn btn-primary';
   saveBtn.style = 'width:100%;';
   saveBtn.textContent = 'Save';
-  saveBtn.onclick = () => saveDailyBreakdown(itemId, itemName, period, scroll);
+  saveBtn.onclick = () => saveDailyBreakdown(itemId, itemName, period, scroll, saveBtn);
   list.appendChild(saveBtn);
 
   $('itemBreakdownOverlay').classList.add('open');
 }
 
-async function saveDailyBreakdown(itemId, itemName, period, scrollEl) {
+async function saveDailyBreakdown(itemId, itemName, period, scrollEl, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
   const balloc = BALLOC();
   scrollEl.querySelectorAll('input[data-day]').forEach(inp => {
     const row = balloc.rows.find(r =>
@@ -5512,10 +5513,16 @@ async function saveDailyBreakdown(itemId, itemName, period, scrollEl) {
     );
     if (row) row.AllocatedSalaryPortion = String(parseFloat(inp.value) || 0);
   });
-  await DATA.save('data/budgetAllocations.csv', `Daily amounts ${itemName} ${period}`);
-  BP._ready = false;
-  $('itemBreakdownOverlay').classList.remove('open');
-  renderBpPage();
+  try {
+    await DATA.save('data/budgetAllocations.csv', `Daily amounts ${itemName} ${period}`);
+    BP._ready = false;
+    $('itemBreakdownOverlay').classList.remove('open');
+    if (S.currentPage === 'budget') renderBudgetPage();
+    else renderBpPage();
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+    alert('Save failed — please try again.');
+  }
 }
 
 function closeItemBreakdownModal(event) {
