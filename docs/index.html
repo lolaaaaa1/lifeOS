@@ -5343,7 +5343,8 @@ function renderBpByIncome(container) {
       remainingAmt = amount - allocatedAmt;
     }
 
-    if (amount <= 0) return; // skip sources with no received income
+    if (amount <= 0) return;
+    if (!isPrimary && remainingAmt <= 0) return; // hide secondary sources with nothing left to allocate
 
     const over = remainingAmt < 0;
     const card = document.createElement('div');
