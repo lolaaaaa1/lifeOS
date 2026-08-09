@@ -25,8 +25,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 307202604,,Esthetiq Beauty Salon,,120,Hair,Monthly,,,April,2026,Expense,,,
 307202605,,Others,,10,Hair,Monthly,,,April,2026,Expense,,,
 507202606,,Auntie Happy (Hair Dresser),,170,Hair,Monthly,,,April,2026,Expense,,,
-104202610,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,,,
-104202610,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,April,2026,Transfer,,,
 507202630,Ecobank,,100,,Outing,Monthly,,,April,2026,Expense,,To some restaurant with my church friends,
 507202630,,Others,,100,Outing,Monthly,,,April,2026,Expense,,To some restaurant with my church friends,
 104202601,Ecobank,,1000,,Rent,Monthly,,,April,2026,Expense,,,
