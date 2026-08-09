@@ -4886,10 +4886,38 @@ async function saveSalary() {
 
   try {
     const cons = CONS();
-    const row = cons.rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+    const mon = S.currentMonth.Month;
+    const yr  = String(S.currentMonth.Year);
+    const row = cons.rows.find(r => r.Month === mon && String(r.Year) === yr);
     if (row) {
-      row.Salary = String(amount);
-      await DATA.save('data/constraints.csv', `Set salary ${S.currentMonth.Month} ${S.currentMonth.Year}`);
+      // Compute SalaryConstraints using bridge-day formula
+      const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const idx = MONTHS.indexOf(mon);
+      const prevIdx = idx === 0 ? 11 : idx - 1;
+      const prevYr  = idx === 0 ? String(parseInt(yr) - 1) : yr;
+      const prevMon = MONTHS[prevIdx];
+      const nextIdx = idx === 11 ? 0 : idx + 1;
+      const nextYr  = idx === 11 ? String(parseInt(yr) + 1) : yr;
+      const nextMon = MONTHS[nextIdx];
+      const daily   = new Set(['Food', 'Transport']);
+      const bridgeSum = (calMon, calYr, toPeriod) =>
+        BALLOC().rows
+          .filter(r => r.Month === calMon && String(r.Year) === calYr && r.Day &&
+                       r.AppliesToDay === 'TRUE' && r.MonthYearToUse === toPeriod && daily.has(r.Item))
+          .reduce((s, r) => s + (parseFloat(r.AllocatedSalaryPortion) || 0), 0);
+      const curPeriod  = `${mon} ${yr}`;
+      const prevPeriod = `${prevMon} ${prevYr}`;
+      const nextPeriod = `${nextMon} ${nextYr}`;
+      const giveLastMonth = bridgeSum(mon,     yr,     prevPeriod);
+      const giveNextMonth = bridgeSum(mon,     yr,     nextPeriod);
+      const lastMonthGave = bridgeSum(prevMon, prevYr, curPeriod);
+      const nextMonthGave = bridgeSum(nextMon, nextYr, curPeriod);
+      const current           = amount - giveLastMonth - giveNextMonth;
+      const salaryConstraints = current + lastMonthGave + nextMonthGave;
+
+      row.Salary            = String(amount);
+      row.SalaryConstraints = String(Math.round(salaryConstraints * 100) / 100);
+      await DATA.save('data/constraints.csv', `Set salary ${mon} ${yr}`);
     }
     await ensureBallocRows(S.currentMonth.Month, parseInt(S.currentMonth.Year));
     showOfflineBanner(false);
