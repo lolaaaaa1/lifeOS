@@ -467,3 +467,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202611,Telecel Cash,,0.5,,Charges,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
 0908202611,,Charges,,0.5,Charges,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
 0908202611,,Others,,38,Groceries,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
+0908202612,Ecobank,,50,,Ecobank Fixed Amount,Monthly,,,December,2025,Expense,,,0908202612
+0908202612,,Ecobank,,50,Ecobank Fixed Amount,Monthly,,,December,2025,Expense,,,0908202612
