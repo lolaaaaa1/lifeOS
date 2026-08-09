@@ -14,11 +14,12 @@
     var valid=['dashboard','budget','budget-plan','transactions','accounts','goals','loans'];
     var hash=(location.hash||'').replace('#','');
     var sec=localStorage.getItem('lifeos_section');
-    var pg=localStorage.getItem('lifeos_page');
-    if(valid.indexOf(hash)>=0||sec==='finance'||valid.indexOf(pg)>=0)
+    // Only use hash or explicit lifeos_section — never infer from lifeos_page alone
+    if(valid.indexOf(hash)>=0||sec==='finance')
       document.documentElement.dataset.section='finance';
     else if(hash==='books'||sec==='books')
       document.documentElement.dataset.section='books';
+    // else: home or unknown — no data-section set, home screen shows
   })();
   </script>
 
@@ -1895,6 +1896,12 @@
 <!-- ── Books screen ─────────────────────────────────────────────────────────── -->
 <div id="books-screen">
   <div id="books-main">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <button onclick="goHome()" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:0;display:flex;align-items:center;gap:4px;font-size:12px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.05em;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 12L6 8l4-4"/></svg>
+        Home
+      </button>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
       <h1 style="font-family:'Fraunces',serif;font-style:italic;font-size:28px;font-weight:400;color:var(--accent-dk);">Books</h1>
       <button class="btn-primary" onclick="openAddBookModal()">+ Add</button>
@@ -3316,6 +3323,7 @@ function _setSectionVisibility(section) {
 
 function goHome() {
   _setSectionVisibility('home');
+  localStorage.removeItem('lifeos_page');
   history.replaceState(null, '', window.location.pathname);
   _updateHomeCounts();
 }
