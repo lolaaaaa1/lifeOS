@@ -111,8 +111,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 101202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,January,2026,Expense,,,
 101202610,Ecobank,,1050,,Transport,Monthly,,,January,2026,Expense,,,
 101202610,,Others,,1050,Transport,Monthly,,,January,2026,Expense,,,
-2507202608,Ecobank,,990.63,,Food,Monthly,,,January,2026,Expense,,,2507202608
-2507202608,,Others,,990.63,Food,Monthly,,,January,2026,Expense,,,2507202608
 2407202603,Ecobank,,30,,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
 2407202603,,Apple Music,,30,Apple Music Subscription,Monthly,,,July,2026,Expense,,,
 507202601,Ecobank,,400,,Bundle,Monthly,,,July,2026,Expense,,,
