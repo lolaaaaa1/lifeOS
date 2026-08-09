@@ -4687,9 +4687,7 @@ async function openSalaryHistory() {
 
 
 function sbItemRow(it) {
-  const varTotal = _varTotal(it.variable);
   const noSalary = it.amount === 0;
-  const noVar    = varTotal === 0;
   const unset    = isCalcUnset(it.name);
   const paidAmt  = parseFloat(it.paid) || 0;
   const isTransferredItem = it.paid === 'Transferred';
@@ -4699,56 +4697,44 @@ function sbItemRow(it) {
     ? `<span style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em;background:#3a6b4a;color:#faf7f2;padding:2px 7px;border-radius:4px;margin-left:8px;">PAID</span>`
     : '';
   const row = document.createElement('div');
-  row.style = `display:grid;grid-template-columns:1fr 100px 84px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
+  row.style = `display:grid;grid-template-columns:1fr 100px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);${unset ? 'border-left:3px solid #d4a017;padding-left:8px;' : ''}`;
   const salCell = document.createElement('span');
   salCell.style = `font-size:14px;font-weight:${noSalary ? '400' : '500'};${noSalary ? 'opacity:.35;' : ''}text-align:right;cursor:pointer;`;
   salCell.textContent = noSalary ? '—' : fmtGHS(it.amount);
   salCell.onclick = () => openSbAmountEdit(it.name);
-  const varCell = document.createElement('span');
-  varCell.style = `font-size:14px;font-weight:${noVar ? '400' : '500'};${noVar ? 'opacity:.35;' : ''}text-align:right;`;
-  varCell.textContent = noVar ? '—' : fmtGHS(varTotal);
   row.innerHTML = `<span style="font-size:14px;${unset ? 'color:#d4a017;' : ''}">${escHtml(it.name)}${paidBadge}</span>`;
   row.appendChild(salCell);
-  row.appendChild(varCell);
   return row;
 }
 
 function sbTotalsRow(items) {
   const allocSalary = items.reduce((s, it) => s + (it.amount || 0), 0);
-  const allocVar    = items.reduce((s, it) => s + _varTotal(it.variable), 0);
   const salary      = SB.salary || 0;
-  const netVar      = Object.values(SB.variableBySource || {}).reduce((s, v) => s + v, 0);
   const remSalary   = salary - allocSalary;
-  const remVar      = netVar - allocVar;
   const overSal     = remSalary < 0;
-  const overVar     = remVar < 0;
   const foot = document.createElement('div');
-  foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:grid;grid-template-columns:1fr 100px 84px;font-size:14px;font-weight:600;';
+  foot.style = 'margin-top:12px;padding:12px 0;border-top:2px solid rgba(0,0,0,0.12);display:grid;grid-template-columns:1fr 100px;font-size:14px;font-weight:600;';
   foot.innerHTML = `
     <span>Remaining</span>
-    <span style="text-align:right;color:${overSal ? '#a8533f' : '#3a6b4a'};">${overSal ? '−' : ''}${fmtGHS(Math.abs(remSalary))}</span>
-    <span style="text-align:right;color:${netVar > 0 ? (overVar ? '#a8533f' : '#3a6b4a') : 'inherit'};">${netVar > 0 ? `${overVar ? '−' : ''}${fmtGHS(Math.abs(remVar))}` : '—'}</span>`;
+    <span style="text-align:right;color:${overSal ? '#a8533f' : '#3a6b4a'};">${overSal ? '−' : ''}${fmtGHS(Math.abs(remSalary))}</span>`;
   return foot;
 }
 
 function sbSalaryHdr() {
-  const netVar = Object.values(SB.variableBySource || {}).reduce((s, v) => s + v, 0);
   const hdr = document.createElement('div');
-  hdr.style = 'display:grid;grid-template-columns:1fr 100px 84px;align-items:center;padding:4px 0 10px;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:4px;';
+  hdr.style = 'display:grid;grid-template-columns:1fr 100px;align-items:center;padding:4px 0 10px;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:4px;';
   hdr.innerHTML = `
     <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;">Total</span>
-    <strong style="font-size:15px;text-align:right;">${SB.salary > 0 ? fmtGHS(SB.salary) : '—'}</strong>
-    <strong style="font-size:15px;text-align:right;">${netVar > 0 ? fmtGHS(netVar) : '—'}</strong>`;
+    <strong style="font-size:15px;text-align:right;">${SB.salary > 0 ? fmtGHS(SB.salary) : '—'}</strong>`;
   return hdr;
 }
 
 function sbColHdr() {
   const hdr = document.createElement('div');
-  hdr.style = 'display:grid;grid-template-columns:1fr 100px 84px;padding:4px 0 6px;border-bottom:1px solid rgba(0,0,0,0.08);margin-bottom:2px;';
+  hdr.style = 'display:grid;grid-template-columns:1fr 100px;padding:4px 0 6px;border-bottom:1px solid rgba(0,0,0,0.08);margin-bottom:2px;';
   hdr.innerHTML = `
     <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;">Item</span>
-    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Salary</span>
-    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Other</span>`;
+    <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;opacity:.5;text-align:right;">Salary</span>`;
   return hdr;
 }
 
@@ -4764,7 +4750,7 @@ function setSbTab(tab) {
 function renderSbUsed() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  const items = [...SB.items.filter(it => it.amount > 0 || _varTotal(it.variable) > 0)]
+  const items = [...SB.items.filter(it => it.amount > 0)]
     .sort((a, b) => isCalc(a.name) ? -1 : isCalc(b.name) ? 1 : 0);
   if (!items.length) {
     const e = document.createElement('div');
@@ -4782,7 +4768,7 @@ function renderSbUsed() {
 function renderSbUnused() {
   const list = $('salaryHistoryList');
   list.innerHTML = '';
-  const items = SB.items.filter(it => it.amount === 0 && _varTotal(it.variable) === 0);
+  const items = SB.items.filter(it => it.amount === 0);
   if (!items.length) {
     const e = document.createElement('div');
     e.style = 'padding:20px 0;opacity:.5;text-align:center;font-size:14px;';
@@ -5518,27 +5504,29 @@ function renderBpByIncome(container) {
       allocatedAmt = salAlloc;
       remainingAmt = amount - allocatedAmt;
     } else {
-      // Variable: net credits received (all-time) minus all-time allocated from this source
-      amount       = TXNS().rows
+      // Variable: total credits received (all-time) vs this-period allocations
+      amount = TXNS().rows
         .filter(r => r.Item === name && (parseFloat(r.Credit) || 0) > 0)
         .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+      const periodKey = (!isAllMonths() && S.currentMonth)
+        ? S.currentMonth.Month + ' ' + S.currentMonth.Year
+        : null;
       allocatedAmt = BALLOC().rows
+        .filter(r => r.VariableIncomeSource === name && r.AppliesToDay !== 'FALSE' && (!periodKey || r.MonthYearToUse === periodKey))
+        .reduce((s, r) => s + (parseFloat(r.AllocatedVariableIncomePortion) || 0), 0);
+      const allocatedAllTime = BALLOC().rows
         .filter(r => r.VariableIncomeSource === name && r.AppliesToDay !== 'FALSE')
         .reduce((s, r) => s + (parseFloat(r.AllocatedVariableIncomePortion) || 0), 0);
-      remainingAmt = amount - allocatedAmt;
+      remainingAmt = amount - allocatedAllTime;
     }
 
-    if (amount <= 0) return;
+    if (!isPrimary && amount <= 0 && allocatedAmt <= 0) return;
+    if (isPrimary && amount <= 0) return;
     if (!isPrimary) {
-      // Hide secondary income that wasn't received this month AND has nothing left to allocate
       if (!isAllMonths() && S.currentMonth) {
-        const curM = S.currentMonth.Month;
-        const curY = String(S.currentMonth.Year);
-        const creditsThisMonth = TXNS().rows
-          .filter(r => r.Item === name && (parseFloat(r.Credit) || 0) > 0 && r.MonthFor === curM && (String(r.YearFor) === curY || String(r.Yearfor) === curY))
-          .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
-        if (creditsThisMonth <= 0 && remainingAmt <= 0) return;
-      } else if (remainingAmt <= 0) return;
+        // Show if this period has allocations from this source
+        if (allocatedAmt <= 0) return;
+      } else if (remainingAmt <= 0 && allocatedAmt <= 0) return;
     }
 
     const over = remainingAmt < 0;
