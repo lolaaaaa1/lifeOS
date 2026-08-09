@@ -453,3 +453,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202604,,Telecel Cash,,300,Telecel Loan,Monthly,,,August,2026,Income,,,
 0908202606,Cash,,18,,Transport,Monthly,,,August,2026,Expense,,,0908202606
 0908202606,,Trotro,,18,Transport,Monthly,,,August,2026,Expense,,,0908202606
+0908202607,MTN Mobile Money,,42,,Simple Transfer,Monthly,,,August,2026,Transfer,,,0908202607
+0908202607,,Telecel Cash,,42,Simple Transfer,Monthly,,,August,2026,Transfer,,,0908202607
