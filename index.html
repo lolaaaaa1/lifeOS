@@ -1382,11 +1382,12 @@
       background: none;
       border: none;
       cursor: pointer;
-      padding: 6px;
-      color: var(--ink);
+      padding: 10px;
+      color: rgba(250,247,242,0.85);
+      flex-shrink: 0;
       -webkit-tap-highlight-color: transparent;
     }
-    #mobile-back.show { display: flex; align-items: center; }
+    #mobile-back.show { display: flex; align-items: center; justify-content: center; }
 
     /* ── Books screen ────────────────────────────────────────────────────────── */
     #books-screen {
@@ -3146,7 +3147,8 @@ async function retryConnection() {
     _ensureCol(ITMS(), 'Display');
     showOfflineBanner(false);
     const hashPage  = window.location.hash.replace('#', '');
-    const startPage = VALID_PAGES.includes(hashPage) ? hashPage : 'dashboard';
+    const startPage = VALID_PAGES.includes(hashPage) ? hashPage : (localStorage.getItem('lifeos_page') || 'dashboard');
+    _setSectionVisibility('finance');
     navigate(startPage);
     loadBudgetItems();
     try { AC.defs = await apiFetch('/account-defs'); AC.rows = await apiFetch('/accounts'); } catch {}
@@ -3257,6 +3259,8 @@ async function navigate(page) {
 
 function _setSectionVisibility(section) {
   S.section = section;
+  if (section !== 'home') localStorage.setItem('lifeos_section', section);
+  else localStorage.removeItem('lifeos_section');
   $('home-screen').classList.toggle('active', section === 'home');
   $('app').classList.toggle('visible', section === 'finance');
   $('books-screen').classList.toggle('active', section === 'books');
@@ -6964,8 +6968,9 @@ async function init() {
     return;
   }
 
-  const hashPage  = window.location.hash.replace('#', '');
-  const savedPage = localStorage.getItem('lifeos_page');
+  const hashPage     = window.location.hash.replace('#', '');
+  const savedPage    = localStorage.getItem('lifeos_page');
+  const savedSection = localStorage.getItem('lifeos_section');
 
   // If hash/saved is a finance page, go directly into finance section
   if (VALID_PAGES.includes(hashPage)) {
@@ -6973,10 +6978,18 @@ async function init() {
     navigate(hashPage);
   } else if (hashPage === 'books') {
     _setSectionVisibility('books');
+    const mTitle = $('mobile-title');
+    if (mTitle) mTitle.textContent = 'Books';
     renderBooksPage();
-  } else if (VALID_PAGES.includes(savedPage)) {
+  } else if (VALID_PAGES.includes(savedPage) || savedSection === 'finance') {
+    const page = VALID_PAGES.includes(savedPage) ? savedPage : 'dashboard';
     _setSectionVisibility('finance');
-    navigate(savedPage);
+    navigate(page);
+  } else if (savedSection === 'books') {
+    _setSectionVisibility('books');
+    const mTitle = $('mobile-title');
+    if (mTitle) mTitle.textContent = 'Books';
+    renderBooksPage();
   } else {
     // Default: show home grid
     _setSectionVisibility('home');
