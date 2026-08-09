@@ -5354,10 +5354,18 @@ function renderBpByIncome(container) {
     let amount, allocatedAmt, remainingAmt;
 
     if (isPrimary) {
-      // Salary: use constraint amount and salary allocations
-      const budget = getBudgetForCurrentMonth();
+      // Salary: use actual income received vs salary allocations
       const salAlloc = Object.values(BP.salaryAmounts || {}).reduce((s, v) => s + v, 0);
-      amount       = budget ?? salAlloc;
+      const allMonths = isAllMonths();
+      const curM = S.currentMonth ? S.currentMonth.Month : null;
+      const curY = S.currentMonth ? String(S.currentMonth.Year) : null;
+      const actualReceived = TXNS().rows
+        .filter(r => r.TransactionType === 'Income' && r.Item === name && (parseFloat(r.Credit) || 0) > 0 &&
+          (allMonths
+            ? String(r.YearFor) === curY
+            : (r.MonthFor === curM && String(r.YearFor) === curY)))
+        .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+      amount       = actualReceived > 0 ? actualReceived : (getBudgetForCurrentMonth() ?? salAlloc);
       allocatedAmt = salAlloc;
       remainingAmt = amount - allocatedAmt;
     } else {
