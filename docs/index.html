@@ -2330,10 +2330,14 @@ const DATA = {
 
   get(path) { return this._c[path]; },
 
-  async load(path) {
+  async load(path, force = false) {
+    const cached = this._c[path];
+    if (!force && cached && cached._loadedAt && (Date.now() - cached._loadedAt < 5 * 60 * 1000)) {
+      return cached;
+    }
     const { text, sha } = await GH.fetchFile(path);
     const { headers, rows } = parseCSV(text);
-    this._c[path] = { headers, rows, sha };
+    this._c[path] = { headers, rows, sha, _loadedAt: Date.now() };
     return this._c[path];
   },
 
@@ -4025,14 +4029,19 @@ async function computeAndSaveConstraints() {
   let row = cons.rows.find(r => r.Month === mon && String(r.Year) === yr);
   if (!row) { row = { Month: mon, Year: yr }; cons.rows.push(row); }
 
-  row['Salary']            = String(salary);
-  row['Last Month Gave']   = lastMonthGave  > 0 ? String(lastMonthGave)  : '';
-  row['Give Last Month']   = giveLastMonth  > 0 ? String(giveLastMonth)  : '';
-  row['Cuurent']           = String(current);
-  row['Next Month Gave']   = nextMonthGave  > 0 ? String(nextMonthGave)  : '';
-  row['Give Next Month']   = giveNextMonth  > 0 ? String(giveNextMonth)  : '';
-  row['SalaryConstraints'] = String(salaryConstraints);
-  row['Net Effect']        = '0';
+  const newVals = {
+    'Salary':            String(salary),
+    'Last Month Gave':   lastMonthGave  > 0 ? String(lastMonthGave)  : '',
+    'Give Last Month':   giveLastMonth  > 0 ? String(giveLastMonth)  : '',
+    'Cuurent':           String(current),
+    'Next Month Gave':   nextMonthGave  > 0 ? String(nextMonthGave)  : '',
+    'Give Next Month':   giveNextMonth  > 0 ? String(giveNextMonth)  : '',
+    'SalaryConstraints': String(salaryConstraints),
+    'Net Effect':        '0',
+  };
+  const changed = Object.keys(newVals).some(k => row[k] !== newVals[k]);
+  if (!changed) return;
+  Object.assign(row, newVals);
 
   await DATA.save('data/constraints.csv', `Auto-compute constraints ${mon} ${yr}`);
 }
