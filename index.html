@@ -23,15 +23,20 @@
   </script>
 
   <style>
-    /* ── Pre-paint section restore (matches data-section set by head script) ── */
+    /* ── Section visibility driven by data-section on <html> ── */
+    /* Home (default or explicit) */
+    html:not([data-section]) #home-screen,
+    html[data-section="home"] #home-screen { display: flex; }
+    /* Finance */
     html[data-section="finance"] #home-screen  { display: none !important; }
     html[data-section="finance"] #app          { display: flex !important; }
-    html[data-section="finance"] #mobile-header { display: flex !important; }
+    /* Books */
     html[data-section="books"]   #home-screen  { display: none !important; }
     html[data-section="books"]   #books-screen { display: block !important; }
-    html[data-section="books"]   #mobile-header { display: flex !important; }
-    html[data-section="books"]   #mobile-back  { display: flex !important; }
-    html[data-section="books"]   #mobile-hamburger { display: none !important; }
+    @media (max-width: 768px) {
+      html[data-section="books"] #mobile-back      { display: flex !important; }
+      html[data-section="books"] #mobile-hamburger { display: none !important; }
+    }
 
     /* ── Reset & tokens ─────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1496,7 +1501,7 @@
 <body>
 
 <!-- Home screen (section grid) -->
-<div id="home-screen" class="active">
+<div id="home-screen">
   <div class="home-header">
     <div class="home-wordmark">lifeOS</div>
     <div class="home-subtitle">Your personal OS</div>
@@ -3289,14 +3294,16 @@ async function navigate(page) {
 
 function _setSectionVisibility(section) {
   S.section = section;
+  // keep data-section in sync so head-script CSS rules stay correct
+  document.documentElement.dataset.section = section;
   if (section !== 'home') localStorage.setItem('lifeos_section', section);
   else localStorage.removeItem('lifeos_section');
-  $('home-screen').classList.toggle('active', section === 'home');
+  // CSS on html[data-section] handles home-screen / app / books-screen visibility
   $('app').classList.toggle('visible', section === 'finance');
   $('books-screen').classList.toggle('active', section === 'books');
-  // mobile header: hide on home screen, show explicitly when in a section
+  // mobile header: hide on home; otherwise let the media query control it
   const mhdr = $('mobile-header');
-  if (mhdr) mhdr.style.display = section === 'home' ? 'none' : 'flex';
+  if (mhdr) mhdr.style.display = section === 'home' ? 'none' : '';
   const back = $('mobile-back');
   const hamburger = $('mobile-hamburger');
   // Finance: hamburger only. Books: back arrow only. Home: neither.
@@ -6994,25 +7001,16 @@ async function init() {
     if (VALID_PAGES.includes(_hashPage) || _savedSec === 'finance' || VALID_PAGES.includes(_savedPg)) {
       $('home-screen').classList.remove('active');
       $('app').classList.add('visible');
+      // let media query control mobile-header; clear any home-screen inline hide
       const mhdr = $('mobile-header');
-      if (mhdr) mhdr.style.display = 'flex';
-      // Finance: hamburger only
-      const hamburger = $('mobile-hamburger');
-      if (hamburger) hamburger.style.display = 'flex';
-      const back = $('mobile-back');
-      if (back) back.classList.remove('show');
+      if (mhdr) mhdr.style.display = '';
     } else if (_hashPage === 'books' || _savedSec === 'books') {
       $('home-screen').classList.remove('active');
       $('books-screen').classList.add('active');
       const mhdr = $('mobile-header');
-      if (mhdr) mhdr.style.display = 'flex';
+      if (mhdr) mhdr.style.display = '';
       const mTitle = $('mobile-title');
       if (mTitle) mTitle.textContent = 'Books';
-      // Books: back arrow only
-      const back = $('mobile-back');
-      if (back) back.classList.add('show');
-      const hamburger = $('mobile-hamburger');
-      if (hamburger) hamburger.style.display = 'none';
     }
   }
 
