@@ -471,5 +471,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2811202501,,Ecobank,,900.4,Salary,Monthly,,,December,2025,Income,,,
 0908202605,MTN Mobile Money,,400,,Loan Repayment,Monthly,,,August,2026,Expense,,,
 0908202605,,MTN Company,,400,Loan Repayment,Monthly,,,August,2026,Expense,,,
-0908202616,Ecobank,,350,,Simple Transfer,Monthly,,,August,2026,Transfer,,,0908202616
-0908202616,,MTN Mobile Money,,350,Simple Transfer,Monthly,,,August,2026,Transfer,,,0908202616
+0908202616,Ecobank,,335,,Simple Transfer,Monthly,,,August,2026,Transfer,,,
+0908202616,,MTN Mobile Money,,335,Simple Transfer,Monthly,,,August,2026,Transfer,,,
