@@ -6778,9 +6778,9 @@ function renderAllocInfo(val) {
         const splitColor = splitAmt > 0 ? '#5a4a3a' : 'var(--muted)';
         const rowBg      = isManSel ? 'background:var(--accent-muted,rgba(90,120,90,0.12));' : '';
         return `<div class="alloc-row${isManSel ? ' selected' : ''}" onclick="toggleSplitMonth('${key}')"
-          style="${rowBg}display:grid;grid-template-columns:${cols};align-items:${r.bon > 0 ? 'start' : 'center'};padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);opacity:${!available && splitAmt === 0 ? '0.4' : '1'};">
+          style="${rowBg}display:grid;grid-template-columns:${cols};align-items:center;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);opacity:${!available && splitAmt === 0 ? '0.4' : '1'};">
           <span style="font-size:13px;">${isManSel ? '✓ ' : ''}${r.month} ${r.year}</span>
-          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${fmtGHS(r.alloc)}${r.bon > 0 ? `<br><span style="font-size:10px;color:var(--muted);">+${fmtGHS(r.bon)} bonus</span>` : ''}</span>
+          <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;">${fmtGHS(r.alloc)}</span>
           <span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${remColor};">${(rem < 0 ? '−' : '') + fmtGHS(Math.abs(rem))}</span>
           ${showSplit ? `<span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace;color:${splitColor};font-weight:${splitAmt > 0 ? '600' : '400'};">${splitAmt > 0 ? fmtGHS(splitAmt) : '—'}</span>` : ''}
         </div>`;
