@@ -319,8 +319,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 307202610,,Others,,331,Utilities,Monthly,,,June,2026,Expense,,,
 106202601,Ecobank,,1000,,Rent,Monthly,,,June,2026,Expense,,,
 106202601,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense,,,
-2811202501,Nationwide Medical Insurance,,1300,,Salary,Monthly,,,December,2025,Income,,,
-2811202501,,Ecobank,,1300,Salary,Monthly,,,December,2025,Income,,,
 2507202611,Achieve MSc. Actuarial Science,,1500,,Hair,Monthly,,,April,2026,Expense,,Brown Highlight Fringe Wig,2507202611
 2507202611,,The Hair City,,1500,Hair,Monthly,,,April,2026,Expense,,Brown Highlight Fringe Wig,2507202611
 2507202612,Achieve MSc. Actuarial Science,,1500,,Utilities,Monthly,,,May,2026,Expense,,Shenanigans Really,2507202612
@@ -471,3 +469,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 103202610,,Others,,920,Transport,Monthly,,,March,2026,Expense,,,
 0908202605,MTN Mobile Money,,65.04,,Loan Repayment,Monthly,,,December,2025,Expense,,,
 0908202605,,MTN Company,,65.04,Loan Repayment,Monthly,,,December,2025,Expense,,,
+2811202501,Nationwide Medical Insurance,,900,,Salary,Monthly,,,December,2025,Income,,,
+2811202501,,Ecobank,,900,Salary,Monthly,,,December,2025,Income,,,
