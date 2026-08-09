@@ -273,8 +273,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 103202608,,Society of Actuaries,,650,SOA Exams,Monthly,,,March,2026,Expense,,,
 103202605,Ecobank,,500,,Tithe,Monthly,,,March,2026,Expense,,,
 103202605,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,March,2026,Expense,,,
-103202610,Ecobank,,840,,Transport,Monthly,,,March,2026,Expense,,,
-103202610,,Others,,840,Transport,Monthly,,,March,2026,Expense,,,
 2507202604,Ecobank,,100,,Trust Fund,Monthly,,,March,2026,Transfer,,,2507202604
 2507202604,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,March,2026,Transfer,,,2507202604
 2407202601,Ecobank,,260,,Food,Monthly,,,March,2026,Expense,,,
@@ -471,3 +469,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 507202612,,Gadolsoles,,70.63,Shoes,Monthly,,,January,2026,Expense,,,
 101202610,Ecobank,,560,,Transport,Monthly,,,January,2026,Expense,,,
 101202610,,Others,,560,Transport,Monthly,,,January,2026,Expense,,,
+103202610,Ecobank,,920,,Transport,Monthly,,,March,2026,Expense,,,
+103202610,,Others,,920,Transport,Monthly,,,March,2026,Expense,,,
