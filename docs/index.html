@@ -4814,9 +4814,16 @@ function closeSalaryHistory(event) {
    SALARY MODAL
    ════════════════════════════════════════════════════════════════════════════ */
 function openSalaryModal() {
-  // populate
   const md = S.monthData;
-  const existingAmt = md ? (parseFloat(md.Salary) || '') : '';
+  // Read salary from transactions (Item=Salary, MonthFor+YearFor matching current period)
+  const mon = S.currentMonth ? S.currentMonth.Month : null;
+  const yr  = S.currentMonth ? String(S.currentMonth.Year) : null;
+  const txnSalary = mon && yr
+    ? TXNS().rows
+        .filter(r => r.Item === 'Salary' && r.MonthFor === mon && String(r.YearFor) === yr && parseFloat(r.Credit) > 0)
+        .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0)
+    : 0;
+  const existingAmt = txnSalary || (md ? (parseFloat(md.Salary) || '') : '');
   const existingType = md && md.SalaryType === 'pct' ? 'pct' : 'fixed';
 
   setSalaryType(existingType);
