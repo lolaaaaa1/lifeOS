@@ -2330,14 +2330,10 @@ const DATA = {
 
   get(path) { return this._c[path]; },
 
-  async load(path, force = false) {
-    const cached = this._c[path];
-    if (!force && cached && cached._loadedAt && (Date.now() - cached._loadedAt < 5 * 60 * 1000)) {
-      return cached;
-    }
+  async load(path) {
     const { text, sha } = await GH.fetchFile(path);
     const { headers, rows } = parseCSV(text);
-    this._c[path] = { headers, rows, sha, _loadedAt: Date.now() };
+    this._c[path] = { headers, rows, sha };
     return this._c[path];
   },
 
