@@ -463,9 +463,9 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202613,,Others,,950,Food,Monthly,,,January,2026,Expense,,,0908202613
 0908202614,Ecobank,,480,,Food,Monthly,,,February,2026,Expense,,,0908202614
 0908202614,,Others,,480,Food,Monthly,,,February,2026,Expense,,,0908202614
-105202608,Ecobank,,1000,,Food,Monthly,,,May,2026,Expense,,,
-105202608,,Others,,1000,Food,Monthly,,,May,2026,Expense,,,
 104202608,Ecobank,,310,,Food,Monthly,,,April,2026,Expense,,,
 104202608,,Others,,310,Food,Monthly,,,April,2026,Expense,,,
 103202609,Ecobank,,720,,Food,Monthly,,,March,2026,Expense,,,
 103202609,,Others,,720,Food,Monthly,,,March,2026,Expense,,,
+105202608,Ecobank,,1400,,Food,Monthly,,,May,2026,Expense,,,
+105202608,,Others,,1400,Food,Monthly,,,May,2026,Expense,,,
