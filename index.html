@@ -3995,7 +3995,7 @@ async function computeAndSaveConstraints() {
     'Salary':            String(salary),
     'Last Month Gave':   lastMonthGave  > 0 ? String(lastMonthGave)  : '',
     'Give Last Month':   giveLastMonth  > 0 ? String(giveLastMonth)  : '',
-    'Cuurent':           String(current),
+    'Current':           String(current),
     'Next Month Gave':   nextMonthGave  > 0 ? String(nextMonthGave)  : '',
     'Give Next Month':   giveNextMonth  > 0 ? String(giveNextMonth)  : '',
     'SalaryConstraints': String(salaryConstraints),
@@ -4916,7 +4916,13 @@ async function saveSalary() {
       const salaryConstraints = current + lastMonthGave + nextMonthGave;
 
       row.Salary            = String(amount);
-      row.SalaryConstraints = String(Math.round(salaryConstraints * 100) / 100);
+      row['Last Month Gave']  = lastMonthGave  > 0 ? String(lastMonthGave)  : '';
+      row['Give Last Month']  = giveLastMonth  > 0 ? String(giveLastMonth)  : '';
+      row['Current']          = String(Math.round(current * 100) / 100);
+      row['Next Month Gave']  = nextMonthGave  > 0 ? String(nextMonthGave)  : '';
+      row['Give Next Month']  = giveNextMonth  > 0 ? String(giveNextMonth)  : '';
+      row.SalaryConstraints   = String(Math.round(salaryConstraints * 100) / 100);
+      row['Net Effect']       = '0';
       await DATA.save('data/constraints.csv', `Set salary ${mon} ${yr}`);
     }
     await ensureBallocRows(S.currentMonth.Month, parseInt(S.currentMonth.Year));
