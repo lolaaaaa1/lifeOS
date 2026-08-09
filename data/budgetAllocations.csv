@@ -308,7 +308,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,March,3,21,Saturday,Food,March 2026,TRUE,30,,
 2026,March,3,22,Sunday,Food,March 2026,TRUE,40,,
 2026,March,3,23,Monday,Food,March 2026,TRUE,40,,
-2026,March,3,24,Tuesday,Food,March 2026,TRUE,20,,
+2026,March,3,24,Tuesday,Food,March 2026,TRUE,40,,
 2026,March,3,25,Wednesday,Food,March 2026,TRUE,30,,
 2026,March,3,26,Thursday,Food,March 2026,TRUE,40,,
 2026,March,3,27,Friday,Food,March 2026,TRUE,30,,
