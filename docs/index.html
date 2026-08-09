@@ -4800,7 +4800,7 @@ function closeSalaryHistory(event) {
 function openSalaryModal() {
   // populate
   const md = S.monthData;
-  const existingAmt = md ? (parseFloat(md.SalaryAmount) || '') : '';
+  const existingAmt = md ? (parseFloat(md.Salary) || '') : '';
   const existingType = md && md.SalaryType === 'pct' ? 'pct' : 'fixed';
 
   setSalaryType(existingType);
@@ -4884,13 +4884,14 @@ async function saveSalary() {
   $('saveSalaryBtn').disabled = true;
 
   try {
-    await apiFetch(`/finance/months/${S.currentMonth.Month}/${S.currentMonth.Year}/salary`, {
-      method: 'PUT',
-      body: JSON.stringify({ salaryType: 'fixed', salaryAmount: amount }),
-    });
+    const cons = CONS();
+    const row = cons.rows.find(r => r.Month === S.currentMonth.Month && String(r.Year) === String(S.currentMonth.Year));
+    if (row) {
+      row.Salary = String(amount);
+      await DATA.save('data/constraints.csv', `Set salary ${S.currentMonth.Month} ${S.currentMonth.Year}`);
+    }
     await ensureBallocRows(S.currentMonth.Month, parseInt(S.currentMonth.Year));
     showOfflineBanner(false);
-    // refresh
     await fetchMonthData();
     renderBudgetPage();
     $('salaryModalOverlay').classList.remove('open');
