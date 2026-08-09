@@ -261,8 +261,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202606,,Telecel Cash,,27,,Monthly,,,June,2026,Transfer,,,2507202606
 2507202607,Ecobank,,3.4,,,Monthly,,,June,2026,Transfer,,,2507202607
 2507202607,,Telecel Cash,,3.4,,Monthly,,,June,2026,Transfer,,,2507202607
-106202608,Ecobank,,840,,Food,Monthly,,,June,2026,Expense,,,
-106202608,,Others,,840,Food,Monthly,,,June,2026,Expense,,,
 103202607,Ecobank,,30,,Apple Music Subscription,Monthly,,,March,2026,Expense,,,
 103202607,,Apple Music,,30,Apple Music Subscription,Monthly,,,March,2026,Expense,,,
 103202601,Ecobank,,8.5,,Charges,Monthly,,,March,2026,Expense,,,
@@ -469,3 +467,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 103202609,,Others,,720,Food,Monthly,,,March,2026,Expense,,,
 105202608,Ecobank,,1400,,Food,Monthly,,,May,2026,Expense,,,
 105202608,,Others,,1400,Food,Monthly,,,May,2026,Expense,,,
+106202608,Ecobank,,1300,,Food,Monthly,,,June,2026,Expense,,,
+106202608,,Others,,1300,Food,Monthly,,,June,2026,Expense,,,
