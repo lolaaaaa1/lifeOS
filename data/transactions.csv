@@ -463,3 +463,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202609,,Others,,38,Groceries,Monthly,,,August,2026,Expense,,Eggs (Half Crate),0908202609
 0908202610,Telecel Cash,,12,,Groceries,Monthly,,,August,2026,Expense,,Bread,0908202610
 0908202610,,Others,,12,Groceries,Monthly,,,August,2026,Expense,,Bread,0908202610
+0908202611,Telecel Cash,,38,,Groceries,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
+0908202611,Telecel Cash,,0.5,,Charges,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
+0908202611,,Charges,,0.5,Charges,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
+0908202611,,Others,,38,Groceries,Monthly,,,August,2026,Expense,,Water Pack 1,0908202611
