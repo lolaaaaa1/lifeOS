@@ -20,7 +20,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,February,2,14,Saturday,Transport,February 2026,FALSE,0,,
 2026,February,2,21,Saturday,Transport,February 2026,FALSE,0,,
 2026,February,2,28,Saturday,Transport,February 2026,FALSE,0,,
-2026,February,,,,Charges,February 2026,,8.5,,
+2026,February,,,,Charges,February 2026,,50,,
 2026,February,,,,Apple Music Subscription,February 2026,,30,,
 2026,February,,,,Department Dues,February 2026,,100,,
 2026,February,,,,Rent Charges,February 2026,,120,,
