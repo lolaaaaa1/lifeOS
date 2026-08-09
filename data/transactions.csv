@@ -447,7 +447,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0908202602,,Others,,100,Food,Monthly,,,August,2026,Expense,,Bought Fried Rice from chow deck,0908202602
 0908202603,Cash,,200,,Simple Transfer,Monthly,,,December,2025,Transfer,,,0908202603
 0908202603,,Telecel Cash,,200,Simple Transfer,Monthly,,,December,2025,Transfer,,,0908202603
-0908202604,Telecel Company,,300,,Telecel Loan,Monthly,,,August,2025,Income,,,0908202604
-0908202604,,Telecel Cash,,300,Telecel Loan,Monthly,,,August,2025,Income,,,0908202604
 0908202605,MTN Mobile Money,,65,,Loan Repayment,Monthly,,,December,2025,Expense,,,0908202605
 0908202605,,MTN Company,,65,Loan Repayment,Monthly,,,December,2025,Expense,,,0908202605
+0908202604,Telecel Company,,300,,Telecel Loan,Monthly,,,August,2026,Income,,,
+0908202604,,Telecel Cash,,300,Telecel Loan,Monthly,,,August,2026,Income,,,
