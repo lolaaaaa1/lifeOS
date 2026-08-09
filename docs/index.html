@@ -3981,6 +3981,62 @@ function updateMonthTrigger() {
   }
 }
 
+async function computeAndSaveConstraints() {
+  if (!S.currentMonth || isAllMonths()) return;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const mon = S.currentMonth.Month;
+  const yr  = String(S.currentMonth.Year);
+  const idx = MONTHS.indexOf(mon);
+  if (idx < 0) return;
+
+  // Salary from income transactions for this period
+  const salary = TXNS().rows
+    .filter(r => r.TransactionType === 'Income' && r.Item === 'Salary' &&
+                 r.MonthFor === mon && String(r.YearFor) === yr && (parseFloat(r.Credit) || 0) > 0)
+    .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+  if (!salary) return;
+
+  const curPeriod  = `${mon} ${yr}`;
+  const prevIdx    = idx === 0 ? 11 : idx - 1;
+  const prevYr     = idx === 0 ? String(parseInt(yr) - 1) : yr;
+  const prevMon    = MONTHS[prevIdx];
+  const prevPeriod = `${prevMon} ${prevYr}`;
+  const nextIdx    = idx === 11 ? 0 : idx + 1;
+  const nextYr     = idx === 11 ? String(parseInt(yr) + 1) : yr;
+  const nextMon    = MONTHS[nextIdx];
+  const nextPeriod = `${nextMon} ${nextYr}`;
+  const daily      = new Set(['Food', 'Transport']);
+
+  const bridgeSum = (calMon, calYr, toPeriod) =>
+    BALLOC().rows
+      .filter(r => r.Month === calMon && String(r.Year) === calYr && r.Day &&
+                   r.AppliesToDay === 'TRUE' && r.MonthYearToUse === toPeriod && daily.has(r.Item))
+      .reduce((s, r) => s + (parseFloat(r.AllocatedSalaryPortion) || 0), 0);
+
+  const giveNextMonth  = bridgeSum(mon,     yr,     nextPeriod);
+  const giveLastMonth  = bridgeSum(mon,     yr,     prevPeriod);
+  const lastMonthGave  = bridgeSum(prevMon, prevYr, curPeriod);
+  const nextMonthGave  = bridgeSum(nextMon, nextYr, curPeriod);
+
+  const current           = salary - giveLastMonth - giveNextMonth;
+  const salaryConstraints = current + lastMonthGave + nextMonthGave;
+
+  const cons = CONS();
+  let row = cons.rows.find(r => r.Month === mon && String(r.Year) === yr);
+  if (!row) { row = { Month: mon, Year: yr }; cons.rows.push(row); }
+
+  row['Salary']            = String(salary);
+  row['Last Month Gave']   = lastMonthGave  > 0 ? String(lastMonthGave)  : '';
+  row['Give Last Month']   = giveLastMonth  > 0 ? String(giveLastMonth)  : '';
+  row['Cuurent']           = String(current);
+  row['Next Month Gave']   = nextMonthGave  > 0 ? String(nextMonthGave)  : '';
+  row['Give Next Month']   = giveNextMonth  > 0 ? String(giveNextMonth)  : '';
+  row['SalaryConstraints'] = String(salaryConstraints);
+  row['Net Effect']        = '0';
+
+  await DATA.save('data/constraints.csv', `Auto-compute constraints ${mon} ${yr}`);
+}
+
 async function selectMonth(month, year) {
   S.currentMonth = { Month: month, Year: year };
   BP._ready = false; // month changed — force fresh aggregation
@@ -3991,6 +4047,7 @@ async function selectMonth(month, year) {
   await fetchMonthData();
   if (S.currentPage === 'budget') renderBudgetPage();
   if (S.currentPage === 'budget-plan') renderBpPage();
+  computeAndSaveConstraints();
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
