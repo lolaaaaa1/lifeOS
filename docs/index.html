@@ -4419,9 +4419,11 @@ const ALLOC_M = { source: '' };
 // Net received from a secondary income source (credits minus debits), minus already-allocated.
 // excludeItem + excludePeriod = the item being edited, so its current allocation isn't double-counted.
 function _variableRemaining(source, excludeItem, excludePeriod) {
+  // Only sum Credit rows — double-entry records both sides with same Item,
+  // so Credits-Debits would cancel to zero.
   const netReceived = TXNS().rows
-    .filter(r => r.Item === source)
-    .reduce((s, r) => s + (parseFloat(r.Credit) || 0) - (parseFloat(r.Debit) || 0), 0);
+    .filter(r => r.Item === source && (parseFloat(r.Credit) || 0) > 0)
+    .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
   const totalAllocated = BALLOC().rows
     .filter(r => r.VariableIncomeSource === source && r.AppliesToDay !== 'FALSE')
     .reduce((s, r) => s + (parseFloat(r.AllocatedVariableIncomePortion) || 0), 0);
@@ -5233,61 +5235,73 @@ function computeMonthContributions() {
 }
 
 function renderBpByIncome(container) {
-  const allocated  = Object.values(BP.salaryAmounts || BP.monthAmounts).reduce((s, v) => s + v, 0);
-  const budget     = getBudgetForCurrentMonth();
-  const required   = budget ?? allocated;
-  const remaining  = required - allocated;
-  const over       = remaining < 0;
-  const pct        = required > 0 ? Math.min(100, (allocated / required) * 100) : 0;
   const periodLabel = isAllMonths()
     ? `All ${S.currentMonth.Year}`
     : (S.currentMonth ? S.currentMonth.Month.toUpperCase() + ' ' + S.currentMonth.Year : '');
-  const contrib = computeMonthContributions();
 
-  // One card per income source with a non-zero amount
-  IC.sources.filter(src => (parseFloat(src.Amount || '0') || 0) > 0).forEach(src => {
-    const name = src.Items;
+  // Determine primary income source name (IncomeType = Primary in items.csv)
+  const primaryNames = new Set(
+    ITMS().rows.filter(r => r.Section === 'Income' && r.IncomeType === 'Primary').map(r => r.ItemName)
+  );
+
+  // Group all income sources: primary ones get salary logic, secondary get variable logic
+  const allSources = ITMS().rows.filter(r => r.Section === 'Income');
+
+  allSources.forEach(itm => {
+    const name = itm.ItemName;
+    const isPrimary = primaryNames.has(name);
+
+    let amount, allocatedAmt, remainingAmt;
+
+    if (isPrimary) {
+      // Salary: use constraint amount and salary allocations
+      const budget = getBudgetForCurrentMonth();
+      const salAlloc = Object.values(BP.salaryAmounts || {}).reduce((s, v) => s + v, 0);
+      amount       = budget ?? salAlloc;
+      allocatedAmt = salAlloc;
+      remainingAmt = amount - allocatedAmt;
+    } else {
+      // Variable: net credits received (all-time) minus all-time allocated from this source
+      amount       = TXNS().rows
+        .filter(r => r.Item === name && (parseFloat(r.Credit) || 0) > 0)
+        .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
+      allocatedAmt = BALLOC().rows
+        .filter(r => r.VariableIncomeSource === name && r.AppliesToDay !== 'FALSE')
+        .reduce((s, r) => s + (parseFloat(r.AllocatedVariableIncomePortion) || 0), 0);
+      remainingAmt = amount - allocatedAmt;
+    }
+
+    if (amount <= 0) return; // skip sources with no received income
+
+    const over = remainingAmt < 0;
     const card = document.createElement('div');
     card.className = 'salary-card';
     card.style.cssText = 'cursor:pointer;margin-bottom:12px;';
-    card.onclick = (e) => { if (!e.target.closest('button')) openSalaryHistory(); };
-    const splitHtml = contrib ? `
-      <div class="salary-split" style="margin-top:14px;margin-bottom:0;">
-        <div class="salary-split-item">
-          <span class="salary-split-label">${escHtml(contrib.prevLabel)}</span>
-          <span class="salary-split-value">${contrib.prev > 0 ? fmtGHS(contrib.prev) : '—'}</span>
-        </div>
-        <div class="salary-split-item">
-          <span class="salary-split-label">${escHtml(contrib.currLabel)}</span>
-          <span class="salary-split-value">${contrib.curr > 0 ? fmtGHS(contrib.curr) : '—'}</span>
-        </div>
-        <div class="salary-split-item">
-          <span class="salary-split-label">${escHtml(contrib.nextLabel)}</span>
-          <span class="salary-split-value">${contrib.next > 0 ? fmtGHS(contrib.next) : '—'}</span>
-        </div>
-      </div>` : '';
-    const allocSplitHtml = `
-      <div class="salary-split" style="margin-top:12px;">
-        <div class="salary-split-item">
-          <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
-          <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remaining))}</span>
-        </div>
-      </div>
-      ${budgetProgressHtml(allocated, required)}`;
+    if (!isPrimary) card.onclick = (e) => { if (!e.target.closest('button')) openVariableIncomeDetail(name); };
+    else card.onclick = (e) => { if (!e.target.closest('button')) openSalaryHistory(); };
+
     card.innerHTML = `
       <div class="salary-card-top">
-        <span class="salary-card-label">${escHtml(name.toUpperCase())} — REQUIRED · ${periodLabel}</span>
+        <span class="salary-card-label">${escHtml(name.toUpperCase())} · ${periodLabel}</span>
       </div>
-      <div class="salary-card-amount${required > 0 ? '' : ' empty'}">${required > 0 ? fmtGHS(required) : '—'}</div>
-      ${allocSplitHtml}
-      ${splitHtml}`;
+      <div class="salary-card-amount">${fmtGHS(amount)}</div>
+      <div class="salary-split" style="margin-top:12px;">
+        <div class="salary-split-item">
+          <span class="salary-split-label">Allocated</span>
+          <span class="salary-split-value">${fmtGHS(allocatedAmt)}</span>
+        </div>
+        <div class="salary-split-item">
+          <span class="salary-split-label" style="${over ? 'color:#a8533f;' : ''}">Remaining</span>
+          <span class="salary-split-value" style="${over ? 'color:#a8533f;' : ''}">${over ? '−' : ''}${fmtGHS(Math.abs(remainingAmt))}</span>
+        </div>
+      </div>
+      ${budgetProgressHtml(allocatedAmt, amount)}`;
     container.appendChild(card);
   });
 
-  if (!IC.sources.some(s => (parseFloat(s.Amount || '0') || 0) > 0)) {
-    container.innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">Add income on the Income page first.</div>';
+  if (!container.hasChildNodes()) {
+    container.innerHTML = '<div style="padding:16px 0;opacity:0.5;text-align:center;">No income sources found.</div>';
   }
-
 }
 
 function isCalc(itemId) {
