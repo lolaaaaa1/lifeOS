@@ -119,7 +119,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,July,,,,Charges,July 2026,,63.9,,
 2026,July,,,,Clothes,July 2026,,140,,
 2026,July,,,,Department Dues,July 2026,,100,,
-2026,July,,,,Outing,July 2026,,100,,
+2026,July,,,,Outing,July 2026,,0,,
 2026,July,,,,Travel,July 2026,,0,,
 2026,July,,,,Trust Fund,July 2026,,100,,
 2026,July,,,,Rent Charges,July 2026,,120,,
