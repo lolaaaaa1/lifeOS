@@ -271,3 +271,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026125,,Trotro,,10,Transport,Monthly,,,August,2026,Expense,,,10082026125
 10082026126,Telecel Cash,,30,,Food,Monthly,,,August,2026,Expense,,Fried Yam,10082026126
 10082026126,,Others,,30,Food,Monthly,,,August,2026,Expense,,Fried Yam,10082026126
+10082026127,Telecel Cash,,100,,Food,Monthly,,,August,2026,Expense,,,10082026127
+10082026127,,Others,,100,Food,Monthly,,,August,2026,Expense,,,10082026127
