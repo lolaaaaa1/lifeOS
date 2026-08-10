@@ -275,3 +275,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026127,,Others,,100,Food,Monthly,,,August,2026,Expense,,,10082026127
 10082026128,Telecel Cash,,100,,Food,Monthly,,,August,2026,Expense,,,
 10082026128,,Others,,100,Food,Monthly,,,August,2026,Expense,,,
+10082026129,Telecel Cash,,50,,Transport,Monthly,,,August,2026,Expense,,,10082026129
+10082026129,,Others,,50,Transport,Monthly,,,August,2026,Expense,,,10082026129
