@@ -23,3 +23,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202601,,Achieve MSc. Actuarial Science,,1000,MSc. Actuarial Science,Monthly,,,June,2026,Expense,,,1008202601
 1008202602,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,July,2026,Expense,,,1008202601
 1008202602,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Expense,,,1008202601
+1008202603,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,August,2026,Expense,,,1008202601
+1008202603,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,August,2026,Expense,,,1008202601
