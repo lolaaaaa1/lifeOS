@@ -253,3 +253,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026116,,MTN Company,,90,Loan Repayment,Monthly,,,August,2026,Expense,,,10082026116
 10082026117,Ecobank,,100,,Transport,Monthly,,,August,2026,Expense,,,10082026117
 10082026117,,Trotro,,100,Transport,Monthly,,,August,2026,Expense,,,10082026117
+10082026118,Ecobank,,200,,Food,Monthly,,,August,2026,Expense,,,10082026118
+10082026118,,Others,,200,Food,Monthly,,,August,2026,Expense,,,10082026118
