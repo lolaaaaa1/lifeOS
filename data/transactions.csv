@@ -255,3 +255,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026117,,Trotro,,100,Transport,Monthly,,,August,2026,Expense,,,10082026117
 10082026118,Ecobank,,200,,Food,Monthly,,,August,2026,Expense,,,10082026118
 10082026118,,Others,,200,Food,Monthly,,,August,2026,Expense,,,10082026118
+10082026119,Ecobank,,122,,Transport,Monthly,,,August,2026,Expense,,,10082026119
+10082026119,,Ride Hailing Apps,,122,Transport,Monthly,,,August,2026,Expense,,,10082026119
