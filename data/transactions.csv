@@ -111,3 +111,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202645,,Trotro,,840,Transport,Monthly,,,June,2026,Expense,,,1008202640
 1008202646,Ecobank,,1050,,Transport,Monthly,,,July,2026,Expense,,,1008202640
 1008202646,,Trotro,,1050,Transport,Monthly,,,July,2026,Expense,,,1008202640
+1008202647,Ecobank,,50,,Ecobank Fixed Amount,Monthly,,,January,2026,Expense,,,1008202647
+1008202647,,Ecobank,,50,Ecobank Fixed Amount,Monthly,,,January,2026,Expense,,,1008202647
