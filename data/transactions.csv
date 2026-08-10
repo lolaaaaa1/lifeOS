@@ -265,3 +265,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026122,,Others,,100,Utilities,Monthly,,,August,2026,Expense,,,10082026122
 10082026123,Ecobank,,600,,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026123
 10082026123,,Cash,,600,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026123
+10082026124,Telecel Company,,300,,Telecel Loan,Monthly,,,August,2026,Income,,,10082026124
+10082026124,,Telecel Cash,,300,Telecel Loan,Monthly,,,August,2026,Income,,,10082026124
