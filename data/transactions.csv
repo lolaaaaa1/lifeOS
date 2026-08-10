@@ -197,3 +197,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202688,,National Rental Assistance,,120,Rent Charges,Monthly,,,May,2026,Expense,,,1008202684
 1008202689,Ecobank,,120,,Rent Charges,Monthly,,,June,2026,Expense,,,1008202684
 1008202689,,National Rental Assistance,,120,Rent Charges,Monthly,,,June,2026,Expense,,,1008202684
+1008202690,Ecobank,,120,,Rent Charges,Monthly,,,July,2026,Expense,,,1008202684
+1008202690,,National Rental Assistance,,120,Rent Charges,Monthly,,,July,2026,Expense,,,1008202684
