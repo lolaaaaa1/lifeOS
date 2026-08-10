@@ -267,3 +267,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026123,,Cash,,600,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026123
 10082026124,Telecel Company,,300,,Telecel Loan,Monthly,,,August,2026,Income,,,10082026124
 10082026124,,Telecel Cash,,300,Telecel Loan,Monthly,,,August,2026,Income,,,10082026124
+10082026125,Cash,,10,,Transport,Monthly,,,August,2026,Expense,,,10082026125
+10082026125,,Trotro,,10,Transport,Monthly,,,August,2026,Expense,,,10082026125
