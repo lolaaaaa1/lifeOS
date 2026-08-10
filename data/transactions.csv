@@ -263,3 +263,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026121,,ECOBANK Virtual Card,,30,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026121
 10082026122,Ecobank,,100,,Utilities,Monthly,,,August,2026,Expense,,,10082026122
 10082026122,,Others,,100,Utilities,Monthly,,,August,2026,Expense,,,10082026122
+10082026123,Ecobank,,600,,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026123
+10082026123,,Cash,,600,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026123
