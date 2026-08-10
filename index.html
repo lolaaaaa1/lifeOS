@@ -7238,6 +7238,15 @@ async function init() {
     _ensureCol(ITMS(), 'Display');
     _ensureCol(ITMS(), 'BudgetMode');
     await _migrateTxns();
+    // Recompute constraints for every month that has a salary transaction
+    { const seen = new Set();
+      for (const r of TXNS().rows) {
+        if (r.TransactionType === 'Income' && r.Item === 'Salary' && r.MonthFor && r.YearFor) {
+          const key = `${r.MonthFor} ${r.YearFor}`;
+          if (!seen.has(key)) { seen.add(key); await computeAndSaveConstraints(r.MonthFor, String(r.YearFor)); }
+        }
+      }
+    }
   } catch (err) {
     showOfflineBanner(true);
     if ($('monthTriggerValue')) $('monthTriggerValue').textContent = 'Error';
