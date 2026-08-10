@@ -21,3 +21,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2507202614,,Ecobank,,7000,Salary,Monthly,July,2026,August,2026,Income,,,
 1008202601,Ecobank,,4000,,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,1008202601
 1008202601,,Achieve MSc. Actuarial Science,,4000,MSc. Actuarial Science,Monthly,,,June,2026,Transfer,,,1008202601
+1008202602,Ecobank,,500,,Tithe,Monthly,,,January,2026,Expense,,,1008202602
+1008202602,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,January,2026,Expense,,,1008202602
