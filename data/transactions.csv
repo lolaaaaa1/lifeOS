@@ -73,3 +73,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202618,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,August,2026,Expense,,,1008202608
 1008202627,Ecobank,,140,,Rental Utilities,Monthly,,,January,2026,Expense,,,1008202627
 1008202627,,Alhassan,,140,Rental Utilities,Monthly,,,January,2026,Expense,,,1008202627
+1008202628,Ecobank,,140,,Rental Utilities,Monthly,,,February,2026,Expense,,,1008202627
+1008202628,,Alhassan,,140,Rental Utilities,Monthly,,,February,2026,Expense,,,1008202627
