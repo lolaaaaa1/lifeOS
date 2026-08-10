@@ -1,5 +1,5 @@
 Month,Year,ActualNumberOfDays,PersonalFinanceNumberOfWeeks,Salary,Last Month Gave,Give Last Month,Current,Next Month Gave,Give Next Month,SalaryConstraints,Net Effect
-December,2025,31,4,900.4,,,775.4,,125,775.4,0
+December,2025,31,4,,,,,,,,
 January,2026,31,5,5000,125,,5000,95,,5220,0
 February,2026,28,4,5000,,95,4905,100,,5005,0
 March,2026,31,4,5000,,100,4740,,160,4740,0
