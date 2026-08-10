@@ -149,3 +149,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202664,,Telecel Company,,100,Bundle,Monthly,,,January,2026,Expense,,,1008202664
 1008202665,Ecobank,,300,,Bundle,Monthly,,,April,2026,Expense,,,1008202664
 1008202665,,Telecel Company,,300,Bundle,Monthly,,,April,2026,Expense,,,1008202664
+1008202666,Ecobank,,400,,Bundle,Monthly,,,July,2026,Expense,,,1008202664
+1008202666,,Telecel Company,,400,Bundle,Monthly,,,July,2026,Expense,,,1008202664
