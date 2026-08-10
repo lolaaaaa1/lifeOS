@@ -115,3 +115,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202647,,Ecobank,,50,Ecobank Fixed Amount,Monthly,,,January,2026,Expense,,,1008202647
 1008202648,Ecobank,,400,,Loan Repayment,Monthly,,,August,2026,Expense,,,1008202648
 1008202648,,MTN Mobile Money,,400,Loan Repayment,Monthly,,,August,2026,Expense,,,1008202648
+1008202649,Ecobank,,100,,Trust Fund,Monthly,,,February,2026,Expense,,,1008202649
+1008202649,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,February,2026,Expense,,,1008202649
