@@ -49,8 +49,6 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202616,,National Rental Assistance,,1000,Rent,Monthly,,,June,2026,Expense,,,1008202608
 1008202617,Ecobank,,1000,,Rent,Monthly,,,July,2026,Expense,,,1008202608
 1008202617,,National Rental Assistance,,1000,Rent,Monthly,,,July,2026,Expense,,,1008202608
-1008202618,Ecobank,,1000,,Rent,Monthly,,,August,2026,Expense,,,1008202608
-1008202618,,National Rental Assistance,,1000,Rent,Monthly,,,August,2026,Expense,,,1008202608
 1008202619,Ecobank,,200,,Electricity,Monthly,,,January,2026,Expense,,,1008202619
 1008202619,,Electricity Company of Ghana,,200,Electricity,Monthly,,,January,2026,Expense,,,1008202619
 1008202620,Ecobank,,200,,Electricity,Monthly,,,February,2026,Expense,,,1008202619
