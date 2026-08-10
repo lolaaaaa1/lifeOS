@@ -71,3 +71,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202625,,Electricity Company of Ghana,,200,Electricity,Monthly,,,July,2026,Expense,,,1008202619
 1008202626,Ecobank,,200,,Electricity,Monthly,,,August,2026,Expense,,,1008202619
 1008202626,,Electricity Company of Ghana,,200,Electricity,Monthly,,,August,2026,Expense,,,1008202619
+1008202627,Ecobank,,800,,Trust Fund,Monthly,,,August,2026,Transfer,,,1008202627
+1008202627,,Achieve Trust Fund,,800,Trust Fund,Monthly,,,August,2026,Transfer,,,1008202627
