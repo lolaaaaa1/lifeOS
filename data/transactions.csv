@@ -19,7 +19,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 3105202601,,Ecobank,,7000,Salary,Monthly,May,2026,June,2026,Income,,,
 2507202614,Nationwide Medical Insurance,,7000,,Salary,Monthly,July,2026,August,2026,Income,,,
 2507202614,,Ecobank,,7000,Salary,Monthly,July,2026,August,2026,Income,,,
-1008202602,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,July,2026,Expense,,,1008202601
-1008202602,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,July,2026,Expense,,,1008202601
 1008202603,Ecobank,,1500,,MSc. Actuarial Science,Monthly,,,August,2026,Expense,,,1008202601
 1008202603,,Achieve MSc. Actuarial Science,,1500,MSc. Actuarial Science,Monthly,,,August,2026,Expense,,,1008202601
