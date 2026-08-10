@@ -27,3 +27,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202603,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,February,2026,Expense,,,1008202602
 1008202604,Ecobank,,500,,Tithe,Monthly,,,March,2026,Expense,,,1008202602
 1008202604,,ICGC Holy Ghost Temple,,500,Tithe,Monthly,,,March,2026,Expense,,,1008202602
+1008202605,Ecobank,,700,,Tithe,Monthly,,,April,2026,Expense,,,1008202602
+1008202605,,ICGC Holy Ghost Temple,,700,Tithe,Monthly,,,April,2026,Expense,,,1008202602
