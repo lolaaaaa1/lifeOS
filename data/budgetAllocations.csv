@@ -198,7 +198,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,January,,,,Utilities,January 2026,,,,
 2026,January,,,,Loan Repayment,January 2026,,,,
 2026,January,,,,Groceries,January 2026,,,,
-2026,January,,,,Ecobank Fixed Amount,January 2026,,,,
+2026,January,,,,Ecobank Fixed Amount,January 2026,,50,,
 2026,February,,,,Bundle,February 2026,,,,
 2026,February,,,,Claude Subscription,February 2026,,,,
 2026,February,,,,Clothes,February 2026,,,,
