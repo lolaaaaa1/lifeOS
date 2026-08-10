@@ -257,5 +257,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026118,,Others,,200,Food,Monthly,,,August,2026,Expense,,,10082026118
 10082026119,Ecobank,,122,,Transport,Monthly,,,August,2026,Expense,,,10082026119
 10082026119,,Ride Hailing Apps,,122,Transport,Monthly,,,August,2026,Expense,,,10082026119
-10082026120,Ecobank,,828.5,,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026120
-10082026120,,Cash,,828.5,Simple Transfer,Monthly,,,August,2026,Transfer,,,10082026120
+10082026120,Ecobank,,828.5,,Simple Transfer,Monthly,,,August,2026,Transfer,,,
+10082026120,,Telecel Cash,,828.5,Simple Transfer,Monthly,,,August,2026,Transfer,,,
