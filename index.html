@@ -3975,7 +3975,16 @@ async function computeAndSaveConstraints(overrideMon, overrideYr) {
     .filter(r => r.TransactionType === 'Income' && r.Item === 'Salary' &&
                  r.MonthFor === mon && String(r.YearFor) === yr && (parseFloat(r.Credit) || 0) > 0)
     .reduce((s, r) => s + (parseFloat(r.Credit) || 0), 0);
-  if (!salary) return;
+  if (!salary) {
+    // Zero out stale constraint row if salary transaction no longer exists
+    const cons = CONS();
+    const row = cons.rows.find(r => r.Month === mon && String(r.Year) === yr);
+    if (row && parseFloat(row.Salary) > 0) {
+      Object.assign(row, { Salary: '', 'Last Month Gave': '', 'Give Last Month': '', Current: '', 'Next Month Gave': '', 'Give Next Month': '', SalaryConstraints: '', 'Net Effect': '' });
+      await DATA.save('data/constraints.csv', `Clear constraints ${mon} ${yr}`);
+    }
+    return;
+  }
 
   const curPeriod  = `${mon} ${yr}`;
   const prevIdx    = idx === 0 ? 11 : idx - 1;
@@ -7238,12 +7247,18 @@ async function init() {
     _ensureCol(ITMS(), 'Display');
     _ensureCol(ITMS(), 'BudgetMode');
     await _migrateTxns();
-    // Recompute constraints for every month that has a salary transaction
+    // Recompute constraints for every month that has a salary transaction or a stale salary in constraints
     { const seen = new Set();
       for (const r of TXNS().rows) {
         if (r.TransactionType === 'Income' && r.Item === 'Salary' && r.MonthFor && r.YearFor) {
           const key = `${r.MonthFor} ${r.YearFor}`;
           if (!seen.has(key)) { seen.add(key); await computeAndSaveConstraints(r.MonthFor, String(r.YearFor)); }
+        }
+      }
+      for (const r of CONS().rows) {
+        if (r.Month && r.Year && parseFloat(r.Salary) > 0) {
+          const key = `${r.Month} ${r.Year}`;
+          if (!seen.has(key)) { seen.add(key); await computeAndSaveConstraints(r.Month, String(r.Year)); }
         }
       }
     }
