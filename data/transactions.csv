@@ -167,3 +167,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202673,,Others,,1361.1,Gifting,Monthly,,,July,2026,Expense,,,1008202671
 1008202674,Ecobank,,370,,Gifting,Monthly,,,August,2026,Expense,,,1008202671
 1008202674,,Others,,370,Gifting,Monthly,,,August,2026,Expense,,,1008202671
+1008202675,Ecobank,,150,,Hair,Monthly,,,June,2026,Expense,,,1008202675
+1008202675,,Others,,150,Hair,Monthly,,,June,2026,Expense,,,1008202675
