@@ -3962,11 +3962,11 @@ function updateMonthTrigger() {
   }
 }
 
-async function computeAndSaveConstraints() {
-  if (!S.currentMonth || isAllMonths()) return;
+async function computeAndSaveConstraints(overrideMon, overrideYr) {
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const mon = S.currentMonth.Month;
-  const yr  = String(S.currentMonth.Year);
+  const mon = overrideMon || (!isAllMonths() && S.currentMonth && S.currentMonth.Month);
+  const yr  = overrideYr  || (!isAllMonths() && S.currentMonth && String(S.currentMonth.Year));
+  if (!mon || !yr) return;
   const idx = MONTHS.indexOf(mon);
   if (idx < 0) return;
 
@@ -7137,6 +7137,17 @@ async function saveAccountTxn() {
         ballocChanged = true;
       }
       if (ballocChanged) await DATA.save('data/budgetAllocations.csv', `Realloc: ${accountFrom} → ${item}`);
+    }
+
+    if (item === 'Salary' && txnType === 'Income') {
+      const months = AC.txnSplit && AC.txnSplit.length > 0
+        ? AC.txnSplit.map(s => ({ mon: s.month, yr: String(s.year) }))
+        : [{ mon: $('acctTxnMonthFor').value, yr: $('acctTxnYearFor').value }];
+      const seen = new Set();
+      for (const { mon, yr } of months) {
+        const key = `${mon} ${yr}`;
+        if (!seen.has(key) && mon && yr) { seen.add(key); await computeAndSaveConstraints(mon, yr); }
+      }
     }
 
     $('accountModalOverlay').classList.remove('open');
