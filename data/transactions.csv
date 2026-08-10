@@ -203,3 +203,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202691,,National Rental Assistance,,120,Rent Charges,Monthly,,,August,2026,Expense,,,1008202684
 1008202692,Ecobank,,200,,Shoes,Monthly,,,April,2026,Expense,,,1008202692
 1008202692,,Others,,200,Shoes,Monthly,,,April,2026,Expense,,,1008202692
+1008202693,Ecobank,,760,,Shoes,Monthly,,,June,2026,Expense,,,1008202692
+1008202693,,Others,,760,Shoes,Monthly,,,June,2026,Expense,,,1008202692
