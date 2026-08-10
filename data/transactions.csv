@@ -77,3 +77,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202628,,Alhassan,,140,Rental Utilities,Monthly,,,February,2026,Expense,,,1008202627
 1008202629,Ecobank,,140,,Rental Utilities,Monthly,,,March,2026,Expense,,,1008202627
 1008202629,,Alhassan,,140,Rental Utilities,Monthly,,,March,2026,Expense,,,1008202627
+1008202630,Ecobank,,140,,Rental Utilities,Monthly,,,April,2026,Expense,,,1008202627
+1008202630,,Alhassan,,140,Rental Utilities,Monthly,,,April,2026,Expense,,,1008202627
