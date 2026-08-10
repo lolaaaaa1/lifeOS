@@ -247,3 +247,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026113,,Others,,1750,Utilities,Monthly,,,June,2026,Expense,,,10082026111
 10082026114,Ecobank,,500,,Food,Monthly,,,April,2026,Expense,,,10082026114
 10082026114,,Others,,500,Food,Monthly,,,April,2026,Expense,,,10082026114
+10082026115,Ecobank,,140,,Rental Utilities,Monthly,,,August,2026,Expense,,,10082026115
+10082026115,,Alhassan,,140,Rental Utilities,Monthly,,,August,2026,Expense,,,10082026115
