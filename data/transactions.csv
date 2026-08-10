@@ -233,3 +233,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026106,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,August,2026,Transfer,,,1008202649
 10082026107,Ecobank,,1000,,SOA Exams,Monthly,,,January,2026,Expense,,,10082026107
 10082026107,,Achieve SOA Exams,,1000,SOA Exams,Monthly,,,January,2026,Expense,,,10082026107
+10082026108,Ecobank,,650,,SOA Exams,Monthly,,,February,2026,Expense,,,10082026107
+10082026108,,Achieve SOA Exams,,650,SOA Exams,Monthly,,,February,2026,Expense,,,10082026107
