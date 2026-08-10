@@ -225,3 +225,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026102,,Achieve Trust Fund,,200,Trust Fund,Monthly,,,April,2026,Transfer,,,1008202649
 10082026103,Ecobank,,100,,Trust Fund,Monthly,,,May,2026,Transfer,,,1008202649
 10082026103,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,May,2026,Transfer,,,1008202649
+10082026104,Ecobank,,100,,Trust Fund,Monthly,,,June,2026,Transfer,,,1008202649
+10082026104,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,June,2026,Transfer,,,1008202649
