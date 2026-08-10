@@ -133,3 +133,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202648,,MTN Company,,400,Loan Repayment,Monthly,,,August,2026,Expense,,,
 1008202657,Ecobank,,30,,Apple Music Subscription,Monthly,,,January,2026,Expense,,,1008202657
 1008202657,,Apple Music,,30,Apple Music Subscription,Monthly,,,January,2026,Expense,,,1008202657
+1008202658,Ecobank,,30,,Apple Music Subscription,Monthly,,,February,2026,Expense,,,1008202657
+1008202658,,Apple Music,,30,Apple Music Subscription,Monthly,,,February,2026,Expense,,,1008202657
