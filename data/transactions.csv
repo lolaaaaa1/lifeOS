@@ -155,3 +155,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202667,,Claude,,300,Claude Subscription,Monthly,,,July,2026,Expense,,,1008202667
 1008202668,Ecobank,,100,,Clothes,Monthly,,,May,2026,Expense,,,1008202668
 1008202668,,Others,,100,Clothes,Monthly,,,May,2026,Expense,,,1008202668
+1008202669,Ecobank,,550,,Clothes,Monthly,,,June,2026,Expense,,,1008202668
+1008202669,,Others,,550,Clothes,Monthly,,,June,2026,Expense,,,1008202668
