@@ -62,7 +62,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,April,,,,Electricity,April 2026,,200,,
 2026,April,,,,Shoes,April 2026,,200,,
 2026,April,,,,Bundle,April 2026,,300,,
-2026,April,,,,Hair,April 2026,,1800,,
+2026,April,,,,Hair,April 2026,,0,,
 2026,April,,,,Skincare,April 2026,,300,,
 2026,April,,,,Tithe,April 2026,,700,,
 2026,April,,,,Rent,April 2026,,1000,,
