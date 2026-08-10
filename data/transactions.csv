@@ -125,3 +125,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202652,,Others,,40,Charges,Monthly,,,March,2026,Expense,,,1008202650
 1008202653,Ecobank,,50,,Charges,Monthly,,,April,2026,Expense,,,1008202650
 1008202653,,Others,,50,Charges,Monthly,,,April,2026,Expense,,,1008202650
+1008202654,Ecobank,,40,,Charges,Monthly,,,May,2026,Expense,,,1008202650
+1008202654,,Others,,40,Charges,Monthly,,,May,2026,Expense,,,1008202650
