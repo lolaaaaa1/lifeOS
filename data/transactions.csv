@@ -213,3 +213,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1008202696,,Others,,35,Nails,Monthly,,,July,2026,Expense,,,1008202696
 1008202697,Ecobank,,100,,Outing,Monthly,,,April,2026,Expense,,,1008202697
 1008202697,,Others,,100,Outing,Monthly,,,April,2026,Expense,,,1008202697
+1008202698,Ecobank,,300,,Skincare,Monthly,,,April,2026,Expense,,,1008202698
+1008202698,,Others,,300,Skincare,Monthly,,,April,2026,Expense,,,1008202698
