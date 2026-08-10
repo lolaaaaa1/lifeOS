@@ -184,7 +184,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2025,December,,,,Travel,December 2025,,,,
 2025,December,,,,Utilities,December 2025,,,,
 2025,December,,,,Groceries,December 2025,,,,
-2025,December,,,,Ecobank Fixed Amount,December 2025,,50,,
+2025,December,,,,Ecobank Fixed Amount,December 2025,,0,,
 2026,August,,,,Ecobank Fixed Amount,August 2026,,,,
 2026,January,,,,Claude Subscription,January 2026,,,,
 2026,January,,,,Clothes,January 2026,,,,
