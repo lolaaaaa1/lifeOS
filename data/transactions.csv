@@ -279,3 +279,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 10082026129,,Others,,50,Transport,Monthly,,,August,2026,Expense,,,10082026129
 1308202601,Cash,,55,,Food,Monthly,,,August,2026,Expense,,Fried Yam,1308202601
 1308202601,,Others,,55,Food,Monthly,,,August,2026,Expense,,Fried Yam,1308202601
+1308202602,Cash,,90,,Transport,Monthly,,,August,2026,Expense,,,1308202602
+1308202602,,Trotro,,90,Transport,Monthly,,,August,2026,Expense,,,1308202602
