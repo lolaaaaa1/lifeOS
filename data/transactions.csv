@@ -281,3 +281,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1308202601,,Others,,55,Food,Monthly,,,August,2026,Expense,,Fried Yam,1308202601
 1308202602,Cash,,90,,Transport,Monthly,,,August,2026,Expense,,,1308202602
 1308202602,,Trotro,,90,Transport,Monthly,,,August,2026,Expense,,,1308202602
+1308202603,Telecel Cash,,29,,Transport,Monthly,,,August,2026,Expense,,To Capitol,1308202603
+1308202603,,Ride Hailing Apps,,29,Transport,Monthly,,,August,2026,Expense,,To Capitol,1308202603
