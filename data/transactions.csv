@@ -283,3 +283,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1308202602,,Trotro,,90,Transport,Monthly,,,August,2026,Expense,,,1308202602
 1308202603,Telecel Cash,,29,,Transport,Monthly,,,August,2026,Expense,,To Capitol,1308202603
 1308202603,,Ride Hailing Apps,,29,Transport,Monthly,,,August,2026,Expense,,To Capitol,1308202603
+1408202601,Cash,,45,,Transport,Monthly,,,August,2026,Expense,,,1408202601
+1408202601,,Trotro,,45,Transport,Monthly,,,August,2026,Expense,,,1408202601
