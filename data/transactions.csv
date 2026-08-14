@@ -289,3 +289,7 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1408202602,,Others,,45,Food,Monthly,,,August,2026,Expense,,,1408202602
 1408202603,Cash,,4,,Food,Monthly,,,August,2026,Expense,,,
 1408202603,,Others,,4,Food,Monthly,,,August,2026,Expense,,,
+1408202604,Telecel Cash,,300,,Simple Transfer,Monthly,,,August,2026,Transfer,,,1408202604
+1408202604,Telecel Cash,,2,,Charges,Monthly,,,August,2026,Transfer,,,1408202604
+1408202604,,Charges,,2,Charges,Monthly,,,August,2026,Transfer,,,1408202604
+1408202604,,Ecobank,,300,Simple Transfer,Monthly,,,August,2026,Transfer,,,1408202604
