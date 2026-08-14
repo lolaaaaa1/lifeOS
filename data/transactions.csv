@@ -293,5 +293,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1408202604,Telecel Cash,,2,,Charges,Monthly,,,August,2026,Transfer,,,1408202604
 1408202604,,Charges,,2,Charges,Monthly,,,August,2026,Transfer,,,1408202604
 1408202604,,Ecobank,,300,Simple Transfer,Monthly,,,August,2026,Transfer,,,1408202604
-1408202605,Ecobank,,300,,Claude Subscription,Monthly,,,August,2026,Transfer,,,1408202605
-1408202605,,ECOBANK Virtual Card,,300,Claude Subscription,Monthly,,,August,2026,Transfer,,,1408202605
+1408202605,Ecobank,,300,,Simple Transfer,Monthly,,,August,2026,Transfer,,,
+1408202605,,ECOBANK Virtual Card,,300,Simple Transfer,Monthly,,,August,2026,Transfer,,,
