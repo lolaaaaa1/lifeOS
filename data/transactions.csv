@@ -285,3 +285,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1308202603,,Ride Hailing Apps,,29,Transport,Monthly,,,August,2026,Expense,,To Capitol,1308202603
 1408202601,Cash,,45,,Transport,Monthly,,,August,2026,Expense,,,1408202601
 1408202601,,Trotro,,45,Transport,Monthly,,,August,2026,Expense,,,1408202601
+1408202602,Cash,,45,,Food,Monthly,,,August,2026,Expense,,,1408202602
+1408202602,,Others,,45,Food,Monthly,,,August,2026,Expense,,,1408202602
