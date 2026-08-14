@@ -295,3 +295,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1408202604,,Ecobank,,300,Simple Transfer,Monthly,,,August,2026,Transfer,,,1408202604
 1408202605,Ecobank,,300,,Simple Transfer,Monthly,,,August,2026,Transfer,,,
 1408202605,,ECOBANK Virtual Card,,300,Simple Transfer,Monthly,,,August,2026,Transfer,,,
+1408202606,ECOBANK Virtual Card,,280,,Claude Subscription,Monthly,,,August,2026,Expense,,,1408202606
+1408202606,,Claude,,280,Claude Subscription,Monthly,,,August,2026,Expense,,,1408202606
