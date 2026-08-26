@@ -833,7 +833,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,September,,,,Nails,September 2026,,,,
 2026,September,,,,Outing,September 2026,,,,
 2026,September,,,,Rent,September 2026,,1000,,
-2026,September,,,,Rent Charges,September 2026,,,,
+2026,September,,,,Rent Charges,September 2026,,120,,
 2026,September,,,,Rental Utilities,September 2026,,140,,
 2026,September,,,,Shoes,September 2026,,,,
 2026,September,,,,Skincare,September 2026,,,,
