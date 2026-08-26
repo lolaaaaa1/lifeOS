@@ -303,3 +303,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2608202601,,Others,,506,Food,Monthly,,,August,2026,Expense,,,2608202601
 2608202602,Cash,,351,,Transport,Monthly,,,August,2026,Expense,,,
 2608202602,,Trotro,,351,Transport,Monthly,,,August,2026,Expense,,,
+2608202603,Telecel Cash,,43,,Transport,Monthly,,,August,2026,Expense,,,2608202603
+2608202603,,Others,,43,Transport,Monthly,,,August,2026,Expense,,,2608202603
