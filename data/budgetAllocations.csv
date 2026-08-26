@@ -797,7 +797,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,September,,,,Claude Subscription,September 2026,,,,
 2026,September,,,,Clothes,September 2026,,,,
 2026,September,,,,Department Dues,September 2026,,100,,
-2026,September,,,,Electricity,September 2026,,,,
+2026,September,,,,Electricity,September 2026,,200,,
 2026,September,9,1,Tuesday,Food,September 2026,TRUE,,,
 2026,September,9,2,Wednesday,Food,September 2026,TRUE,,,
 2026,September,9,3,Thursday,Food,September 2026,TRUE,,,
