@@ -868,7 +868,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,September,9,27,Sunday,Transport,September 2026,TRUE,,,
 2026,September,9,28,Monday,Transport,September 2026,TRUE,,,
 2026,September,,,,Travel,September 2026,,,,
-2026,September,,,,Trust Fund,September 2026,,,,
+2026,September,,,,Trust Fund,September 2026,,100,,
 2026,September,,,,Utilities,September 2026,,,,
 2026,September,,,,Loan Repayment,September 2026,,,,
 2026,September,,,,Groceries,September 2026,,,,
