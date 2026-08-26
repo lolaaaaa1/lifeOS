@@ -301,5 +301,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 1408202607,,Telecel Cash,,440,Telecel Loan,Monthly,,,August,2026,Income,,,
 2608202601,Telecel Cash,,506,,Food,Monthly,,,August,2026,Expense,,,2608202601
 2608202601,,Others,,506,Food,Monthly,,,August,2026,Expense,,,2608202601
-2608202602,Cash,,394,,Transport,Monthly,,,August,2026,Expense,,,2608202602
-2608202602,,Trotro,,394,Transport,Monthly,,,August,2026,Expense,,,2608202602
+2608202602,Cash,,350,,Transport,Monthly,,,August,2026,Expense,,,
+2608202602,,Trotro,,350,Transport,Monthly,,,August,2026,Expense,,,
