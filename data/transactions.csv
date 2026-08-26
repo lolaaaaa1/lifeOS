@@ -307,3 +307,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2608202603,,Others,,43,Transport,Monthly,,,August,2026,Expense,,,2608202603
 2608202604,Telecel Cash,,408.5,,Groceries,Monthly,,,August,2026,Expense,,,2608202604
 2608202604,,Others,,408.5,Groceries,Monthly,,,August,2026,Expense,,,2608202604
+2608202605,ECOBANK Virtual Card,,30,,Apple Music Subscription,Monthly,,,August,2026,Expense,,,2608202605
+2608202605,,Apple Music,,30,Apple Music Subscription,Monthly,,,August,2026,Expense,,,2608202605
