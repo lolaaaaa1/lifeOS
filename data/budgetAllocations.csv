@@ -791,7 +791,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,July,,,,Groceries,July 2026,,,,
 2026,July,,,,Ecobank Fixed Amount,July 2026,,,,
 2026,August,,,,Claude Subscription,August 2026,,,Telecel Loan,280
-2026,September,,,,Apple Music Subscription,September 2026,,,,
+2026,September,,,,Apple Music Subscription,September 2026,,30,,
 2026,September,,,,Bundle,September 2026,,,,
 2026,September,,,,Charges,September 2026,,,,
 2026,September,,,,Claude Subscription,September 2026,,,,
