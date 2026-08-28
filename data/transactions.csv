@@ -327,3 +327,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2808202608,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,June,2026,Transfer,,,2808202605
 2808202609,Ecobank,,340,,SOA Exams,Monthly,,,July,2026,Transfer,,,2808202605
 2808202609,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,July,2026,Transfer,,,2808202605
+2808202610,Ecobank,,50,,SOA Exams,Monthly,,,August,2026,Transfer,,,2808202605
+2808202610,,Achieve SOA Exams,,50,SOA Exams,Monthly,,,August,2026,Transfer,,,2808202605
