@@ -317,3 +317,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2808202603,,National Rental Assistance,,1000,Rent,Monthly,,,September,2026,Expense,,,2808202603
 2808202604,Ecobank,,220,,Rent Charges,Monthly,,,September,2026,Expense,,,2808202604
 2808202604,,National Rental Assistance,,220,Rent Charges,Monthly,,,September,2026,Expense,,,2808202604
+2808202605,Ecobank,,400,,SOA Exams,Monthly,,,March,2026,Transfer,,,2808202605
+2808202605,,Achieve SOA Exams,,400,SOA Exams,Monthly,,,March,2026,Transfer,,,2808202605
