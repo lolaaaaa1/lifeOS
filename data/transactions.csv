@@ -337,3 +337,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2808202613,,Simon Nana Kwame Afriyie Karikari,,400,Loan Repayment,Monthly,,,September,2026,Expense,,,2808202613
 2808202614,Ecobank,,330,,Loan Repayment,Monthly,,,September,2026,Expense,,,2808202614
 2808202614,,Telecel Company,,330,Loan Repayment,Monthly,,,September,2026,Expense,,,2808202614
+2808202615,Ecobank,,95,,Farewell Insurance,Monthly,,,September,2026,Expense,,,2808202615
+2808202615,,Prudential Farewell Insurance,,95,Farewell Insurance,Monthly,,,September,2026,Expense,,,2808202615
