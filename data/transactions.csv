@@ -311,3 +311,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2608202605,,Apple Music,,30,Apple Music Subscription,Monthly,,,August,2026,Expense,,,2608202605
 2608202606,Nationwide Medical Insurance,,7665.85,,Salary,Monthly,,,September,2026,Income,,,2608202606
 2608202606,,Ecobank,,7665.85,Salary,Monthly,,,September,2026,Income,,,2608202606
+2808202601,Ecobank,,200,,Electricity,Monthly,,,September,2026,Expense,,,2808202601
+2808202601,,Electricity Company of Ghana,,200,Electricity,Monthly,,,September,2026,Expense,,,2808202601
