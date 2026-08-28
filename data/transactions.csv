@@ -333,3 +333,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2808202611,,Achieve SOA Exams,,340,SOA Exams,Monthly,,,September,2026,Transfer,,,2808202611
 2808202612,Ecobank,,100,,Trust Fund,Monthly,,,September,2026,Expense,,,2808202612
 2808202612,,Achieve Trust Fund,,100,Trust Fund,Monthly,,,September,2026,Expense,,,2808202612
+2808202613,Ecobank,,400,,Loan Repayment,Monthly,,,September,2026,Expense,,,2808202613
+2808202613,,Simon Nana Kwame Afriyie Karikari,,400,Loan Repayment,Monthly,,,September,2026,Expense,,,2808202613
