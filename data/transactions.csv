@@ -339,3 +339,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2808202614,,Telecel Company,,330,Loan Repayment,Monthly,,,September,2026,Expense,,,2808202614
 2808202615,Ecobank,,95,,Farewell Insurance,Monthly,,,September,2026,Expense,,,2808202615
 2808202615,,Prudential Farewell Insurance,,95,Farewell Insurance,Monthly,,,September,2026,Expense,,,2808202615
+0109202601,Ecobank,,100,,Department Dues,Monthly,,,September,2026,Expense,,,0109202601
+0109202601,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,September,2026,Expense,,,0109202601
