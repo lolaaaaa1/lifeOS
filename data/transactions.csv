@@ -347,3 +347,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0109202603,,ICGC Holy Ghost Temple,,767,Tithe,Monthly,,,September,2026,Expense,,,0109202603
 0109202604,Ecobank,,100,,Transport,Monthly,,,September,2026,Expense,,,0109202604
 0109202604,,Others,,100,Transport,Monthly,,,September,2026,Expense,,,0109202604
+0109202605,Ecobank,,140,,Rental Utilities,Monthly,,,September,2026,Expense,,,0109202605
+0109202605,,Alhassan,,140,Rental Utilities,Monthly,,,September,2026,Expense,,,0109202605
