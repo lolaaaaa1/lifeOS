@@ -341,3 +341,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 2808202615,,Prudential Farewell Insurance,,95,Farewell Insurance,Monthly,,,September,2026,Expense,,,2808202615
 0109202601,Ecobank,,100,,Department Dues,Monthly,,,September,2026,Expense,,,0109202601
 0109202601,,Amanda Bio-Marfo,,100,Department Dues,Monthly,,,September,2026,Expense,,,0109202601
+0109202602,Ecobank,,400,,Food,Monthly,,,September,2026,Expense,,,0109202602
+0109202602,,Others,,400,Food,Monthly,,,September,2026,Expense,,,0109202602
