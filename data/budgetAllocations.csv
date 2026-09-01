@@ -826,7 +826,7 @@ Year,Month,MonthNumber,Day,DayName,Item,MonthYearToUse,AppliesToDay,AllocatedSal
 2026,September,9,26,Saturday,Food,September 2026,TRUE,40,,
 2026,September,9,27,Sunday,Food,September 2026,TRUE,40,,
 2026,September,9,28,Monday,Food,September 2026,TRUE,50,,
-2026,September,,,,Gifting,September 2026,,,,
+2026,September,,,,Gifting,September 2026,,230,,
 2026,September,,,,Hair,September 2026,,,,
 2026,September,,,,Long Term Savings,September 2026,,,,
 2026,September,,,,MSc. Actuarial Science,September 2026,,1500,,
