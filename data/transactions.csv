@@ -345,3 +345,5 @@ TransactionID,AccountFrom,AccountTo,Debit,Credit,Item,IncomePeriod,MonthReceived
 0109202602,,Others,,400,Food,Monthly,,,September,2026,Expense,,,0109202602
 0109202603,Ecobank,,767,,Tithe,Monthly,,,September,2026,Expense,,,0109202603
 0109202603,,ICGC Holy Ghost Temple,,767,Tithe,Monthly,,,September,2026,Expense,,,0109202603
+0109202604,Ecobank,,100,,Transport,Monthly,,,September,2026,Expense,,,0109202604
+0109202604,,Others,,100,Transport,Monthly,,,September,2026,Expense,,,0109202604
